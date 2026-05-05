@@ -687,29 +687,9 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         spoke.inner_clip_offset_px <= 0
       ) continue;
 
-      // Compute text label clearance zone for shape culling
-      let textClearStartR = -1;
-      let textClearEndR = -1;
-      if (config.spoke_text?.enabled) {
-        const labelSlotId = wrapPositive(
-          Math.round(spoke.label_slot_id ?? spoke.display_slot_id ?? 0),
-          maxSpokeCount
-        );
-        if (labelSlotId < UBUNTU_RELEASE_LABELS.length) {
-          const labelText = UBUNTU_RELEASE_LABELS[labelSlotId];
-          const textFontSize = Math.max(
-            3,
-            Math.round(
-              Math.max(3, config.spoke_text.font_size_px ?? ECHO_TEXT_BASE_FONT_SIZE_PX) *
-              Math.max(0.01, Math.min(stageW, stageH) / 1080) *
-              Math.max(0.01, config.composition.scale || 1)
-            )
-          );
-          const tm = getTextLabelRadiusMetrics(spoke, haloOuterR, fullFrameR, textFontSize, labelText, config);
-          textClearStartR = tm.clearStartR;
-          textClearEndR = tm.clearEndR;
-        }
-      }
+      const labelBandMetrics = config.spoke_text?.enabled
+        ? getSpokeLabelBandMetrics(spoke, haloOuterR, fullFrameR, getTextLabelFontSizePx(config), maxSpokeCount, config)
+        : null;
 
       const maxOrbitIdx = Math.ceil(
         (fullFrameR - spoke.echo_dot_origin_radius) / orbitStep
@@ -764,9 +744,9 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
 
         // Suppress shapes whose actual drawn footprint would enter the text-label clearance zone.
         if (
-          textClearStartR >= 0
-          && dotR + markerGeometry.outerRadiusPx >= textClearStartR
-          && dotR - markerGeometry.outerRadiusPx <= textClearEndR
+          labelBandMetrics
+          && dotR + markerGeometry.outerRadiusPx >= labelBandMetrics.clearStartR
+          && dotR - markerGeometry.outerRadiusPx <= labelBandMetrics.clearEndR
         ) continue;
 
         const dotAlpha =
@@ -799,13 +779,28 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     }
   }
 
-  // ── text label radius metrics (matching reference get_text_label_radius_metrics) ──
+  // ── shared spoke-content band metrics ──────────────────────────────
 
-  interface TextLabelMetrics {
+  interface ContentBandMetrics {
     startRadius: number;
     endRadius: number;
     clearStartR: number;
     clearEndR: number;
+  }
+
+  interface SpokeLabelBandMetrics extends ContentBandMetrics {
+    label: string;
+  }
+
+  function getTextLabelFontSizePx(config: HaloFieldConfig): number {
+    return Math.max(
+      3,
+      Math.round(
+        Math.max(3, config.spoke_text?.font_size_px ?? ECHO_TEXT_BASE_FONT_SIZE_PX) *
+        Math.max(0.01, Math.min(stageW, stageH) / 1080) *
+        Math.max(0.01, config.composition.scale || 1)
+      )
+    );
   }
 
   function getTextLabelWidthPx(label: string, fontSizePx: number): number {
@@ -820,15 +815,14 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     return haloOuterR + Math.max(0, config.spoke_lines.content_clearance_px ?? 0);
   }
 
-  function getTextLabelRadiusMetrics(
+  function getContentBandMetrics(
     spoke: Spoke | null,
     haloOuterR: number,
     fullFrameR: number,
-    fontSizePx: number,
-    labelText: string,
+    contentLengthPx: number,
+    radialU: number,
     config: HaloFieldConfig
-  ): TextLabelMetrics {
-    const radialU = clamp(config.spoke_text?.radial_u ?? 0.55, 0, 1);
+  ): ContentBandMetrics {
     const cx = config.composition.center_x_px;
     const cy = config.composition.center_y_px;
     const originRadius = Math.max(0, spoke?.echo_dot_origin_radius ?? haloOuterR);
@@ -864,9 +858,8 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       minimumContentStartRadius,
       fullFrameR
     );
-    const estimatedLengthPx = getTextLabelWidthPx(labelText, fontSizePx);
     const endRadius = clamp(
-      startRadius + estimatedLengthPx,
+      startRadius + contentLengthPx,
       startRadius,
       fullFrameR
     );
@@ -878,6 +871,40 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         startRadius - TEXT_LABEL_MARGIN_PX
       ),
       clearEndR: Math.min(fullFrameR, endRadius + TEXT_LABEL_MARGIN_PX)
+    };
+  }
+
+  function getSpokeLabelBandMetrics(
+    spoke: Spoke | null,
+    haloOuterR: number,
+    fullFrameR: number,
+    fontSizePx: number,
+    maxSpokeCount: number,
+    config: HaloFieldConfig
+  ): SpokeLabelBandMetrics | null {
+    const labelSlotId = wrapPositive(
+      Math.round(spoke?.label_slot_id ?? spoke?.display_slot_id ?? 0),
+      maxSpokeCount
+    );
+    if (labelSlotId >= UBUNTU_RELEASE_LABELS.length) {
+      return null;
+    }
+
+    const label = UBUNTU_RELEASE_LABELS[labelSlotId];
+    if (!label) {
+      return null;
+    }
+
+    return {
+      label,
+      ...getContentBandMetrics(
+        spoke,
+        haloOuterR,
+        fullFrameR,
+        getTextLabelWidthPx(label, fontSizePx),
+        clamp(config.spoke_text?.radial_u ?? 0.55, 0, 1),
+        config
+      )
     };
   }
 
@@ -895,14 +922,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     if (!box || baseAlpha <= 0 || !config.spoke_text?.enabled) return;
     const cx = config.composition.center_x_px;
     const cy = config.composition.center_y_px;
-    const fontSize = Math.max(
-      3,
-      Math.round(
-        Math.max(3, config.spoke_text.font_size_px ?? ECHO_TEXT_BASE_FONT_SIZE_PX) *
-        Math.max(0.01, Math.min(stageW, stageH) / 1080) *
-        Math.max(0.01, config.composition.scale || 1)
-      )
-    );
+    const fontSize = getTextLabelFontSizePx(config);
     const bgColor = config.composition.background_color || "#202020";
     const textColor = config.spoke_lines.reference_color || "#666666";
     const labelPadX = Math.max(4, Math.round(fontSize * 0.28));
@@ -916,25 +936,23 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
 
     for (const spoke of spokes) {
       if (spoke.seam_overlay_only) continue;
-      const labelSlotId = wrapPositive(
-        Math.round(spoke.label_slot_id ?? spoke.display_slot_id ?? 0),
-        maxSlots
+      const labelBandMetrics = getSpokeLabelBandMetrics(
+        spoke,
+        haloOuterR,
+        fullFrameR,
+        fontSize,
+        maxSlots,
+        config
       );
-      if (labelSlotId >= UBUNTU_RELEASE_LABELS.length) continue;
-
-      const label = UBUNTU_RELEASE_LABELS[labelSlotId];
-      if (!label) continue;
+      if (!labelBandMetrics) continue;
 
       const foldSeam = getFoldSeamAlpha(spoke.angle, config);
       const spokeAlpha = baseAlpha * clamp(spoke.alpha ?? 1, 0, 1) * foldSeam;
       if (spokeAlpha <= 0) continue;
 
-      const textMetrics = getTextLabelRadiusMetrics(
-        spoke, haloOuterR, fullFrameR, fontSize, label, config
-      );
       // World coords (Y-up), then convert to canvas (Y-down)
-      const worldX = cx + Math.cos(spoke.angle) * textMetrics.startRadius;
-      const worldY = cy + Math.sin(spoke.angle) * textMetrics.startRadius;
+      const worldX = cx + Math.cos(spoke.angle) * labelBandMetrics.startRadius;
+      const worldY = cy + Math.sin(spoke.angle) * labelBandMetrics.startRadius;
       const canvasX = worldX;
       const canvasY = stageH - worldY;
       // Negate angle for canvas Y-down coordinate system
@@ -950,11 +968,11 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       );
       if (revealAlpha <= 0) continue;
 
-      const radialFade = getRadialFadeAlpha(textMetrics.startRadius, fullFrameR, config);
+      const radialFade = getRadialFadeAlpha(labelBandMetrics.startRadius, fullFrameR, config);
       const alpha = spokeAlpha * revealAlpha * radialFade;
       if (alpha <= 0) continue;
 
-      const measure = textCtx.measureText(label);
+      const measure = textCtx.measureText(labelBandMetrics.label);
       const measuredAscent = measure.actualBoundingBoxAscent || fontSize * 0.38;
       const measuredDescent = measure.actualBoundingBoxDescent || fontSize * 0.18;
       const measuredHeight = measuredAscent + measuredDescent;
@@ -972,7 +990,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         measuredHeight + labelPadY * 2
       );
       textCtx.fillStyle = textColor;
-      textCtx.fillText(label, 0, 0);
+      textCtx.fillText(labelBandMetrics.label, 0, 0);
       textCtx.restore();
     }
 
