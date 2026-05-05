@@ -155,6 +155,7 @@ export interface HaloFieldConfig {
     phase_end_width_px: number;
     start_radius_px: number;
     end_radius_extra_px: number;
+    content_clearance_px: number;
     show_reference_halo: boolean;
     show_debug_masks: boolean;
   };
@@ -230,6 +231,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { path: "generator_wrangle.pattern_offset_spokes", label: "Pattern Offset", kind: "number", sectionKey: "angles", min: -120, max: 120, step: 1 },
     { path: "spoke_lines.start_radius_px", label: "Start Radius", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
     { path: "spoke_lines.end_radius_extra_px", label: "End Radius Extra", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
+    { path: "spoke_lines.content_clearance_px", label: "Content Clearance", kind: "slider", sectionKey: "angles", min: 0, max: 200, step: 1 },
 
     // ── Colors ──────────────────────────────────────────────────
     { path: "composition.background_color", label: "Background", kind: "color", sectionKey: "colors" },
@@ -1122,7 +1124,8 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
       echo_wave_count: 4,
       echo_opacity_mult: 0.5,
       start_radius_px: 150,
-      end_radius_extra_px: 0
+      end_radius_extra_px: 0,
+      content_clearance_px: 24
     },
     spoke_text: {
       enabled: true,

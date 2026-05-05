@@ -34,7 +34,6 @@ import {
 const BACKGROUND_SPOKE_WIDTH_PX = 1;
 const BACKGROUND_SPOKE_FADE_SEGMENTS = 16;
 const ECHO_PLUS_SIZE_PX = 8;
-const ECHO_MARKER_HALO_GAP_PX = 4;
 const ECHO_TEXT_BASE_FONT_SIZE_PX = 18;
 const TEXT_LABEL_FONT_FAMILY = '"Ubuntu Sans", "Ubuntu", sans-serif';
 const TEXT_LABEL_MARGIN_PX = 16;
@@ -587,6 +586,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       0.5 * geoScale,
       Math.max(0, config.spoke_lines.echo_marker_stroke_px ?? config.spoke_lines.width_px ?? 0) * geoScale
     );
+    const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
     const rippleMinScale = 0.45;
     const rippleMaxScale = 1.55;
     const rippleFadeStartU = lerp(0.2, 0.85, echoFadeMult);
@@ -712,8 +712,8 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
           getRevealLocalAlpha(wdx - cx, wdy - cy, reveal, maxSpokeCount);
         if (dotAlpha <= 0) continue;
 
-        // marker outside halo?
-        if (dotR - dotRadiusPx <= haloOuterR + ECHO_MARKER_HALO_GAP_PX + 0.01) continue;
+        // marker beyond the shared spoke-content clearance?
+        if (dotR - dotRadiusPx <= minimumContentStartRadius + 0.01) continue;
 
         const variant = getEchoMarkerVariant(
           echoStyle,
@@ -766,6 +766,10 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     return w;
   }
 
+  function getSharedContentStartRadius(haloOuterR: number, config: HaloFieldConfig): number {
+    return haloOuterR + Math.max(0, config.spoke_lines.content_clearance_px ?? 0);
+  }
+
   function getTextLabelRadiusMetrics(
     spoke: Spoke | null,
     haloOuterR: number,
@@ -783,7 +787,9 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     const baseOrbitStepPx = maxOrbitCount <= 1
       ? 0
       : Math.max(0, (fullFrameR - originRadius) / (maxOrbitCount - 1));
-    const baseStartRadius = lerp(haloOuterR, fullFrameR, radialU);
+    const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
+    const contentClearancePx = Math.max(0, config.spoke_lines.content_clearance_px ?? 0);
+    const baseStartRadius = lerp(minimumContentStartRadius, fullFrameR, radialU);
     const pulsedOrbitIndex = baseOrbitStepPx <= 0
       ? 0
       : Math.max(0, (baseStartRadius - originRadius) / baseOrbitStepPx);
@@ -798,15 +804,14 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     const thickSegmentEndR = thickSegment
       ? Math.hypot(thickSegment.end_x - cx, thickSegment.end_y - cy)
       : haloOuterR;
-    const minStartRadius = haloOuterR + ECHO_MARKER_HALO_GAP_PX + TEXT_LABEL_MARGIN_PX;
     const startRadius = clamp(
       Math.max(
         currentOrbitStepPx > 0
           ? originRadius + pulsedOrbitIndex * currentOrbitStepPx
           : baseStartRadius,
-        thickSegmentEndR + TEXT_LABEL_MARGIN_PX
+        thickSegmentEndR + contentClearancePx
       ),
-      minStartRadius,
+      minimumContentStartRadius,
       fullFrameR
     );
     const estimatedLengthPx = getTextLabelWidthPx(labelText, fontSizePx);
@@ -819,7 +824,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       startRadius,
       endRadius,
       clearStartR: Math.max(
-        haloOuterR + ECHO_MARKER_HALO_GAP_PX,
+        minimumContentStartRadius,
         startRadius - TEXT_LABEL_MARGIN_PX
       ),
       clearEndR: Math.min(fullFrameR, endRadius + TEXT_LABEL_MARGIN_PX)
