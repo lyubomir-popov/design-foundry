@@ -33,7 +33,38 @@ interface ExportOptions {
   startFrame: number;
   endFrame: number;
   frameRate: number;
+  fadeInEnabled: boolean;
+  fadeOutEnabled: boolean;
 }
+
+type ExportKind = "png-sequence" | "mp4";
+
+interface SavedExportOptions {
+  startFrame: number;
+  endFrame: number;
+  fadeInEnabled: boolean;
+  fadeOutEnabled: boolean;
+}
+
+const EXPORT_KIND_COPY: Record<ExportKind, {
+  title: string;
+  description: string;
+  submitLabel: string;
+  showFades: boolean;
+}> = {
+  "png-sequence": {
+    title: "Export PNG Sequence",
+    description: "Choose an inclusive frame range for the PNG sequence. Frame 30 will be exported as frame 30.",
+    submitLabel: "Export PNG Sequence",
+    showFades: false
+  },
+  mp4: {
+    title: "Export MP4",
+    description: "Choose an inclusive frame range. Frame 30 means the exported video includes frame 30.",
+    submitLabel: "Export MP4",
+    showFades: true
+  }
+};
 
 interface CreateExportAutomationControllerOptions {
   ctx: PreviewAppContext;
@@ -52,6 +83,7 @@ interface CreateExportAutomationControllerOptions {
 export interface ExportAutomationController {
   exportComposedFramePng(): Promise<void>;
   exportPngSequence(): Promise<void>;
+  exportMp4(): Promise<void>;
   getAutomationState(): Record<string, unknown>;
   applyAutomationSnapshot(payload?: Record<string, unknown>): Promise<Record<string, unknown>>;
   exportAutomationFrame(payload?: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -161,6 +193,21 @@ export function createExportAutomationController(
 ): ExportAutomationController {
   const { ctx } = options;
   let exportModalResolve: ((opts: ExportOptions | null) => void) | null = null;
+  let activeExportKind: ExportKind = "png-sequence";
+  const savedExportOptionsByKind: Record<ExportKind, SavedExportOptions> = {
+    "png-sequence": {
+      startFrame: 1,
+      endFrame: getDefaultExportEndFrame(),
+      fadeInEnabled: false,
+      fadeOutEnabled: false
+    },
+    mp4: {
+      startFrame: 1,
+      endFrame: getDefaultExportEndFrame(),
+      fadeInEnabled: false,
+      fadeOutEnabled: false
+    }
+  };
 
   function getDefaultExportEndFrame(): number {
     return Math.max(1, Math.floor(10 * ctx.state.exportSettings.frameRate));
@@ -196,6 +243,7 @@ export function createExportAutomationController(
           <button class="bf-modal-close" data-export-cancel type="button">Close</button>
         </header>
         <div class="bf-modal-body">
+          <p class="bf-form-help" data-export-description></p>
           <div class="bf-field">
             <label class="bf-form-label">Start Frame</label>
             <div class="bf-control">
@@ -206,6 +254,24 @@ export function createExportAutomationController(
             <label class="bf-form-label">End Frame</label>
             <div class="bf-control">
               <input type="number" class="bf-input" data-export-end-frame min="1" step="1" value="240">
+            </div>
+          </div>
+          <div class="bf-stack is-compact-stack" data-export-fades hidden>
+            <div class="bf-field is-checkbox">
+              <div class="bf-control">
+                <div class="bf-checkbox">
+                  <input id="export-fade-in" class="bf-checkbox-input" data-export-fade-in type="checkbox">
+                  <label class="bf-checkbox-label" for="export-fade-in">Fade in first 2 seconds</label>
+                </div>
+              </div>
+            </div>
+            <div class="bf-field is-checkbox">
+              <div class="bf-control">
+                <div class="bf-checkbox">
+                  <input id="export-fade-out" class="bf-checkbox-input" data-export-fade-out type="checkbox">
+                  <label class="bf-checkbox-label" for="export-fade-out">Fade out last 2 seconds</label>
+                </div>
+              </div>
             </div>
           </div>
           <p class="bf-form-help" data-export-summary></p>
@@ -219,6 +285,8 @@ export function createExportAutomationController(
 
     const startInput = dialog.querySelector<HTMLInputElement>("[data-export-start-frame]");
     const endInput = dialog.querySelector<HTMLInputElement>("[data-export-end-frame]");
+    const fadeInInput = dialog.querySelector<HTMLInputElement>("[data-export-fade-in]");
+    const fadeOutInput = dialog.querySelector<HTMLInputElement>("[data-export-fade-out]");
     const summaryEl = dialog.querySelector<HTMLElement>("[data-export-summary]");
 
     const updateSummary = () => updateExportSummary(summaryEl, startInput, endInput);
@@ -236,12 +304,21 @@ export function createExportAutomationController(
     dialog.querySelector("[data-export-submit]")?.addEventListener("click", () => {
       const start = Math.max(1, parseInt(startInput?.value ?? "1", 10) || 1);
       const end = Math.max(start, parseInt(endInput?.value ?? "1", 10) || 1);
-      dialog.close();
-      exportModalResolve?.({
+      const nextOptions: ExportOptions = {
         startFrame: start,
         endFrame: end,
-        frameRate: Math.max(1, Math.round(ctx.state.exportSettings.frameRate))
-      });
+        frameRate: Math.max(1, Math.round(ctx.state.exportSettings.frameRate)),
+        fadeInEnabled: activeExportKind === "mp4" && Boolean(fadeInInput?.checked),
+        fadeOutEnabled: activeExportKind === "mp4" && Boolean(fadeOutInput?.checked)
+      };
+      savedExportOptionsByKind[activeExportKind] = {
+        startFrame: nextOptions.startFrame,
+        endFrame: nextOptions.endFrame,
+        fadeInEnabled: nextOptions.fadeInEnabled,
+        fadeOutEnabled: nextOptions.fadeOutEnabled
+      };
+      dialog.close();
+      exportModalResolve?.(nextOptions);
       exportModalResolve = null;
     });
 
@@ -255,8 +332,9 @@ export function createExportAutomationController(
     return dialog;
   }
 
-  function promptForExportOptions(): Promise<ExportOptions | null> {
+  function promptForExportOptions(kind: ExportKind): Promise<ExportOptions | null> {
     return new Promise((resolve) => {
+      activeExportKind = kind;
       exportModalResolve = resolve;
 
       let modal = document.getElementById("export-options-modal") as HTMLDialogElement | null;
@@ -265,14 +343,29 @@ export function createExportAutomationController(
         document.body.append(modal);
       }
 
+      const modalCopy = EXPORT_KIND_COPY[kind];
+      const savedOptions = savedExportOptionsByKind[kind];
+      modal.querySelector<HTMLElement>("#export-modal-title")!.textContent = modalCopy.title;
+      modal.querySelector<HTMLElement>("[data-export-description]")!.textContent = modalCopy.description;
+      modal.querySelector<HTMLElement>("[data-export-fades]")!.hidden = !modalCopy.showFades;
+      modal.querySelector<HTMLButtonElement>("[data-export-submit]")!.textContent = modalCopy.submitLabel;
+
       const startInput = modal.querySelector<HTMLInputElement>("[data-export-start-frame]");
       const endInput = modal.querySelector<HTMLInputElement>("[data-export-end-frame]");
+      const fadeInInput = modal.querySelector<HTMLInputElement>("[data-export-fade-in]");
+      const fadeOutInput = modal.querySelector<HTMLInputElement>("[data-export-fade-out]");
       const summaryEl = modal.querySelector<HTMLElement>("[data-export-summary]");
       if (startInput) {
-        startInput.value = "1";
+        startInput.value = String(Math.max(1, savedOptions.startFrame));
       }
       if (endInput) {
-        endInput.value = String(getDefaultExportEndFrame());
+        endInput.value = String(Math.max(savedOptions.startFrame, savedOptions.endFrame));
+      }
+      if (fadeInInput) {
+        fadeInInput.checked = savedOptions.fadeInEnabled;
+      }
+      if (fadeOutInput) {
+        fadeOutInput.checked = savedOptions.fadeOutEnabled;
       }
       updateExportSummary(summaryEl, startInput, endInput);
 
@@ -413,7 +506,7 @@ export function createExportAutomationController(
   }
 
   async function exportPngSequence(): Promise<void> {
-    const exportOptions = await promptForExportOptions();
+    const exportOptions = await promptForExportOptions("png-sequence");
     if (!exportOptions) {
       return;
     }
@@ -469,6 +562,73 @@ export function createExportAutomationController(
     } catch (error) {
       const message = error instanceof Error ? error.message : "PNG sequence export failed.";
       ctx.setSourceDefaultStatus(`PNG sequence export failed: ${message}`, "error");
+    } finally {
+      if (wasPlaying) {
+        ctx.setPlaybackPlaying(true);
+      }
+    }
+  }
+
+  async function exportMp4(): Promise<void> {
+    const exportOptions = await promptForExportOptions("mp4");
+    if (!exportOptions) {
+      return;
+    }
+
+    const wasPlaying = ctx.state.isPlaying;
+    ctx.setPlaybackPlaying(false);
+
+    const profile = getOutputProfile(ctx.state.outputProfileKey);
+    const frameCount = exportOptions.endFrame - exportOptions.startFrame + 1;
+
+    ctx.setSourceDefaultStatus(
+      `Rendering ${frameCount} frames (${exportOptions.startFrame}-${exportOptions.endFrame}, inclusive) and encoding MP4 at ${exportOptions.frameRate} fps...`
+    );
+
+    try {
+      let response: Response;
+      try {
+        response = await fetch("/__authoring/export-mp4", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            preview_document: options.buildCurrentDocumentPersistence(),
+            output_profile_key: ctx.state.outputProfileKey,
+            output_width_px: profile.widthPx,
+            output_height_px: profile.heightPx,
+            export_name: ctx.state.exportSettings.exportName,
+            frame_rate: exportOptions.frameRate,
+            start_frame: exportOptions.startFrame,
+            end_frame: exportOptions.endFrame,
+            fade_in_enabled: exportOptions.fadeInEnabled,
+            fade_out_enabled: exportOptions.fadeOutEnabled
+          })
+        });
+      } catch {
+        throw new Error("MP4 export needs the preview authoring dev server. Run `npm run preview:dev`.");
+      }
+
+      const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+      if (response.status === 404) {
+        throw new Error("MP4 export is only available from the preview authoring dev server. Run `npm run preview:dev`.");
+      }
+      if (!response.ok || payload.ok !== true) {
+        throw new Error(
+          typeof payload.error === "string"
+            ? payload.error
+            : `MP4 export failed with ${response.status}.`
+        );
+      }
+
+      ctx.setSourceDefaultStatus(
+        `Exported MP4 to ${typeof payload.mp4_path === "string" ? payload.mp4_path : "the output directory"}.`,
+        "success"
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "MP4 export failed.";
+      ctx.setSourceDefaultStatus(`MP4 export failed: ${message}`, "error");
     } finally {
       if (wasPlaying) {
         ctx.setPlaybackPlaying(true);
@@ -760,6 +920,7 @@ export function createExportAutomationController(
   return {
     exportComposedFramePng,
     exportPngSequence,
+    exportMp4,
     getAutomationState,
     applyAutomationSnapshot,
     exportAutomationFrame,

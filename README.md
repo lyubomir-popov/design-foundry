@@ -76,6 +76,7 @@ That starts a Vite app at `apps/overlay-preview/` which currently:
 - persists local `.brand-layout-ops.json` documents through the shared overlay document metadata/state envelope plus shared scene-family and per-format `project` metadata, with CSV-draft extras layered on top and legacy preview-file compatibility retained
 - lets the Formats dialog add or delete saved document formats, add common sizes from a built-in preset list, and edit the document scene-family metadata instead of treating the active screen size as only transient preview state
 - uses the selected document scene family in the live stage and composed-frame export path, with phyllotaxis, fuzzy-boids, and scatter rendered through richer family-specific canvas preview passes while halo keeps the Three.js renderer
+- exports composed PNG stills, inclusive PNG sequences, and dev-only MP4s from the File menu; the MP4 path snapshots the current persisted preview document, renders a temporary PNG sequence headlessly, and encodes it through the existing FFmpeg script with optional fades
 - treats local documents as the source of truth for working state; browser-local preset storage is no longer supposed to seed a new session's working document
 
 Other useful local checks:

@@ -47,6 +47,7 @@ export interface OutputProfile {
 
 export const OUTPUT_PROFILE_ORDER: readonly string[] = [
   "landscape_1280x720",
+  "fullhd_1920x1080",
   "instagram_1080x1350",
   "story_1080x1920",
   "screen_3840x2160",
@@ -62,6 +63,16 @@ export const OUTPUT_PROFILES: Readonly<Record<string, OutputProfile>> = {
     defaultFrameRate: 24,
     kind: "social_landscape",
     platforms: "Twitter/X, Mastodon, LinkedIn",
+    safeArea: { top: 0, right: 0, bottom: 0, left: 0 }
+  },
+  fullhd_1920x1080: {
+    key: "fullhd_1920x1080",
+    label: "1920\u00d71080 Full HD",
+    widthPx: 1920,
+    heightPx: 1080,
+    defaultFrameRate: 30,
+    kind: "broadcast_landscape",
+    platforms: "YouTube, Vimeo, Broadcast",
     safeArea: { top: 0, right: 0, bottom: 0, left: 0 }
   },
   instagram_1080x1350: {

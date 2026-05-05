@@ -250,4 +250,6 @@ export interface PreviewAppContext {
   exportComposedFramePng(): Promise<void>;
   /** Export a PNG sequence with a frame-range modal. */
   exportPngSequence(): Promise<void>;
+  /** Export an MP4 through the dev-server authoring pipeline. */
+  exportMp4(): Promise<void>;
 }

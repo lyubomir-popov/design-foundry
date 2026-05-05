@@ -347,7 +347,7 @@ export function normalizeOverlayDocumentProject<
     ?? targets[0]?.id
     ?? getOverlayDocumentTargetId(snapshot.outputProfileKey);
   const activeTargetId = typeof rawProject.activeTargetId === "string" && targets.some((target) => (
-    target.id === rawProject.activeTargetId && target.outputProfileKey === snapshot.outputProfileKey
+    target.id === rawProject.activeTargetId
   ))
     ? rawProject.activeTargetId
     : snapshotTargetId;

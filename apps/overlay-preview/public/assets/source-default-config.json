@@ -16,6 +16,11 @@
         "outputProfileKey": "landscape_1280x720"
       },
       {
+        "id": "fullhd_1920x1080",
+        "label": "1920×1080 Full HD",
+        "outputProfileKey": "fullhd_1920x1080"
+      },
+      {
         "id": "instagram_1080x1350",
         "label": "1080×1350 4:5 IG",
         "outputProfileKey": "instagram_1080x1350"

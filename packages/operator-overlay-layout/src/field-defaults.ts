@@ -62,6 +62,11 @@ export const OVERLAY_PROFILE_TEXT_STYLE_OVERRIDES: Record<string, OverlayProfile
     b_head: { fontSizePx: 24, lineHeightPx: 32 },
     paragraph: { fontSizePx: 24, lineHeightPx: 32 }
   },
+  fullhd_1920x1080: {
+    title: { fontSizePx: 64, lineHeightPx: 72 },
+    b_head: { fontSizePx: 32, lineHeightPx: 40 },
+    paragraph: { fontSizePx: 28, lineHeightPx: 36 }
+  },
   instagram_1080x1350: {
     title: { fontSizePx: 63, lineHeightPx: 64 },
     b_head: { fontSizePx: 32, lineHeightPx: 36 },

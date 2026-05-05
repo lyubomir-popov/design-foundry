@@ -4,6 +4,35 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Document persistence hardening (2026-05-05)
+
+- Fixed saved active-format restore so `project.activeTargetId` remains authoritative when the older compatibility snapshot profile is stale; reopened custom formats now stay active instead of falling back to 1080x1920.
+- Fixed file metadata application so Save/Open/Restore title updates notify the shell immediately, and recent-document storage clone failures no longer leave the open/save flow pending.
+- Added a dev-server document-file fallback for the integrated browser path that was creating zero-byte project files: file-handle saves are verified after write, failed or mismatched writes fall back to `/__authoring/document-file`, and empty file-handle reads can recover a valid same-name JSON from `projects/`.
+- Extended that dev-server fallback so Save/Save As writes directly to `projects/<file>` when no usable file handle exists at all, instead of dropping straight to a browser download that can look like a no-op in the VS Code webview or Chrome automation.
+- Added `fullhd_1920x1080` as a built-in default format and seeded it into the default source document, so `1920×1080 Full HD` now appears in the fresh-document formats list without manual re-entry.
+- Added `npm run verify:document-persistence` for the stale-snapshot active-format case.
+- Validation: `npm run typecheck`, `npm run verify:document-persistence`, live route smoke for `/__authoring/document-file`, live preview e2e covering Save As, refresh restore, explicit Open from the saved document, an intentionally failing File System Access write that still produced and reopened a nonempty `projects/` JSON through the dev fallback, and a real Chrome check where picker failure still wrote `projects/Untitled-document.brand-layout-ops.json` and subsequent plain Save updated that same file in place.
+
+## Save naming + safe-area edit state fix (2026-05-01)
+
+- Fixed first-save naming so an untitled document adopts the chosen file name in document metadata and the top-navigation title instead of staying `Untitled document` after Save or Save As.
+- Fixed the Layout Grid safe-area inputs so multi-field edits compose against the current safe-area state instead of overwriting earlier edits with stale values from when the panel was built.
+- Validation: `npm run typecheck`, live browser save with a stubbed file picker confirming the nav title updates to the chosen file stem, and live safe-area edits confirming rendered left and right insets match the input values.
+
+## Preview resume + format redraw fix (2026-05-01)
+
+- Fixed the preview-shell startup path so the app restores the last successfully saved or opened document snapshot instead of always falling back to the default untitled source-default document on reload.
+- Fixed output-profile switching so activating a custom format immediately rerenders the stage and authored SVG overlay for the new frame size instead of leaving the previous format's render state on screen.
+- Validation: `npm run typecheck` plus live browser checks for 1080x1920 to 1920x1080 switching and startup restore of a saved 1920x1080 document snapshot.
+
+## Export parity — browser MP4 path (2026-05-01)
+
+- Closed the remaining `racoon-anim` export-parity gap by wiring browser MP4 export into the live File menu with the same inclusive frame-range semantics and optional two-second fade toggles.
+- Extended `scripts/export-headless.ts` so the headless renderer can apply an exact persisted preview-document snapshot before rendering, which keeps browser export tied to the current authored document instead of a looser runtime-only state.
+- Added the dev-only `/__authoring/export-mp4` route in `apps/overlay-preview/vite.config.ts`. It writes a temp preview-document snapshot, renders an isolated temp PNG sequence, encodes delivery-friendly MP4 output through `scripts/encode-mp4.ts`, and cleans up afterward. Windows child-process spawning is now handled with a safe shell-backed path.
+- Validation: `npm run typecheck` and a live one-frame browser MP4 smoke export that returned HTTP 200 and produced an MP4 in `output/<width>x<height>/mp4/`.
+
 ## Long-term
 
 ## Lane P5b — runtime buckets keyed by document format ids (2026-04-19)

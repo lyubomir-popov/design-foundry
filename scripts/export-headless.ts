@@ -13,6 +13,7 @@
  *   npx tsx scripts/export-headless.ts --frame 42             # single frame
  *   npx tsx scripts/export-headless.ts --profile story_1080x1920
  *   npx tsx scripts/export-headless.ts --frame-rate 30
+ *   npx tsx scripts/export-headless.ts --preview-document ./tmp/export.json
  *   npx tsx scripts/export-headless.ts --transparent-background
  *   npx tsx scripts/export-headless.ts --output-dir ./output/sequence
  *   npx tsx scripts/export-headless.ts --headed                # visible browser
@@ -22,7 +23,7 @@
  */
 
 import { type ChildProcess, spawn } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -50,11 +51,27 @@ const startFrameArg = getArg("--start-frame");
 const endFrameArg = getArg("--end-frame");
 const singleFrameArg = getArg("--frame");
 const outputDirArg = getArg("--output-dir");
+const previewDocumentArg = getArg("--preview-document");
 const urlArg = getArg("--url");
 const portArg = getArg("--port") ?? "4177";
 const transparentBackground = hasFlag("--transparent-background");
 const headless = !hasFlag("--headed");
 const deviceScaleFactor = Number(getArg("--device-scale-factor") ?? "2");
+
+function loadPreviewDocumentFromArg(): unknown {
+  if (!previewDocumentArg) {
+    return undefined;
+  }
+
+  const filePath = resolve(previewDocumentArg);
+  try {
+    return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(
+      `Failed to read preview document from ${filePath}: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Server management
@@ -140,6 +157,7 @@ async function main() {
 
   let serverProc: ChildProcess | null = null;
   let url = urlArg ?? "";
+  const previewDocument = loadPreviewDocumentFromArg();
 
   if (!url) {
     console.log(`Starting Vite dev server on port ${portArg}...`);
@@ -178,6 +196,7 @@ async function main() {
       if (profileKey) applyPayload.output_profile_key = profileKey;
       if (frameRateArg) applyPayload.frame_rate = Number(frameRateArg);
       if (transparentBackground) applyPayload.transparent_background = true;
+      if (typeof previewDocument !== "undefined") applyPayload.preview_document = previewDocument;
 
       let currentState = baseState;
       if (Object.keys(applyPayload).length > 0) {

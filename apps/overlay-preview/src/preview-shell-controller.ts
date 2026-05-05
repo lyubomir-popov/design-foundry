@@ -71,6 +71,7 @@ export interface PreviewShellControllerDeps {
   removeActiveDocumentFormat(): boolean;
   exportComposedFramePng(): Promise<void>;
   exportPngSequence(): Promise<void>;
+  exportMp4(): Promise<void>;
   initHaloRenderer(): void;
   initAuthoring(): void;
   handleAuthoringEditingKeyDown(event: KeyboardEvent): boolean;
@@ -823,6 +824,13 @@ export function createPreviewShellController(
         onError: (error: unknown) => {
           console.error("[file-menu] Export PNG Sequence failed:", error);
         }
+      },
+      {
+        label: "Export MP4...",
+        onClick: () => deps.exportMp4(),
+        onError: (error: unknown) => {
+          console.error("[file-menu] Export MP4 failed:", error);
+        }
       }
     ]);
   }
@@ -1140,6 +1148,7 @@ export function createPreviewShellController(
     deps.state.playbackTimeSec = 0;
     deps.initHaloRenderer();
     await deps.documentWorkspace.refreshRecentDocuments();
+    await deps.documentWorkspace.restoreLastSessionDocument();
 
     const logoPath = deps.state.params.logo?.assetPath;
     if (logoPath) {

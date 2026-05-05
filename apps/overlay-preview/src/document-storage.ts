@@ -1,5 +1,6 @@
 const DOCUMENT_STORAGE_DB_NAME = "brand-layout-ops-document-storage-v1";
 const DOCUMENT_STORAGE_STORE_NAME = "recent-documents";
+const DOCUMENT_FILE_AUTHORING_PATH = "/__authoring/document-file";
 const MAX_RECENT_DOCUMENTS = 12;
 const DOCUMENT_PICKER_ACCEPT_TYPES: Array<{
   description: string;
@@ -200,7 +201,14 @@ function saveStoredRecentDocumentRecord(record: RecentDocumentRecord): Promise<v
     }
 
     const transaction = database.transaction(DOCUMENT_STORAGE_STORE_NAME, "readwrite");
-    const request = transaction.objectStore(DOCUMENT_STORAGE_STORE_NAME).put(record);
+    let request: IDBRequest<IDBValidKey>;
+    try {
+      request = transaction.objectStore(DOCUMENT_STORAGE_STORE_NAME).put(record);
+    } catch (error) {
+      database.close();
+      reject(error);
+      return;
+    }
 
     request.addEventListener("success", () => {
       resolve();
@@ -373,7 +381,12 @@ export async function readDocumentFileText(handle: FileSystemFileHandle): Promis
   }
 
   const file = await handle.getFile();
-  return file.text();
+  const text = await file.text();
+  if (text.trim().length > 0) {
+    return text;
+  }
+
+  return await readDocumentFileTextFromAuthoringServer(handle.name) ?? text;
 }
 
 export async function writeDocumentFileText(
@@ -385,7 +398,64 @@ export async function writeDocumentFileText(
     throw new Error("Document write permission was denied.");
   }
 
-  const writable = await handle.createWritable();
-  await writable.write(text);
-  await writable.close();
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(new Blob([text], { type: "application/json" }));
+    await writable.close();
+
+    const writtenFile = await handle.getFile();
+    if (await writtenFile.text() === text) {
+      return;
+    }
+  } catch (error) {
+    if (await writeDocumentFileTextToAuthoringServer(handle.name, text)) {
+      return;
+    }
+
+    throw error;
+  }
+
+  if (await writeDocumentFileTextToAuthoringServer(handle.name, text)) {
+    return;
+  }
+
+  throw new Error("Document write verification failed.");
+}
+
+export async function writeDocumentFileTextByName(fileName: string, text: string): Promise<boolean> {
+  return writeDocumentFileTextToAuthoringServer(fileName, text);
+}
+
+async function readDocumentFileTextFromAuthoringServer(fileName: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${DOCUMENT_FILE_AUTHORING_PATH}?file_name=${encodeURIComponent(fileName)}`);
+    if (!response.ok) {
+      return null;
+    }
+
+    const text = await response.text();
+    return text.trim().length > 0 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeDocumentFileTextToAuthoringServer(fileName: string, text: string): Promise<boolean> {
+  try {
+    const response = await fetch(DOCUMENT_FILE_AUTHORING_PATH, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        file_name: fileName,
+        serialized_document: text
+      })
+    });
+
+    const payload = await response.json().catch(() => ({})) as { ok?: unknown };
+    return response.ok && payload.ok === true;
+  } catch {
+    return false;
+  }
 }

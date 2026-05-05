@@ -1,6 +1,7 @@
 import {
   createSuggestedDocumentFileName,
   DOCUMENT_FILE_EXTENSION,
+  deriveDocumentNameFromFileName,
   forgetRecentDocument as forgetStoredRecentDocument,
   loadRecentDocumentRecord,
   loadRecentDocumentSummaries,
@@ -9,9 +10,12 @@ import {
   readDocumentFileText,
   rememberRecentDocument,
   supportsLocalDocumentFiles,
+  writeDocumentFileTextByName,
   writeDocumentFileText,
   type RecentDocumentSummary
 } from "./document-storage.js";
+
+const LAST_SESSION_DOCUMENT_STORAGE_KEY = "brand-layout-ops:last-session-document";
 
 export type DocumentStatusTone = "neutral" | "success" | "error";
 
@@ -68,10 +72,16 @@ export interface DocumentWorkspaceController<TDocument> {
   refreshRecentDocuments: () => Promise<void>;
   forgetRecentDocument: (recentDocumentId: string) => Promise<void>;
   openRecentDocument: (recentDocumentId: string) => Promise<void>;
+  restoreLastSessionDocument: () => Promise<boolean>;
   createNewDocument: () => Promise<void>;
   openDocumentFromDisk: () => Promise<void>;
   saveCurrentDocument: (forceSaveAs?: boolean, nameOverride?: string) => Promise<boolean>;
   duplicateCurrentDocument: () => Promise<void>;
+}
+
+interface StoredSessionDocumentSnapshot {
+  serializedDocument: string;
+  fileName: string | null;
 }
 
 type SelectedDocumentResult<TDocument> =
@@ -100,6 +110,19 @@ function createInitialDocumentWorkspaceState(
 function normalizeDocumentName(rawName: string, untitledName: string): string {
   const trimmedName = rawName.trim();
   return trimmedName.length > 0 ? trimmedName : untitledName;
+}
+
+function resolveDocumentNameFromWorkspace(
+  rawName: string,
+  untitledName: string,
+  fileName: string | null
+): string {
+  const normalizedName = normalizeDocumentName(rawName, untitledName);
+  if (normalizedName !== untitledName || !fileName) {
+    return normalizedName;
+  }
+
+  return deriveDocumentNameFromFileName(fileName);
 }
 
 function confirmDiscardChanges(workspace: DocumentWorkspaceState): boolean {
@@ -151,6 +174,52 @@ function isAbortError(error: unknown): boolean {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
+}
+
+function loadStoredSessionDocumentSnapshot(): StoredSessionDocumentSnapshot | null {
+  try {
+    const rawSnapshot = window.localStorage.getItem(LAST_SESSION_DOCUMENT_STORAGE_KEY);
+    if (!rawSnapshot) {
+      return null;
+    }
+
+    const parsedSnapshot = JSON.parse(rawSnapshot) as {
+      serializedDocument?: unknown;
+      fileName?: unknown;
+    };
+
+    if (typeof parsedSnapshot.serializedDocument !== "string" || parsedSnapshot.serializedDocument.length === 0) {
+      return null;
+    }
+
+    return {
+      serializedDocument: parsedSnapshot.serializedDocument,
+      fileName: typeof parsedSnapshot.fileName === "string" && parsedSnapshot.fileName.trim().length > 0
+        ? parsedSnapshot.fileName
+        : null
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistSessionDocumentSnapshot(serializedDocument: string, fileName: string | null): void {
+  try {
+    window.localStorage.setItem(LAST_SESSION_DOCUMENT_STORAGE_KEY, JSON.stringify({
+      serializedDocument,
+      fileName
+    } satisfies StoredSessionDocumentSnapshot));
+  } catch {
+    // Ignore storage failures; file-backed save/open remains the source of truth.
+  }
+}
+
+function clearStoredSessionDocumentSnapshot(): void {
+  try {
+    window.localStorage.removeItem(LAST_SESSION_DOCUMENT_STORAGE_KEY);
+  } catch {
+    // Ignore storage failures; they should not block authoring.
+  }
 }
 
 export function renderDocumentWorkspaceUi(args: {
@@ -266,6 +335,18 @@ export function createDocumentWorkspaceController<TDocument>(
   const setName = (rawName: string): void => {
     workspace.name = rawName;
     markDirty();
+  };
+
+  const getResolvedWorkspaceMetadata = (updatedAtFallback: string = workspace.createdAt): DocumentWorkspaceMetadata => ({
+    name: getNormalizedName(workspace.name),
+    createdAt: workspace.createdAt,
+    updatedAt: workspace.updatedAt ?? updatedAtFallback
+  });
+
+  const persistWorkspaceDocumentSnapshot = (metadata: DocumentWorkspaceMetadata, fileName: string | null): void => {
+    const persistedDocument = options.buildPersistedDocument(metadata);
+    const serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
+    persistSessionDocumentSnapshot(serializedDocument, fileName);
   };
 
   const refreshRecentDocuments = async (): Promise<void> => {
@@ -388,12 +469,14 @@ export function createDocumentWorkspaceController<TDocument>(
     fileName: string | null
   ): void => {
     const metadata = options.getDocumentMetadata(document);
-    workspace.name = metadata.name;
+    const resolvedFileName = fileName ?? fileHandle?.name ?? null;
+    workspace.name = resolveDocumentNameFromWorkspace(metadata.name, options.untitledName, resolvedFileName);
     workspace.fileHandle = fileHandle;
-    workspace.fileName = fileName ?? fileHandle?.name ?? null;
+    workspace.fileName = resolvedFileName;
     workspace.createdAt = metadata.createdAt;
     workspace.updatedAt = metadata.updatedAt;
     workspace.isDirty = false;
+    notifyWorkspaceChanged();
   };
 
   const shouldDiscardChanges = (): boolean => {
@@ -421,6 +504,7 @@ export function createDocumentWorkspaceController<TDocument>(
 
     await options.applyDocument(document);
     applyWorkspaceDocumentMetadata(document, record.handle, record.fileName);
+    persistWorkspaceDocumentSnapshot(getResolvedWorkspaceMetadata(), record.fileName);
     await rememberCurrentDocumentHandle(
       record.handle,
       workspace.updatedAt ?? workspace.createdAt,
@@ -428,6 +512,33 @@ export function createDocumentWorkspaceController<TDocument>(
       record.id
     );
     setStatus(`Reopened ${record.fileName}.`, "success");
+  };
+
+  const restoreLastSessionDocument = async (): Promise<boolean> => {
+    const storedSnapshot = loadStoredSessionDocumentSnapshot();
+    if (!storedSnapshot) {
+      return false;
+    }
+
+    let rawDocument: unknown;
+    try {
+      rawDocument = JSON.parse(storedSnapshot.serializedDocument) as unknown;
+    } catch {
+      clearStoredSessionDocumentSnapshot();
+      return false;
+    }
+
+    const document = options.parseDocument(rawDocument);
+    if (!document) {
+      clearStoredSessionDocumentSnapshot();
+      return false;
+    }
+
+    workspace.recentDocumentId = null;
+    await options.applyDocument(document);
+    applyWorkspaceDocumentMetadata(document, null, storedSnapshot.fileName);
+    setStatus(`Restored ${storedSnapshot.fileName ?? options.getDocumentMetadata(document).name}.`, "success");
+    return true;
   };
 
   const createNewDocument = async (): Promise<void> => {
@@ -444,6 +555,7 @@ export function createDocumentWorkspaceController<TDocument>(
     workspace.createdAt = new Date().toISOString();
     workspace.updatedAt = null;
     workspace.isDirty = false;
+    clearStoredSessionDocumentSnapshot();
     setStatus("Started a new local document.", "success");
   };
 
@@ -464,6 +576,7 @@ export function createDocumentWorkspaceController<TDocument>(
 
     await options.applyDocument(selectedDocument.document);
     applyWorkspaceDocumentMetadata(selectedDocument.document, selectedDocument.fileHandle, selectedDocument.fileName);
+    persistWorkspaceDocumentSnapshot(getResolvedWorkspaceMetadata(), selectedDocument.fileName);
 
     if (selectedDocument.fileHandle) {
       await rememberCurrentDocumentHandle(
@@ -481,23 +594,24 @@ export function createDocumentWorkspaceController<TDocument>(
   };
 
   const saveCurrentDocument = async (forceSaveAs: boolean = false, nameOverride?: string): Promise<boolean> => {
-    const nextDocumentName = getNormalizedName(nameOverride ?? workspace.name);
     const savedAt = new Date().toISOString();
-    const persistedDocument = options.buildPersistedDocument({
-      name: nextDocumentName,
-      createdAt: workspace.createdAt || savedAt,
-      updatedAt: savedAt
-    });
-    const serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
-
     let fileHandle = forceSaveAs ? null : workspace.fileHandle;
     let fileName = forceSaveAs ? null : workspace.fileName;
+    let usedAuthoringRouteFallback = false;
     let usedDownloadFallback = false;
     let pickerFallbackReason: string | null = null;
 
-    if (!fileHandle && supportsLocalDocumentFiles()) {
+    if (fileHandle) {
+      fileName = fileHandle.name;
+    }
+
+    let nextDocumentName = getNormalizedName(nameOverride ?? workspace.name);
+    const canReuseNamedDocumentWithoutHandle = !forceSaveAs && !fileHandle && typeof fileName === "string" && fileName.trim().length > 0;
+
+    if (!fileHandle && !canReuseNamedDocumentWithoutHandle && supportsLocalDocumentFiles()) {
       try {
         fileHandle = await pickDocumentFileToSave(createSuggestedDocumentFileName(nextDocumentName));
+        fileName = fileHandle?.name ?? fileName;
       } catch (error) {
         if (isAbortError(error)) {
           return false;
@@ -507,14 +621,28 @@ export function createDocumentWorkspaceController<TDocument>(
       }
     }
 
+    if (typeof nameOverride === "undefined") {
+      nextDocumentName = resolveDocumentNameFromWorkspace(workspace.name, options.untitledName, fileName);
+    }
+
+    const persistedDocument = options.buildPersistedDocument({
+      name: nextDocumentName,
+      createdAt: workspace.createdAt || savedAt,
+      updatedAt: savedAt
+    });
+    const serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
+
     try {
       if (fileHandle) {
         await writeDocumentFileText(fileHandle, serializedDocument);
         fileName = fileHandle.name;
       } else {
         fileName = createSuggestedDocumentFileName(nextDocumentName);
-        downloadJsonFile(fileName, serializedDocument);
-        usedDownloadFallback = true;
+        usedAuthoringRouteFallback = await writeDocumentFileTextByName(fileName, serializedDocument);
+        if (!usedAuthoringRouteFallback) {
+          downloadJsonFile(fileName, serializedDocument);
+          usedDownloadFallback = true;
+        }
       }
     } catch (error) {
       setStatus(`Document save failed: ${getErrorMessage(error)}`, "error");
@@ -527,6 +655,7 @@ export function createDocumentWorkspaceController<TDocument>(
     workspace.createdAt = workspace.createdAt || savedAt;
     workspace.updatedAt = savedAt;
     workspace.isDirty = false;
+    notifyWorkspaceChanged();
 
     if (fileHandle) {
       await rememberCurrentDocumentHandle(
@@ -540,7 +669,14 @@ export function createDocumentWorkspaceController<TDocument>(
       notifyWorkspaceChanged();
     }
 
-    if (usedDownloadFallback && pickerFallbackReason) {
+    if (usedAuthoringRouteFallback && pickerFallbackReason) {
+      setStatus(
+        `Saved ${fileName ?? nextDocumentName} to projects/ because the local file picker failed: ${pickerFallbackReason}`,
+        "success"
+      );
+    } else if (usedAuthoringRouteFallback) {
+      setStatus(`Saved ${fileName ?? nextDocumentName} to projects/.`, "success");
+    } else if (usedDownloadFallback && pickerFallbackReason) {
       setStatus(
         `Saved ${fileName ?? nextDocumentName} via browser download because the local file picker failed: ${pickerFallbackReason}`,
         "success"
@@ -548,6 +684,7 @@ export function createDocumentWorkspaceController<TDocument>(
     } else {
       setStatus(`Saved ${fileName ?? nextDocumentName}.`, "success");
     }
+    persistSessionDocumentSnapshot(serializedDocument, fileName ?? null);
     return true;
   };
 
@@ -572,6 +709,7 @@ export function createDocumentWorkspaceController<TDocument>(
     refreshRecentDocuments,
     forgetRecentDocument,
     openRecentDocument,
+    restoreLastSessionDocument,
     createNewDocument,
     openDocumentFromDisk,
     saveCurrentDocument,

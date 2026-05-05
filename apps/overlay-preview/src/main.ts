@@ -288,6 +288,7 @@ profileStateController = createProfileStateController({
   getEffectiveParams,
   normalizeSelection,
   resizeRenderer,
+  renderStage,
   syncDocumentProjectToCurrentOutputProfile,
   saveOutputFormatKey
 });
@@ -804,6 +805,9 @@ const ctx: PreviewAppContext = {
   },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();
+  },
+  exportMp4: async () => {
+    await exportAutomationController?.exportMp4();
   }
 };
 
@@ -935,6 +939,9 @@ previewShellController = createPreviewShellController({
   },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();
+  },
+  exportMp4: async () => {
+    await exportAutomationController?.exportMp4();
   },
   initHaloRenderer: () => {
     stageRenderController.initHaloRenderer();

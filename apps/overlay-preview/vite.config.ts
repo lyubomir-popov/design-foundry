@@ -1,4 +1,6 @@
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +14,31 @@ const sourceDefaultConfigPath = path.resolve(__dirname, "public", "assets", "sou
 const sourceDefaultAuthoringPath = "/__authoring/source-default-config";
 const sourceDefaultRelativePath = path.relative(__dirname, sourceDefaultConfigPath).replace(/\\/g, "/");
 const overlayCsvAuthoringPath = "/__authoring/overlay-csv";
+const documentFileAuthoringPath = "/__authoring/document-file";
+const exportMp4AuthoringPath = "/__authoring/export-mp4";
+const maxSafeSupersampledExportPixels = 3840 * 2160;
+const npxExecutable = process.platform === "win32" ? "npx.cmd" : "npx";
+
+function resolveAuthoringDocumentFilePath(rawFileName: unknown): { fileName: string; filePath: string } {
+  const normalizedName = path.basename(String(rawFileName || "").trim().replace(/\\/g, "/"));
+  if (!normalizedName) {
+    throw new Error("Expected a document file name.");
+  }
+
+  const safeFileName = normalizedName.replace(/[^a-zA-Z0-9._ -]+/g, "-");
+  if (!safeFileName.toLowerCase().endsWith(".json")) {
+    throw new Error("Document file name must end with .json.");
+  }
+
+  const projectsRoot = path.join(repoRoot, "projects");
+  const filePath = path.resolve(projectsRoot, safeFileName);
+  const relativeFromProjects = path.relative(projectsRoot, filePath);
+  if (!relativeFromProjects || relativeFromProjects.startsWith("..") || path.isAbsolute(relativeFromProjects)) {
+    throw new Error("Document file name must stay within projects/.");
+  }
+
+  return { fileName: safeFileName, filePath };
+}
 
 function resolvePublicAuthoringAssetPath(rawAssetPath: string): { logicalPath: string; filePath: string } {
   const normalizedAssetPath = String(rawAssetPath || "").trim().replace(/\\/g, "/");
@@ -38,13 +65,68 @@ function resolvePublicAuthoringAssetPath(rawAssetPath: string): { logicalPath: s
   };
 }
 
+function getExportDeviceScaleFactor(outputWidthPx: number, outputHeightPx: number): number {
+  const pixelCount = Math.max(0, Number(outputWidthPx || 0)) * Math.max(0, Number(outputHeightPx || 0));
+  return pixelCount >= maxSafeSupersampledExportPixels ? 1 : 2;
+}
+
+function readRequestBody(req: NodeJS.ReadableStream): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    req.on("data", (chunk) => {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    });
+    req.on("end", () => {
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
+    req.on("error", reject);
+  });
+}
+
+function runProcess(command: string, args: string[], cwd: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      shell: process.platform === "win32",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    child.stdout?.on("data", (chunk) => {
+      process.stdout.write(chunk);
+    });
+    child.stderr?.on("data", (chunk) => {
+      process.stderr.write(chunk);
+    });
+
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(
+        new Error(
+          `${path.basename(command)} exited with code ${code ?? "null"}${signal ? ` (signal ${signal})` : ""}.`
+        )
+      );
+    });
+  });
+}
+
 function sourceDefaultAuthoringPlugin(): Plugin {
   return {
     name: "source-default-authoring",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const requestPath = req.url?.split("?")[0];
-        if (!requestPath || (requestPath !== sourceDefaultAuthoringPath && requestPath !== overlayCsvAuthoringPath)) {
+        if (
+          !requestPath ||
+          (requestPath !== sourceDefaultAuthoringPath &&
+            requestPath !== overlayCsvAuthoringPath &&
+            requestPath !== documentFileAuthoringPath &&
+            requestPath !== exportMp4AuthoringPath)
+        ) {
           next();
           return;
         }
@@ -140,8 +222,158 @@ function sourceDefaultAuthoringPlugin(): Plugin {
           return;
         }
 
+        if (requestPath === documentFileAuthoringPath && req.method === "GET") {
+          void (async () => {
+            try {
+              const requestUrl = new URL(req.url ?? documentFileAuthoringPath, "http://127.0.0.1");
+              const resolvedDocument = resolveAuthoringDocumentFilePath(requestUrl.searchParams.get("file_name"));
+              const contents = await fs.readFile(resolvedDocument.filePath, "utf8");
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(contents);
+            } catch (error) {
+              const code = (error as NodeJS.ErrnoException).code;
+              res.statusCode = code === "ENOENT" ? 404 : 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: error instanceof Error ? error.message : "Document file not found." }));
+            }
+          })();
+          return;
+        }
+
+        if (requestPath === documentFileAuthoringPath && req.method === "POST") {
+          void (async () => {
+            try {
+              const payload = JSON.parse((await readRequestBody(req)) || "{}");
+              const resolvedDocument = resolveAuthoringDocumentFilePath(payload?.file_name);
+              const serializedDocument = typeof payload?.serialized_document === "string"
+                ? payload.serialized_document
+                : "";
+              if (serializedDocument.trim().length === 0) {
+                throw new Error("Expected a non-empty serialized document.");
+              }
+
+              JSON.parse(serializedDocument);
+              await fs.mkdir(path.dirname(resolvedDocument.filePath), { recursive: true });
+              await fs.writeFile(
+                resolvedDocument.filePath,
+                serializedDocument.endsWith("\n") ? serializedDocument : `${serializedDocument}\n`,
+                "utf8"
+              );
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ ok: true, file_name: resolvedDocument.fileName, path: resolvedDocument.filePath }));
+            } catch (error) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: error instanceof Error ? error.message : "Invalid document payload." }));
+            }
+          })();
+          return;
+        }
+
+        if (requestPath === exportMp4AuthoringPath && req.method === "POST") {
+          void (async () => {
+            let tempDirPath: string | null = null;
+
+            try {
+              const payload = JSON.parse((await readRequestBody(req)) || "{}");
+              const previewDocument = payload?.preview_document;
+              const outputWidthPx = Math.max(1, Math.round(Number(payload?.output_width_px || 0)));
+              const outputHeightPx = Math.max(1, Math.round(Number(payload?.output_height_px || 0)));
+              const exportName = String(payload?.export_name || "export").replace(/[^a-zA-Z0-9_-]/g, "") || "export";
+              const frameRate = Math.max(1, Math.round(Number(payload?.frame_rate || 24)));
+              const startFrame = Math.max(1, Math.round(Number(payload?.start_frame || 1)));
+              const endFrame = Math.max(startFrame, Math.round(Number(payload?.end_frame || startFrame)));
+              const fadeInEnabled = Boolean(payload?.fade_in_enabled);
+              const fadeOutEnabled = Boolean(payload?.fade_out_enabled);
+
+              if (!previewDocument || typeof previewDocument !== "object" || Array.isArray(previewDocument)) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ error: "Expected a preview_document object." }));
+                return;
+              }
+
+              if (endFrame < startFrame) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ error: "End frame must be greater than or equal to start frame." }));
+                return;
+              }
+
+              tempDirPath = await fs.mkdtemp(path.join(os.tmpdir(), "brand-layout-ops-mp4-"));
+              const tempPreviewDocumentPath = path.join(tempDirPath, "preview-document.json");
+              const tempFramesDir = path.join(tempDirPath, "frames");
+              await fs.writeFile(tempPreviewDocumentPath, `${JSON.stringify(previewDocument, null, 2)}\n`, "utf8");
+              await fs.mkdir(tempFramesDir, { recursive: true });
+
+              const outputDir = path.join(repoRoot, "output", `${outputWidthPx}x${outputHeightPx}`, "mp4");
+              await fs.mkdir(outputDir, { recursive: true });
+              const mp4Path = path.join(outputDir, `${exportName}_${outputWidthPx}x${outputHeightPx}.mp4`);
+              const automationUrl = `http://${req.headers.host ?? "127.0.0.1:4173"}/?automation=1`;
+
+              await runProcess(
+                npxExecutable,
+                [
+                  "tsx",
+                  "scripts/export-headless.ts",
+                  "--url",
+                  automationUrl,
+                  "--preview-document",
+                  tempPreviewDocumentPath,
+                  "--frame-rate",
+                  String(frameRate),
+                  "--start-frame",
+                  String(startFrame),
+                  "--end-frame",
+                  String(endFrame),
+                  "--device-scale-factor",
+                  String(getExportDeviceScaleFactor(outputWidthPx, outputHeightPx)),
+                  "--output-dir",
+                  tempFramesDir
+                ],
+                repoRoot
+              );
+
+              await runProcess(
+                npxExecutable,
+                [
+                  "tsx",
+                  "scripts/encode-mp4.ts",
+                  "--input-dir",
+                  tempFramesDir,
+                  "--output",
+                  mp4Path,
+                  "--fps",
+                  String(frameRate),
+                  "--delivery",
+                  "--all-intra",
+                  "--overwrite",
+                  ...(fadeInEnabled ? ["--fade-in-sec", "2"] : []),
+                  ...(fadeOutEnabled ? ["--fade-out-sec", "2"] : [])
+                ],
+                repoRoot
+              );
+
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ ok: true, output_dir: outputDir, mp4_path: mp4Path }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: error instanceof Error ? error.message : "MP4 export failed." }));
+            } finally {
+              if (tempDirPath) {
+                await fs.rm(tempDirPath, { recursive: true, force: true });
+              }
+            }
+          })();
+          return;
+        }
+
         res.statusCode = 405;
-        res.setHeader("Allow", requestPath === sourceDefaultAuthoringPath ? "GET, POST" : "POST");
+        res.setHeader("Allow", requestPath === sourceDefaultAuthoringPath || requestPath === documentFileAuthoringPath ? "GET, POST" : "POST");
         res.end();
       });
     }

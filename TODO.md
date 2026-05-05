@@ -39,7 +39,7 @@ Goal: Stop treating saved sizes as if they were only export targets. The live wo
 | P2 | Done | Newly added formats now become active immediately. Because profile-bucket state already seeds from the current active format on first switch, new formats inherit a useful first-guess layout instead of forcing a second activation step |
 | P3 | Done | Persistence and app-surface cleanup landed without breaking compatibility: the shared schema now exposes `OverlayDocumentFormat`, automation emits `document_formats` plus `document_active_format_id` alongside the legacy target keys, and the live app context or shell controller wiring now reads as formats instead of targets |
 | P4 | Done | The first data-model slice is landed without a schema break: document formats now carry `formatPresetKey` and `derivedFromFormatId` metadata, built-in presets are now defined as one shared frame + safe-area + grid seed package, the shell exposes that model through `File -> Preset Library...`, and first-time variant seeding now respects that split by keeping preset-backed safe-area or grid seeds while custom sizes derive from the source format. |
-| P5 | In progress | P5a and P5b are landed: new formats now keep stable authored ids through profile mutation, and the live preview runtime now keys authored params, export settings, halo config, and staged CSV edits by document format id while the preview-document bridge still saves compatibility snapshots by output profile. Next: decide the next authored-variant slice without breaking the current persisted shape. |
+| P5 | In progress | P5a and P5b are landed: new formats now keep stable authored ids through profile mutation, the live preview runtime keys authored state by document format id, and save/load now preserves the active document format across stale compatibility snapshots. Next: decide the next authored-variant slice without breaking the current persisted shape. |
 
 ## Immediate Next Steps
 
@@ -48,6 +48,7 @@ Goal: Stop treating saved sizes as if they were only export targets. The live wo
 - Use the new format-id keyed runtime to evaluate same-size authored variants before committing to a saved-file change.
 - Keep document compatibility stable while the user-facing model shifts from targets to formats.
 - Treat new format work as authoring behavior first. Export-recipes or output-operator work can follow once the authoring model is honest.
+- Keep future export work focused on output-operator or preset modeling. The shell parity plumbing for composed PNG, PNG sequence, and dev-only MP4 export is now in place.
 
 ## Operational Constraints
 

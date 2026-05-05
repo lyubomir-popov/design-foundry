@@ -24,6 +24,7 @@ export interface ProfileStateControllerOptions {
   getEffectiveParams(): OverlayLayoutOperatorParams;
   normalizeSelection(): void;
   resizeRenderer(): void;
+  renderStage(): void | Promise<void>;
   syncDocumentProjectToCurrentOutputProfile(): void;
   saveOutputFormatKey(profileKey: string, formatKey: string): void;
 }
@@ -244,6 +245,7 @@ export function createProfileStateController(
     options.resizeRenderer();
     options.syncDocumentProjectToCurrentOutputProfile();
     options.saveOutputFormatKey(state.outputProfileKey, state.contentFormatKey);
+    void options.renderStage();
   }
 
   function switchContentFormat(formatKey: string): void {

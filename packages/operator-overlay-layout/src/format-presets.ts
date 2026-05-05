@@ -32,6 +32,18 @@ const OVERLAY_FORMAT_PRESET_GRID_SEEDS: Record<string, GridSettings> = {
     columnGutterBaselines: 0,
     fitWithinSafeArea: true
   },
+  fullhd_1920x1080: {
+    baselineStepPx: 12,
+    rowCount: 4,
+    columnCount: 6,
+    marginTopBaselines: 6,
+    marginBottomBaselines: 6,
+    marginLeftBaselines: 6,
+    marginRightBaselines: 6,
+    rowGutterBaselines: 4,
+    columnGutterBaselines: 4,
+    fitWithinSafeArea: true
+  },
   instagram_1080x1350: {
     baselineStepPx: 8,
     rowCount: 8,

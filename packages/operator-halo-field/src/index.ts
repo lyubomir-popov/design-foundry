@@ -1166,6 +1166,9 @@ const HALO_PROFILE_OVERRIDES: Record<string, HaloProfileOverride> = {
   landscape_1280x720: {
     composition: { center_offset_y_px: -26 }
   },
+  fullhd_1920x1080: {
+    composition: { center_offset_y_px: 0 }
+  },
   instagram_1080x1350: {
     composition: { scale: 0.67, center_offset_y_px: -121 },
     spoke_text: { font_size_px: 14 },

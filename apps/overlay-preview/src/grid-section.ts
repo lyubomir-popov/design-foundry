@@ -111,25 +111,25 @@ export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
 
     safeFields.append(wrapCol(1, createFormGroup("Safe Top",
       createNumberInput(safeArea.top, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...safeArea, top: v } }; void ctx.renderStage();
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, top: v } }; void ctx.renderStage();
       })
     )));
 
     safeFields.append(wrapCol(1, createFormGroup("Safe Right",
       createNumberInput(safeArea.right, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...safeArea, right: v } }; void ctx.renderStage();
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, right: v } }; void ctx.renderStage();
       })
     )));
 
     safeFields.append(wrapCol(1, createFormGroup("Safe Bottom",
       createNumberInput(safeArea.bottom, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...safeArea, bottom: v } }; void ctx.renderStage();
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, bottom: v } }; void ctx.renderStage();
       })
     )));
 
     safeFields.append(wrapCol(1, createFormGroup("Safe Left",
       createNumberInput(safeArea.left, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...safeArea, left: v } }; void ctx.renderStage();
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, left: v } }; void ctx.renderStage();
       })
     )));
 
