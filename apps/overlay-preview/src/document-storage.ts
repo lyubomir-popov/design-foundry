@@ -426,6 +426,10 @@ export async function writeDocumentFileTextByName(fileName: string, text: string
   return writeDocumentFileTextToAuthoringServer(fileName, text);
 }
 
+export async function readDocumentFileTextByName(fileName: string): Promise<string | null> {
+  return readDocumentFileTextFromAuthoringServer(fileName);
+}
+
 async function readDocumentFileTextFromAuthoringServer(fileName: string): Promise<string | null> {
   try {
     const response = await fetch(`${DOCUMENT_FILE_AUTHORING_PATH}?file_name=${encodeURIComponent(fileName)}`);

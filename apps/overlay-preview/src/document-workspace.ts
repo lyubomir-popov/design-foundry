@@ -8,6 +8,7 @@ import {
   pickDocumentFileToOpen,
   pickDocumentFileToSave,
   readDocumentFileText,
+  readDocumentFileTextByName,
   rememberRecentDocument,
   supportsLocalDocumentFiles,
   writeDocumentFileTextByName,
@@ -16,6 +17,7 @@ import {
 } from "./document-storage.js";
 
 const LAST_SESSION_DOCUMENT_STORAGE_KEY = "brand-layout-ops:last-session-document";
+const DOCUMENT_LOCATION_HASH_PREFIX = "#document=";
 
 export type DocumentStatusTone = "neutral" | "success" | "error";
 
@@ -112,17 +114,33 @@ function normalizeDocumentName(rawName: string, untitledName: string): string {
   return trimmedName.length > 0 ? trimmedName : untitledName;
 }
 
+function isUntitledDocumentName(rawName: string, untitledName: string): boolean {
+  const normalizedName = normalizeDocumentName(rawName, untitledName);
+  return normalizedName === untitledName
+    || normalizedName === deriveDocumentNameFromFileName(createSuggestedDocumentFileName(untitledName));
+}
+
 function resolveDocumentNameFromWorkspace(
   rawName: string,
   untitledName: string,
   fileName: string | null
 ): string {
   const normalizedName = normalizeDocumentName(rawName, untitledName);
-  if (normalizedName !== untitledName || !fileName) {
+  if (!isUntitledDocumentName(normalizedName, untitledName) || !fileName) {
     return normalizedName;
   }
 
   return deriveDocumentNameFromFileName(fileName);
+}
+
+function promptForDocumentName(untitledName: string): string | null {
+  const promptedName = window.prompt("Enter a name for the document before saving it.", "");
+  if (promptedName === null) {
+    return null;
+  }
+
+  const normalizedName = normalizeDocumentName(promptedName, untitledName);
+  return normalizedName === untitledName ? null : normalizedName;
 }
 
 function confirmDiscardChanges(workspace: DocumentWorkspaceState): boolean {
@@ -219,6 +237,33 @@ function clearStoredSessionDocumentSnapshot(): void {
     window.localStorage.removeItem(LAST_SESSION_DOCUMENT_STORAGE_KEY);
   } catch {
     // Ignore storage failures; they should not block authoring.
+  }
+}
+
+function getLocationDocumentFileName(): string | null {
+  try {
+    const hash = window.location.hash;
+    if (!hash.startsWith(DOCUMENT_LOCATION_HASH_PREFIX)) {
+      return null;
+    }
+
+    const fileName = decodeURIComponent(hash.slice(DOCUMENT_LOCATION_HASH_PREFIX.length)).trim();
+    return fileName.length > 0 ? fileName : null;
+  } catch {
+    return null;
+  }
+}
+
+function setLocationDocumentFileName(fileName: string | null): void {
+  try {
+    const nextHash = typeof fileName === "string" && fileName.trim().length > 0
+      ? `document=${encodeURIComponent(fileName.trim())}`
+      : "";
+    const url = new URL(window.location.href);
+    url.hash = nextHash;
+    window.history.replaceState(window.history.state, "", url.toString());
+  } catch {
+    // Ignore history-update failures; they should not block authoring.
   }
 }
 
@@ -476,6 +521,7 @@ export function createDocumentWorkspaceController<TDocument>(
     workspace.createdAt = metadata.createdAt;
     workspace.updatedAt = metadata.updatedAt;
     workspace.isDirty = false;
+    setLocationDocumentFileName(resolvedFileName);
     notifyWorkspaceChanged();
   };
 
@@ -515,6 +561,26 @@ export function createDocumentWorkspaceController<TDocument>(
   };
 
   const restoreLastSessionDocument = async (): Promise<boolean> => {
+    const locationFileName = getLocationDocumentFileName();
+    if (locationFileName) {
+      try {
+        const serializedDocument = await readDocumentFileTextByName(locationFileName);
+        if (serializedDocument) {
+          const document = options.parseDocument(JSON.parse(serializedDocument) as unknown);
+          if (document) {
+            workspace.recentDocumentId = null;
+            await options.applyDocument(document);
+            applyWorkspaceDocumentMetadata(document, null, locationFileName);
+            persistSessionDocumentSnapshot(serializedDocument, locationFileName);
+            setStatus(`Restored ${locationFileName}.`, "success");
+            return true;
+          }
+        }
+      } catch {
+        // Fall back to the last-session snapshot when the explicit hash target cannot be restored.
+      }
+    }
+
     const storedSnapshot = loadStoredSessionDocumentSnapshot();
     if (!storedSnapshot) {
       return false;
@@ -556,6 +622,7 @@ export function createDocumentWorkspaceController<TDocument>(
     workspace.updatedAt = null;
     workspace.isDirty = false;
     clearStoredSessionDocumentSnapshot();
+    setLocationDocumentFileName(null);
     setStatus("Started a new local document.", "success");
   };
 
@@ -625,6 +692,16 @@ export function createDocumentWorkspaceController<TDocument>(
       nextDocumentName = resolveDocumentNameFromWorkspace(workspace.name, options.untitledName, fileName);
     }
 
+    if (!fileHandle && typeof nameOverride === "undefined" && isUntitledDocumentName(nextDocumentName, options.untitledName)) {
+      const promptedName = promptForDocumentName(options.untitledName);
+      if (!promptedName) {
+        setStatus("Document save cancelled: enter a document name.", "error");
+        return false;
+      }
+
+      nextDocumentName = promptedName;
+    }
+
     const persistedDocument = options.buildPersistedDocument({
       name: nextDocumentName,
       createdAt: workspace.createdAt || savedAt,
@@ -636,6 +713,7 @@ export function createDocumentWorkspaceController<TDocument>(
       if (fileHandle) {
         await writeDocumentFileText(fileHandle, serializedDocument);
         fileName = fileHandle.name;
+        void writeDocumentFileTextByName(fileName, serializedDocument);
       } else {
         fileName = createSuggestedDocumentFileName(nextDocumentName);
         usedAuthoringRouteFallback = await writeDocumentFileTextByName(fileName, serializedDocument);
@@ -655,6 +733,8 @@ export function createDocumentWorkspaceController<TDocument>(
     workspace.createdAt = workspace.createdAt || savedAt;
     workspace.updatedAt = savedAt;
     workspace.isDirty = false;
+    persistSessionDocumentSnapshot(serializedDocument, fileName ?? null);
+    setLocationDocumentFileName(fileName ?? null);
     notifyWorkspaceChanged();
 
     if (fileHandle) {
@@ -684,7 +764,6 @@ export function createDocumentWorkspaceController<TDocument>(
     } else {
       setStatus(`Saved ${fileName ?? nextDocumentName}.`, "success");
     }
-    persistSessionDocumentSnapshot(serializedDocument, fileName ?? null);
     return true;
   };
 

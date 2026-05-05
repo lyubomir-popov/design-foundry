@@ -4,7 +4,7 @@
   "metadata": {
     "name": "Untitled-document",
     "createdAt": "2026-05-05T13:23:10.969Z",
-    "updatedAt": "2026-05-05T14:45:38.857Z"
+    "updatedAt": "2026-05-05T14:36:05.500Z"
   },
   "project": {
     "sceneFamilyKey": "halo",
@@ -439,9 +439,9 @@
               "contentFieldId": "body_intro",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 3,
+              "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 2,
+              "offsetBaselines": 68,
               "columnSpan": 1
             },
             {
@@ -449,9 +449,9 @@
               "contentFieldId": "detail_primary",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 4,
+              "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 2,
+              "offsetBaselines": 91,
               "columnSpan": 1
             },
             {
@@ -459,9 +459,9 @@
               "contentFieldId": "detail_secondary",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 4,
+              "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 6,
+              "offsetBaselines": 95,
               "columnSpan": 1
             }
           ],
@@ -1362,9 +1362,9 @@
         "color": "#ffffff",
         "echo_color": "#444444",
         "width_px": 3,
-        "echo_marker_stroke_px": 3,
-        "echo_marker_scale_mult": 2.5,
-        "echo_sparse_scale_boost": 1.5,
+        "echo_marker_stroke_px": 2.2,
+        "echo_marker_scale_mult": 3,
+        "echo_sparse_scale_boost": 1,
         "phase_start_width_px": 8,
         "phase_end_width_px": 4,
         "echo_count": 16,
@@ -1623,9 +1623,9 @@
           "color": "#ffffff",
           "echo_color": "#444444",
           "width_px": 3,
-          "echo_marker_stroke_px": 3,
-          "echo_marker_scale_mult": 2.5,
-          "echo_sparse_scale_boost": 1.5,
+          "echo_marker_stroke_px": 2.2,
+          "echo_marker_scale_mult": 3,
+          "echo_sparse_scale_boost": 1,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
