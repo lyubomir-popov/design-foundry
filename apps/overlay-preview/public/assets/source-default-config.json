@@ -1180,7 +1180,7 @@
         "halo_inner_radius_u": 0.255
       },
       "vignette": {
-        "enabled": true,
+        "enabled": false,
         "shape_fade": 1,
         "shape_fade_start": 0.23,
         "shape_fade_end": 0.79
@@ -1311,7 +1311,7 @@
           "halo_inner_radius_u": 0.255
         },
         "vignette": {
-          "enabled": true,
+          "enabled": false,
           "shape_fade": 1,
           "shape_fade_start": 0.23,
           "shape_fade_end": 0.79
@@ -1441,7 +1441,7 @@
           "halo_inner_radius_u": 0.255
         },
         "vignette": {
-          "enabled": true,
+          "enabled": false,
           "shape_fade": 1,
           "shape_fade_start": 0.24,
           "shape_fade_end": 0.88
@@ -1571,7 +1571,7 @@
           "halo_inner_radius_u": 0.255
         },
         "vignette": {
-          "enabled": true,
+          "enabled": false,
           "shape_fade": 1,
           "shape_fade_start": 0.3,
           "shape_fade_end": 0.85
@@ -1701,7 +1701,7 @@
           "halo_inner_radius_u": 0.255
         },
         "vignette": {
-          "enabled": true,
+          "enabled": false,
           "shape_fade": 1,
           "shape_fade_start": 0.3,
           "shape_fade_end": 0.85

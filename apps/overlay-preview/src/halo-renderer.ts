@@ -256,6 +256,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
   }
 
   function getRadialFadeAlpha(radius: number, fullR: number, config: HaloFieldConfig): number {
+    if (config.vignette?.enabled === false) return 1;
     const strength = clamp(config.vignette?.shape_fade ?? 1, 0, 1);
     if (strength <= 0 || fullR <= 0) return 1;
     const startU = clamp(config.vignette?.shape_fade_start ?? 0.3, 0, 1);

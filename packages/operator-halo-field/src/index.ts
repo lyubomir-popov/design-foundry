@@ -311,6 +311,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     // ── Screensaver Toggles ─────────────────────────────────────
     { path: "screensaver.pulse_orbits", label: "Pulse Orbits", kind: "boolean", sectionKey: "toggles" },
     { path: "screensaver.pulse_spokes", label: "Pulse Spokes", kind: "boolean", sectionKey: "toggles" },
+    { path: "vignette.enabled", label: "Construction Fade", kind: "boolean", sectionKey: "toggles" },
     { path: "spoke_text.enabled", label: "Release Labels", kind: "boolean", sectionKey: "toggles" },
 
     // ── Release Labels (conditional) ────────────────────────────
@@ -1149,7 +1150,7 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
       halo_inner_radius_u: 0.255
     },
     vignette: {
-      enabled: true,
+      enabled: false,
       shape_fade: 1,
       shape_fade_start: 0.3,
       shape_fade_end: 0.85
