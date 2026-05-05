@@ -4,6 +4,14 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Halo clearance + construction-fade cleanup (2026-05-05)
+
+- Added `spoke_lines.content_clearance_px` so halo labels and echo markers now share one spoke-edge clearance control instead of drifting under separate radius rules.
+- Switched late-animation echo-marker clearance to the actual rendered marker footprint, preventing sparse-boost and pulse-scaled markers from slipping back inside the clearance band.
+- Refactored halo label placement and marker clearance onto one shared content-band path in `halo-renderer.ts` so future radius work extends one helper path instead of parallel branches.
+- Added the `Construction Fade` toggle, wired the renderer to respect `vignette.enabled`, and changed seeded halo defaults so construction-line fade now starts off by default.
+- Validation: `npm run typecheck`, live preview checks for shared clearance behavior, and a reload check confirming `Construction Fade` is visible and unchecked by default.
+
 ## Document persistence hardening (2026-05-05)
 
 - Fixed saved active-format restore so `project.activeTargetId` remains authoritative when the older compatibility snapshot profile is stale; reopened custom formats now stay active instead of falling back to 1080x1920.

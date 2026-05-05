@@ -13,7 +13,7 @@ It should behave like a simplified Houdini for brand work with a rigorous, InDes
 
 The key product shape is not "Figma for brand design." It is a structured operator app where:
 
-- a document can target one or more output sizes
+- a document can define one or more authored format variants instead of treating sizes only as export targets
 - documents should be real local project files, not only browser-local state
 - source defaults can seed new documents, but authored operator settings and graph wiring belong to the document itself
 - layout stays rigorous and document-driven rather than freeform first
@@ -59,8 +59,8 @@ These are not roadmap stages; they are current code-shape risks worth watching w
 
 | Signal | Severity | Detail |
 |--------|----------|--------|
-| `main.ts` at ~833 lines | Medium | The app is now mostly controllerized, but the composition root still carries DOM query helpers, overlay-visibility glue, and final bootstrap wiring. Keep extracting only where the seam becomes genuinely reusable or clarifying. |
-| `scene-family-preview.ts` at 724 lines | Medium | Graph orchestration is now on the shared runtime, which is correct. Further splitting should happen only if preview-operator wrappers or draw adapters become reusable, not as churn. |
+| `main.ts` at ~1014 lines | Medium | The app is now mostly controllerized, but the composition root still carries DOM query helpers, overlay-visibility glue, and final bootstrap wiring. Keep extracting only where the seam becomes genuinely reusable or clarifying. |
+| `scene-family-preview.ts` at ~818 lines | Medium | Graph orchestration is now on the shared runtime, which is correct. Further splitting should happen only if preview-operator wrappers or draw adapters become reusable, not as churn. |
 
 ## Operator-surface north star
 
@@ -195,6 +195,25 @@ Success criteria:
 
 - the new repo can match current overlay placement and editing behavior closely enough to replace the current architecture for ongoing work
 
+### Stage 1.5. Format-variant authoring refinement
+
+This is the current bridge between closed parity work and broader operatorized scene building.
+
+Goal:
+
+- make the authored-format model honest before broader operatorized scene building resumes
+
+Deliverables:
+
+- stable format ids through output-profile mutation
+- preset-backed versus derived-variant seeding rules
+- compatibility-safe active-format save/load behavior
+- a deliberate decision on same-size authored variants and the timing of any saved-file migration
+
+Success criteria:
+
+- format switching, derivation, and persistence behave like authored layout variants rather than export-target mutation, without forcing a premature saved-file schema break
+
 ### Stage 2. Operatorized scene building
 
 Goal:
@@ -215,11 +234,11 @@ Success criteria:
 - one campaign document can mix structured layout with procedural motion without bespoke glue code, and can swap one scene family for another without rewriting the layout or export path
 - operator outputs can be passed forward as first-order graph payloads rather than being collapsed into preview-only state
 
-### Stage 3. Local document model
+### Stage 3. Local document model maturation
 
 Goal:
 
-- make authored layout state persist as real local documents instead of transient browser state
+- finish hardening the authored layout state and format-variant model as real local documents instead of leaving important behavior in runtime compatibility bridges
 
 Deliverables:
 
