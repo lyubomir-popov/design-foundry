@@ -529,6 +529,50 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     }
   }
 
+  function getEchoMarkerGeometry(
+    variant: EchoMarkerVariant,
+    dotRadiusPx: number,
+    templateRadiusPx: number,
+    geoScale: number,
+    echoMarkerScaleMult: number,
+    echoSparseScaleMult: number
+  ): {
+    variant: EchoMarkerVariant;
+    outerRadiusPx: number;
+    sizePx: number;
+    triangleSidePx: number;
+    dashLengthPx: number;
+  } {
+    const scaleFactor =
+      ECHO_PLUS_SIZE_PX * geoScale *
+      clamp(dotRadiusPx / Math.max(0.0001, templateRadiusPx), 0.25, 4) *
+      echoMarkerScaleMult * echoSparseScaleMult;
+    const triangleSidePx = Math.max(
+      6.4 * geoScale,
+      dotRadiusPx * 3.2 * echoMarkerScaleMult * echoSparseScaleMult
+    );
+    const dashLengthPx = scaleFactor * 0.75;
+
+    let outerRadiusPx = dotRadiusPx;
+    if (variant === "plus" || variant === "diamond" || variant === "star") {
+      outerRadiusPx = scaleFactor * 0.5;
+    } else if (variant === "triangles") {
+      outerRadiusPx = triangleSidePx / Math.sqrt(3);
+    } else if (variant === "radial_dash") {
+      outerRadiusPx = dashLengthPx * 0.5;
+    } else if (variant === "hexagon") {
+      outerRadiusPx = scaleFactor * 1.1 * 0.5;
+    }
+
+    return {
+      variant,
+      outerRadiusPx,
+      sizePx: scaleFactor,
+      triangleSidePx,
+      dashLengthPx
+    };
+  }
+
   // ── fold seam alpha (angle-dependent spoke fade at phase boundary) ──
 
   function getFoldSeamAlpha(angleRad: number, config: HaloFieldConfig): number {
@@ -676,9 +720,6 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         const tmpl = dotTemplates[Math.min(oi, dotTemplates.length - 1)];
         const dotR = spoke.echo_dot_origin_radius + oi * orbitStep;
 
-        // Suppress shapes in the text-label clearance zone
-        if (textClearStartR >= 0 && dotR >= textClearStartR && dotR <= textClearEndR) continue;
-
         const wdx = cx + Math.cos(spoke.angle) * dotR;
         const wdy = cy + Math.sin(spoke.angle) * dotR;
         const clipDist = Math.hypot(
@@ -705,6 +746,29 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         const dotRadiusPx = tmpl.radius_px * cappedMult;
         if (dotRadiusPx <= 0) continue;
 
+        const variant = getEchoMarkerVariant(
+          echoStyle,
+          spoke.source_spoke_id ?? spoke.display_slot_id,
+          oi,
+          config.spoke_lines.echo_shape_seed ?? 0,
+          config.spoke_lines.echo_mix_shape_pct ?? 0.56
+        );
+        const markerGeometry = getEchoMarkerGeometry(
+          variant,
+          dotRadiusPx,
+          tmpl.radius_px,
+          geoScale,
+          echoMarkerScaleMult,
+          echoSparseScaleMult
+        );
+
+        // Suppress shapes whose actual drawn footprint would enter the text-label clearance zone.
+        if (
+          textClearStartR >= 0
+          && dotR + markerGeometry.outerRadiusPx >= textClearStartR
+          && dotR - markerGeometry.outerRadiusPx <= textClearEndR
+        ) continue;
+
         const dotAlpha =
           spokeAlpha *
           (1 - smoothstep(rippleFadeStartU, 1, rippleU)) *
@@ -713,34 +777,20 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         if (dotAlpha <= 0) continue;
 
         // marker beyond the shared spoke-content clearance?
-        if (dotR - dotRadiusPx <= minimumContentStartRadius + 0.01) continue;
-
-        const variant = getEchoMarkerVariant(
-          echoStyle,
-          spoke.source_spoke_id ?? spoke.display_slot_id,
-          oi,
-          config.spoke_lines.echo_shape_seed ?? 0,
-          config.spoke_lines.echo_mix_shape_pct ?? 0.56
-        );
-
-        const scaleFactor =
-          ECHO_PLUS_SIZE_PX * geoScale *
-          clamp(dotRadiusPx / Math.max(0.0001, tmpl.radius_px), 0.25, 4) *
-          echoMarkerScaleMult * echoSparseScaleMult;
+        if (dotR - markerGeometry.outerRadiusPx <= minimumContentStartRadius + 0.01) continue;
 
         if (variant === "plus") {
-          pushPlusMarker(wdx, wdy, scaleFactor, echoMarkerWidthPx, dotAlpha, spoke.angle);
+          pushPlusMarker(wdx, wdy, markerGeometry.sizePx, echoMarkerWidthPx, dotAlpha, spoke.angle);
         } else if (variant === "triangles") {
-          const side = Math.max(6.4 * geoScale, dotRadiusPx * 3.2 * echoMarkerScaleMult * echoSparseScaleMult);
-          pushTriangleMarker(wdx, wdy, side, echoMarkerWidthPx, dotAlpha, spoke.angle + Math.PI);
+          pushTriangleMarker(wdx, wdy, markerGeometry.triangleSidePx, echoMarkerWidthPx, dotAlpha, spoke.angle + Math.PI);
         } else if (variant === "diamond") {
-          pushDiamondMarker(wdx, wdy, scaleFactor, echoMarkerWidthPx, dotAlpha, spoke.angle);
+          pushDiamondMarker(wdx, wdy, markerGeometry.sizePx, echoMarkerWidthPx, dotAlpha, spoke.angle);
         } else if (variant === "radial_dash") {
-          pushRadialDashMarker(wdx, wdy, scaleFactor * 0.75, echoMarkerWidthPx, dotAlpha, spoke.angle);
+          pushRadialDashMarker(wdx, wdy, markerGeometry.dashLengthPx, echoMarkerWidthPx, dotAlpha, spoke.angle);
         } else if (variant === "star") {
-          pushStarMarker(wdx, wdy, scaleFactor, echoMarkerWidthPx, dotAlpha, spoke.angle);
+          pushStarMarker(wdx, wdy, markerGeometry.sizePx, echoMarkerWidthPx, dotAlpha, spoke.angle);
         } else if (variant === "hexagon") {
-          pushHexagonMarker(wdx, wdy, scaleFactor * 1.1, echoMarkerWidthPx, dotAlpha, spoke.angle);
+          pushHexagonMarker(wdx, wdy, markerGeometry.sizePx * 1.1, echoMarkerWidthPx, dotAlpha, spoke.angle);
         } else {
           // "dots"
           layers.haloEchoDots.push(wdx, wdy, dotRadiusPx * 2, dotRadiusPx * 2, dotAlpha);
