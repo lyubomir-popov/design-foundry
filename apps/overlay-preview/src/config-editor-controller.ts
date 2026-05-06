@@ -71,6 +71,11 @@ interface BackgroundConnectionOption {
   label: string;
 }
 
+interface PendingOperatorSectionRestore {
+  preferredSectionKey: string | null;
+  fallbackToFirstSection: boolean;
+}
+
 const OVERLAY_LOGO_LAYER_TOKEN = "overlay:logo";
 
 function getOverlayTextLayerToken(fieldId: string): string {
@@ -80,7 +85,8 @@ function getOverlayTextLayerToken(fieldId: string): string {
 export function createConfigEditorController(deps: ConfigEditorControllerDeps): ConfigEditorController {
   const { state } = deps;
   const configSectionRegistry = createParameterSectionRegistry(deps.sectionDefinitions);
-  let shouldAutoOpenNextOperatorSection = false;
+  let lastOpenOperatorSectionKey: string | null = null;
+  let pendingOperatorSectionRestore: PendingOperatorSectionRestore | null = null;
   let renderedSectionElementsByKey = new Map<string, HTMLElement>();
 
   function getConfigSections(): ParameterSectionDefinition[] {
@@ -219,7 +225,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
             }
 
             deps.setSelectedOperator(node.id);
-            shouldAutoOpenNextOperatorSection = true;
+            queueOperatorSectionRestore();
             deps.markDocumentDirty();
             buildConfigEditor();
             void deps.renderStage();
@@ -278,7 +284,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
         }
 
         deps.setSelectedOperator(node.id);
-        shouldAutoOpenNextOperatorSection = true;
+        queueOperatorSectionRestore();
         deps.markDocumentDirty();
         buildConfigEditor();
         void deps.renderStage();
@@ -299,7 +305,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           }
 
           deps.setSelectedOperator(node.id);
-          shouldAutoOpenNextOperatorSection = true;
+          queueOperatorSectionRestore();
           deps.markDocumentDirty();
           buildConfigEditor();
           void deps.renderStage();
@@ -329,6 +335,38 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     return renderedSections.find((entry) => entry.section.key === key)?.element ?? null;
   }
 
+  function queueOperatorSectionRestore(options?: {
+    preferredSectionKey?: string | null;
+    fallbackToFirstSection?: boolean;
+  }): void {
+    pendingOperatorSectionRestore = {
+      preferredSectionKey: options?.preferredSectionKey ?? lastOpenOperatorSectionKey,
+      fallbackToFirstSection: options?.fallbackToFirstSection ?? true
+    };
+  }
+
+  function trackOperatorAccordionState(accordion: HTMLElement): void {
+    accordion.addEventListener("click", (event) => {
+      const target = (event.target as HTMLElement).closest<HTMLElement>(".bf-accordion-tab");
+      if (!target) {
+        return;
+      }
+
+      const owningAccordion = target.closest<HTMLElement>(".bf-accordion");
+      if (owningAccordion !== accordion) {
+        return;
+      }
+
+      const sectionGroup = target.closest<HTMLElement>("[data-section-key]");
+      if (!sectionGroup) {
+        return;
+      }
+
+      const isOpen = target.getAttribute("aria-expanded") === "true";
+      lastOpenOperatorSectionKey = isOpen ? null : sectionGroup.dataset.sectionKey ?? null;
+    });
+  }
+
   function selectionsMatch(left: Selection | null, right: Selection | null): boolean {
     return left?.kind === right?.kind && left?.id === right?.id;
   }
@@ -356,7 +394,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
       return;
     }
 
-    shouldAutoOpenNextOperatorSection = true;
+    queueOperatorSectionRestore();
     deps.selectOverlayItem(selection);
   }
 
@@ -405,7 +443,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           ...state.documentProject,
           sceneFamilyKey: sceneFamilyKey as OverlaySceneFamilyKey
         };
-        shouldAutoOpenNextOperatorSection = true;
+        queueOperatorSectionRestore();
         deps.syncDocumentBackgroundGraph();
         deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
         deps.markDocumentDirty();
@@ -455,7 +493,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           return;
         }
 
-        shouldAutoOpenNextOperatorSection = true;
+        queueOperatorSectionRestore();
         buildConfigEditor();
       });
 
@@ -487,7 +525,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           }
 
           deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
-          shouldAutoOpenNextOperatorSection = true;
+          queueOperatorSectionRestore();
           deps.markDocumentDirty();
           buildConfigEditor();
           void deps.renderStage();
@@ -522,7 +560,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
         }
 
         deps.setSelectedOperator(nextNodeId);
-        shouldAutoOpenNextOperatorSection = true;
+        queueOperatorSectionRestore();
         deps.markDocumentDirty();
         buildConfigEditor();
         void deps.renderStage();
@@ -656,6 +694,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
 
     tab.setAttribute("aria-expanded", "true");
     panel.setAttribute("aria-hidden", "false");
+    lastOpenOperatorSectionKey = group?.dataset.sectionKey ?? null;
     return true;
   }
 
@@ -707,9 +746,8 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
       return;
     }
 
-    const expandedTab = container.querySelector<HTMLElement>('.bf-accordion-tab[aria-expanded="true"]');
-    const expandedGroup = expandedTab?.closest<HTMLElement>("[data-section-key]");
-    const previouslyOpenKey = expandedGroup?.dataset.sectionKey ?? null;
+    const preferredOpenSectionKey = pendingOperatorSectionRestore?.preferredSectionKey ?? lastOpenOperatorSectionKey;
+    const fallbackToFirstSection = pendingOperatorSectionRestore?.fallbackToFirstSection ?? false;
 
     container.innerHTML = "";
 
@@ -771,28 +809,24 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           operatorAccordion
         )
       );
+      trackOperatorAccordionState(operatorAccordion);
       setupAccordion(operatorAccordion);
     }
 
     initRangeControls({ root: container });
 
     let restoredSection = false;
-    if (shouldAutoOpenNextOperatorSection) {
-      if (previouslyOpenKey && selectedOperatorSections.some((section) => section.key === previouslyOpenKey)) {
-        const targetGroup = findRenderedSection(renderedSections, previouslyOpenKey);
-        restoredSection = openAccordionSection(targetGroup);
-      }
-
-      if (!restoredSection) {
-        const firstOperatorSection = findRenderedSection(renderedSections, selectedOperatorSections[0]?.key ?? null);
-        restoredSection = openAccordionSection(firstOperatorSection);
-      }
-    } else if (previouslyOpenKey) {
-      const targetGroup = findRenderedSection(renderedSections, previouslyOpenKey);
+    if (preferredOpenSectionKey && selectedOperatorSections.some((section) => section.key === preferredOpenSectionKey)) {
+      const targetGroup = findRenderedSection(renderedSections, preferredOpenSectionKey);
       restoredSection = openAccordionSection(targetGroup);
     }
 
-    shouldAutoOpenNextOperatorSection = false;
+    if (!restoredSection && fallbackToFirstSection) {
+      const firstOperatorSection = findRenderedSection(renderedSections, selectedOperatorSections[0]?.key ?? null);
+      restoredSection = openAccordionSection(firstOperatorSection);
+    }
+
+    pendingOperatorSectionRestore = null;
 
     const activeSections = [...shellSections, ...selectedOperatorSections];
     for (const section of activeSections) {
