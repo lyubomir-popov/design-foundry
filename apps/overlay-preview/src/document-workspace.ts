@@ -125,12 +125,11 @@ function resolveDocumentNameFromWorkspace(
   untitledName: string,
   fileName: string | null
 ): string {
-  const normalizedName = normalizeDocumentName(rawName, untitledName);
-  if (!isUntitledDocumentName(normalizedName, untitledName) || !fileName) {
-    return normalizedName;
+  if (fileName) {
+    return deriveDocumentNameFromFileName(fileName);
   }
 
-  return deriveDocumentNameFromFileName(fileName);
+  return normalizeDocumentName(rawName, untitledName);
 }
 
 function promptForDocumentName(untitledName: string): string | null {

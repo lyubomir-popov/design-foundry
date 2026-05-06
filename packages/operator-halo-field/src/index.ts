@@ -151,6 +151,7 @@ export interface HaloFieldConfig {
     echo_marker_stroke_px: number;
     echo_marker_scale_mult: number;
     echo_sparse_scale_boost: number;
+    echo_spacing_offset_px: number;
     phase_start_width_px: number;
     phase_end_width_px: number;
     start_radius_px: number;
@@ -261,6 +262,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { path: "spoke_lines.echo_marker_stroke_px", label: "Echo Stroke", kind: "slider", sectionKey: "echoDetails", min: 0, max: 12, step: 0.5 },
     { path: "spoke_lines.echo_marker_scale_mult", label: "Echo Scale", kind: "slider", sectionKey: "echoDetails", min: 0.1, max: 6, step: 0.1 },
     { path: "spoke_lines.echo_sparse_scale_boost", label: "Sparse Boost", kind: "slider", sectionKey: "echoDetails", min: 0, max: 6, step: 0.1 },
+    { path: "spoke_lines.echo_spacing_offset_px", label: "Echo Gap", kind: "slider", sectionKey: "echoDetails", min: 0, max: 64, step: 0.5 },
 
     // ── Echo Pattern ────────────────────────────────────────────
     { path: "spoke_lines.echo_shape_seed", label: "Shape Seed", kind: "number", sectionKey: "echoPattern", min: 0, max: 9999, step: 1 },
@@ -1115,6 +1117,7 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
       echo_marker_stroke_px: 2.2,
       echo_marker_scale_mult: 1.5,
       echo_sparse_scale_boost: 0.5,
+      echo_spacing_offset_px: 0,
       phase_start_width_px: 8,
       phase_end_width_px: 4,
       echo_count: 16,

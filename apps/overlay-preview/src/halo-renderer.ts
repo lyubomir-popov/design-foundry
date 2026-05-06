@@ -631,6 +631,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       0.5 * geoScale,
       Math.max(0, config.spoke_lines.echo_marker_stroke_px ?? config.spoke_lines.width_px ?? 0) * geoScale
     );
+    const echoSpacingOffsetPx = Math.max(0, config.spoke_lines.echo_spacing_offset_px ?? 0) * geoScale;
     const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
     const rippleMinScale = 0.45;
     const rippleMaxScale = 1.55;
@@ -696,6 +697,8 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         (fullFrameR - spoke.echo_dot_origin_radius) / orbitStep
       );
       const rippleSpan = Math.max(1, fullFrameR - spoke.echo_dot_origin_radius);
+      let lastPlacedMarkerCenterR = Number.NEGATIVE_INFINITY;
+      let lastPlacedMarkerOuterRadiusPx = 0;
 
       for (let oi = 0; oi <= maxOrbitIdx; oi++) {
         const tmpl = dotTemplates[Math.min(oi, dotTemplates.length - 1)];
@@ -759,6 +762,15 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
 
         // marker beyond the shared spoke-content clearance?
         if (dotR - markerGeometry.outerRadiusPx <= minimumContentStartRadius + 0.01) continue;
+
+        if (Number.isFinite(lastPlacedMarkerCenterR)) {
+          const minimumMarkerGapPx =
+            lastPlacedMarkerOuterRadiusPx + markerGeometry.outerRadiusPx + echoSpacingOffsetPx;
+          if (dotR - lastPlacedMarkerCenterR <= minimumMarkerGapPx - 0.01) continue;
+        }
+
+        lastPlacedMarkerCenterR = dotR;
+        lastPlacedMarkerOuterRadiusPx = markerGeometry.outerRadiusPx;
 
         if (variant === "plus") {
           pushPlusMarker(wdx, wdy, markerGeometry.sizePx, echoMarkerWidthPx, dotAlpha, spoke.angle);
@@ -827,17 +839,13 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     const cx = config.composition.center_x_px;
     const cy = config.composition.center_y_px;
     const originRadius = Math.max(0, spoke?.echo_dot_origin_radius ?? haloOuterR);
-    const maxOrbitCount = Math.max(1, Math.round(config.generator_wrangle.num_orbits || 1));
-    const currentOrbitStepPx = Math.max(0, spoke?.echo_dot_step_px ?? 0);
-    const baseOrbitStepPx = maxOrbitCount <= 1
-      ? 0
-      : Math.max(0, (fullFrameR - originRadius) / (maxOrbitCount - 1));
+    const configuredOrbitCount = Math.max(1, Math.round(config.generator_wrangle.num_orbits || 1));
     const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
     const contentClearancePx = Math.max(0, config.spoke_lines.content_clearance_px ?? 0);
-    const baseStartRadius = lerp(minimumContentStartRadius, fullFrameR, radialU);
-    const pulsedOrbitIndex = baseOrbitStepPx <= 0
+    const stableOrbitStepPx = configuredOrbitCount <= 1
       ? 0
-      : Math.max(0, (baseStartRadius - originRadius) / baseOrbitStepPx);
+      : Math.max(0, (fullFrameR - originRadius) / (configuredOrbitCount - 1));
+    const baseStartRadius = minimumContentStartRadius + stableOrbitStepPx * radialU;
     const thickSegment = spoke
       ? getWorldRayCircleSegment(
           cx, cy, spoke.angle,
@@ -851,9 +859,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       : haloOuterR;
     const startRadius = clamp(
       Math.max(
-        currentOrbitStepPx > 0
-          ? originRadius + pulsedOrbitIndex * currentOrbitStepPx
-          : baseStartRadius,
+        baseStartRadius,
         thickSegmentEndR + contentClearancePx
       ),
       minimumContentStartRadius,
