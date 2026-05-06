@@ -633,6 +633,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     );
     const echoSpacingOffsetPx = Math.max(0, config.spoke_lines.echo_spacing_offset_px ?? 0) * geoScale;
     const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
+    const minimumMarkerStartRadius = minimumContentStartRadius + echoSpacingOffsetPx;
     const rippleMinScale = 0.45;
     const rippleMaxScale = 1.55;
     const rippleFadeStartU = lerp(0.2, 0.85, echoFadeMult);
@@ -761,7 +762,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
         if (dotAlpha <= 0) continue;
 
         // marker beyond the shared spoke-content clearance?
-        if (dotR - markerGeometry.outerRadiusPx <= minimumContentStartRadius + 0.01) continue;
+        if (dotR - markerGeometry.outerRadiusPx <= minimumMarkerStartRadius + 0.01) continue;
 
         if (Number.isFinite(lastPlacedMarkerCenterR)) {
           const minimumMarkerGapPx =
@@ -836,32 +837,14 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     radialU: number,
     config: HaloFieldConfig
   ): ContentBandMetrics {
-    const cx = config.composition.center_x_px;
-    const cy = config.composition.center_y_px;
     const originRadius = Math.max(0, spoke?.echo_dot_origin_radius ?? haloOuterR);
     const configuredOrbitCount = Math.max(1, Math.round(config.generator_wrangle.num_orbits || 1));
     const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
-    const contentClearancePx = Math.max(0, config.spoke_lines.content_clearance_px ?? 0);
     const stableOrbitStepPx = configuredOrbitCount <= 1
       ? 0
       : Math.max(0, (fullFrameR - originRadius) / (configuredOrbitCount - 1));
-    const baseStartRadius = minimumContentStartRadius + stableOrbitStepPx * radialU;
-    const thickSegment = spoke
-      ? getWorldRayCircleSegment(
-          cx, cy, spoke.angle,
-          spoke.inner_clip_center_x_px, spoke.inner_clip_center_y_px,
-          spoke.phase_clip_radius_px ?? spoke.phase_field_radius_px,
-          spoke.start_radius, haloOuterR
-        )
-      : null;
-    const thickSegmentEndR = thickSegment
-      ? Math.hypot(thickSegment.end_x - cx, thickSegment.end_y - cy)
-      : haloOuterR;
     const startRadius = clamp(
-      Math.max(
-        baseStartRadius,
-        thickSegmentEndR + contentClearancePx
-      ),
+      minimumContentStartRadius + stableOrbitStepPx * radialU,
       minimumContentStartRadius,
       fullFrameR
     );
