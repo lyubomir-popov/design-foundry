@@ -170,7 +170,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
   const textCtx = textOverlayCanvas.getContext("2d")!;
 
   // Scene state — rebuilt when config changes
-  let cachedConfigJSON = "";
+  let cachedConfigFingerprint = "";
   let introField: IntroFieldState | null = null;
   let runtimePoints: RuntimePoint[] = [];
   let lastSceneDescriptor: UbuntuSummitAnimationSceneDescriptor | null = null;
@@ -216,11 +216,11 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
   function ensureSceneData(
     config: HaloFieldConfig,
     mascotBox: MascotBox | null,
-    runtimeTiming: RuntimeTiming
+    runtimeTiming: RuntimeTiming,
+    configFingerprint: string
   ) {
-    const key = JSON.stringify(config);
-    if (key !== cachedConfigJSON) {
-      cachedConfigJSON = key;
+    if (configFingerprint !== cachedConfigFingerprint) {
+      cachedConfigFingerprint = configFingerprint;
       introField = buildIntroHaloFieldState(config, mascotBox);
       runtimePoints = buildRuntimePoints(config, introField, runtimeTiming);
     }
@@ -1107,8 +1107,13 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     }
 
     // Rebuild scene data when config changes
-    ensureSceneData(config, mascotBox, sceneDescriptor.runtimeTiming);
-  ensureMascotAssetsLoaded();
+    ensureSceneData(
+      config,
+      mascotBox,
+      sceneDescriptor.runtimeTiming,
+      sceneDescriptor.frameState.nextTransitionState.configFingerprint
+    );
+    ensureMascotAssetsLoaded();
 
     const fullFrameR = frameState.fullFrameOuterRadiusPx;
     const screensaverFieldState = frameState.screensaverFieldState;
