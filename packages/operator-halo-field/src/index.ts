@@ -356,7 +356,6 @@ export interface Spoke {
   width_phase_u?: number;
   seam_overlay_only?: boolean;
   start_radius: number;
-  end_radius: number;
   echo_dot_origin_radius: number;
   echo_dot_step_px: number;
   echo_dots: EchoDot[];
@@ -719,7 +718,6 @@ export function buildIntroHaloFieldState(
       angle,
       phase_u: ps.fill_u,
       start_radius: spokeLineStartRadiusPx,
-      end_radius: ctx.outer_radius_px + config.spoke_lines.end_radius_extra_px * ctx.geometry_scale,
       echo_dot_origin_radius: ctx.inner_radius_px,
       echo_dot_step_px: orbitStepPx,
       echo_dots: sp.echo_dots,
@@ -841,7 +839,6 @@ export function buildPostFinaleHaloFieldState(opts: {
       width_phase_u: wpu,
       seam_overlay_only: false,
       start_radius: spokeLineStartRadiusPx,
-      end_radius: ctx.outer_radius_px + config.spoke_lines.end_radius_extra_px * ctx.geometry_scale,
       echo_dot_origin_radius: ctx.inner_radius_px,
       echo_dot_step_px: orbitStepPx,
       echo_dots: sp.echo_dots,

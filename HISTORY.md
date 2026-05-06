@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Halo runtime ballast cleanup — Q3a (2026-05-06)
+
+- Removed the unused derived `Spoke.end_radius` field from the halo runtime shape in `packages/operator-halo-field`, since the live `End Radius Extra` control is retired and the renderer no longer consumes that value.
+- Left `spoke_lines.end_radius_extra_px` in the saved config shape for compatibility, making the remaining migration question explicit instead of leaving dead runtime ballast in the active field model.
+- Validation: `npm run typecheck`.
+
 ## Halo radius cleanup — Q2 (2026-05-06)
 
 - Renamed the remaining live halo envelope controls to `Orbit Inner Radius` and `Halo Outer Radius`, moved `Spoke Line Start` into `Spoke Details`, and simplified the `Angles` section so the inspector now matches the actual geometry owners instead of reading like four competing radius knobs.
