@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane R first slices — text-style rail updates + animation fingerprint memoization (2026-05-06)
+
+- Removed full Parameters-rail rebuilds from selected text-style edits in `apps/overlay-preview/src/overlay-section.ts`; font size, line height, and weight now update the local style-card metadata in place and keep the live section DOM connected during committed edits.
+- Memoized halo-config fingerprints by config object identity in `packages/operator-ubuntu-summit-animation/src/index.ts`, so stable playback no longer re-serializes the full halo config every frame just to compare transition-state compatibility.
+- Validation: `npm run typecheck`, live overlay-pane edit check confirming the existing Font Size input stayed connected after change and the style card metadata updated in place, and live automation state check confirming the animation builder still returns a valid scene descriptor at `playback_time_sec = 2.01`.
+
 ## Halo saved-shape cleanup — Q3b (2026-05-06)
 
 - Removed `spoke_lines.end_radius_extra_px` from the halo config type and seeded defaults in `packages/operator-halo-field`, so the dead end-radius value no longer exists in either the live schema or newly created halo configs.

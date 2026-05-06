@@ -56,6 +56,8 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 - Halo label placement and marker clearance now route through one shared content-band path in the renderer instead of duplicating spoke-slot lookup, label font sizing, and radial-band math in separate branches. The remaining halo cleanup should extend that shared path rather than reintroducing parallel radius rules.
 - Halo content-base follow-up is in progress: release labels now pin to the shared authored content base instead of riding the orbit-step offset, the `Label Position` control is gone from the live inspector, and the remaining content controls now live together under `Spoke Content` so the fixed base, first-echo gap, and label size are configured from one surface.
 - The remaining radius surface is now narrower and less misleading: `Orbit Inner Radius` and `Halo Outer Radius` expose the orbit/halo envelope, `Spoke Line Start` now reflects the visual spoke-line inset and is clamped to the halo edge at runtime, and the dead live `End Radius Extra` control is gone from both the runtime and saved halo shape.
+- Selected text-style edits in the overlay pane now keep the live section DOM and update their style-card metadata locally instead of forcing a full Parameters-rail rebuild on each committed change.
+- The Ubuntu Summit animation builder now memoizes halo-config fingerprints by object identity, so stable playback no longer re-serializes the full halo config every frame just to decide whether transition state can be reused.
 - Construction-line fade now has a real UI toggle: the halo config panel exposes `vignette.enabled` as `Construction Fade`, the renderer respects that flag instead of always applying the radial vignette to the background spoke layer, and the seeded halo defaults now start with that fade off.
 - The current save/load path still persists the open document's concrete target rows in `project.targets`, but the product direction has shifted again: the user-facing model should be Adobe-like authored format variants with InDesign-style auto-adjust or derivation, seeded by a global document-size preset library. Named export presets should still move onto the future Houdini-like output operator instead of staying in the Formats dialog or source-default modal flows.
 - The shell uses the canonical `baseline-foundry` dark application, overlay, and resize contracts. The old local shell class layer is gone from source. The preview currently imports the valid exported `baseline-foundry/presets/app-tier.css` preset because the sibling repo's exported `presets/panel.css` artifact is malformed.
@@ -63,13 +65,14 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 
 ## Active queue
 
-Lane P is active. Lane Q is complete and archived in `HISTORY.md`.
+Lane R is active. Lane P is paused while the editor and animation hot paths are stabilized.
 
 - Lane M is complete: network overlay, deterministic autolayout, selection, composition seam, and named output sinks are all in place.
 - Lane N is complete: Layers-palette graph CRUD now covers add-node, connect, disconnect, shared typed-port validation, and synchronized parameter-pane focus.
 - Lane O is paused after O1-O3, with zoom and pan work deferred until there is a concrete need.
-- Lane P is active after P5a and P5b. Live format identity no longer mutates with the output profile key, and the in-memory preview runtime now keys authored buckets by document format id while the save/load bridge still preserves the older profile-keyed snapshot shape.
+- Lane P is paused after P5a and P5b while Lane R lands the current editor and animation debt fixes. Live format identity no longer mutates with the output profile key, and the in-memory preview runtime now keys authored buckets by document format id while the save/load bridge still preserves the older profile-keyed snapshot shape.
 - Lane Q is complete: Q1, Q2, Q3a, and Q3b are archived in `HISTORY.md`. The halo content-base and radius cleanup no longer carries runtime or saved-shape ballast for `end_radius_extra_px`.
+- Lane R is active: the first overlay text-style and animation-fingerprint slices are landed, and the next work is to remove remaining rebuild-heavy edit paths and cache repeated halo label measurement.
 - Future format work should follow the new hybrid rule: global presets seed authored format variants, variant derivation should carry a useful first-guess layout across dimensions, and export presets belong on the future output operator.
 - Content-format as a user-facing concept is retired. The document authoring model replaces it, with Adobe-like format variants on top of the Houdini-like operator core. See `ROADMAP.md` → "Document/project model — Adobe-style variants over a Houdini core" for the full synthesis.
 

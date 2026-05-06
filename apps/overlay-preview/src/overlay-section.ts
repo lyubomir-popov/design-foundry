@@ -33,6 +33,18 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     const field = ctx.getSelectedTextField();
     if (!field) return root;
     const selectedStyle = state.params.textStyles.find((style) => style.key === field.styleKey);
+    const styleMetaByKey = new Map<string, HTMLElement>();
+
+    function syncStylePaletteMeta(): void {
+      for (const style of state.params.textStyles) {
+        const meta = styleMetaByKey.get(style.key);
+        if (!meta) {
+          continue;
+        }
+
+        meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
+      }
+    }
 
     const metadataFields = document.createElement("div");
     metadataFields.className = "bf-grid";
@@ -88,6 +100,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       const meta = document.createElement("span");
       meta.className = "bf-option-card-meta";
       meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
+      styleMetaByKey.set(style.key, meta);
 
       button.append(label, meta);
       stylePalette.append(button);
@@ -106,7 +119,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
             ctx.syncLogoToTitleFontSize(value);
           }
           ctx.markDocumentDirty();
-          ctx.buildConfigEditor();
+          syncStylePaletteMeta();
           void ctx.renderStage();
         })
       )));
@@ -115,7 +128,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
         createNumberInput(selectedStyle.lineHeightPx, { min: 1, max: 512, step: 1 }, (value) => {
           ctx.updateTextStyle(selectedStyle.key, (style) => ({ ...style, lineHeightPx: value }));
           ctx.markDocumentDirty();
-          ctx.buildConfigEditor();
+          syncStylePaletteMeta();
           void ctx.renderStage();
         })
       )));
@@ -124,7 +137,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
         createNumberInput(selectedStyle.fontWeight ?? 400, { min: 100, max: 900, step: 100 }, (value) => {
           ctx.updateTextStyle(selectedStyle.key, (style) => ({ ...style, fontWeight: value }));
           ctx.markDocumentDirty();
-          ctx.buildConfigEditor();
+          syncStylePaletteMeta();
           void ctx.renderStage();
         })
       )));

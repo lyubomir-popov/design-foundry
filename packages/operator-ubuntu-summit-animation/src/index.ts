@@ -120,6 +120,19 @@ export interface UbuntuSummitAnimationFrameState {
   nextTransitionState: UbuntuSummitAnimationTransitionState;
 }
 
+const haloConfigFingerprintCache = new WeakMap<HaloFieldConfig, string>();
+
+function getHaloConfigFingerprint(config: HaloFieldConfig): string {
+  const cachedFingerprint = haloConfigFingerprintCache.get(config);
+  if (cachedFingerprint) {
+    return cachedFingerprint;
+  }
+
+  const nextFingerprint = JSON.stringify(config);
+  haloConfigFingerprintCache.set(config, nextFingerprint);
+  return nextFingerprint;
+}
+
 export interface UbuntuSummitAnimationSceneDescriptor {
   family: "ubuntu-summit-animation";
   playbackTimeSec: number;
@@ -625,7 +638,7 @@ export function buildUbuntuSummitAnimationSceneDescriptor(
     effectivePlaybackTimeSec,
     screensaverStartTimeSec
   );
-  const configFingerprint = JSON.stringify(params.haloConfig);
+  const configFingerprint = getHaloConfigFingerprint(params.haloConfig);
   const previousTransitionState = params.previousTransitionState?.configFingerprint === configFingerprint
     ? params.previousTransitionState
     : createEmptyTransitionState(configFingerprint);

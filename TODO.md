@@ -33,13 +33,13 @@ Status: Paused after O1-O3. The shell follow-up did its job; O4/O5 stay deferred
 
 Goal: Pay down the concrete iterative-work risks uncovered in the fresh-eyes audit before adding more control surface or format behavior.
 
-Status: Newly active. Priority order is driven by real user-facing cost, not cleanup aesthetics.
+Status: Active and in progress. The first UI and animation slices are landed: selected text-style edits no longer rebuild the entire Parameters rail, and the animation builder now memoizes halo-config fingerprints instead of serializing the whole config every frame.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| R1 | Next | Stop full Parameters-rail teardown on routine grid, overlay, and layer edits. Prefer incremental sync or explicit local rebuild boundaries instead of `buildConfigEditor()` on normal field changes. |
+| R1 | In Progress | Selected text-style edits now keep the live section DOM and update style-card metadata locally instead of tearing down the whole Parameters rail. Next: remove the same rebuild pattern from grid, logo, and layer-edit paths that still call `buildConfigEditor()` for ordinary edits. |
 | R2 | Next | Replace hidden parameter-pane open-state side effects such as `shouldAutoOpenNextOperatorSection` with explicit, inspectable controller state. |
-| R3 | Next | Remove hot-path animation waste: stop per-frame halo-config serialization and cache repeated label text measurement where the render path currently remeasures each frame. |
+| R3 | In Progress | Halo-config fingerprints are now memoized by config object identity so stable playback no longer stringifies the full config every frame. Next: cache repeated label text measurement in the halo renderer. |
 | R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
 
 ### Lane P — Format variants and preset groundwork
@@ -54,7 +54,8 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 ## Immediate Next Steps
 
-- Land the first Lane R slice by removing unnecessary full inspector rebuilds from the hottest edit paths.
+- Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining hot edit paths after the selected text-style slice.
+- Continue Lane R3 by caching repeated halo label text measurement in the render path.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
