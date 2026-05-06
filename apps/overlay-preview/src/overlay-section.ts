@@ -32,8 +32,21 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
   if (state.selected.kind === "text") {
     const field = ctx.getSelectedTextField();
     if (!field) return root;
-    const selectedStyle = state.params.textStyles.find((style) => style.key === field.styleKey);
+    const fieldId = field.id;
     const styleMetaByKey = new Map<string, HTMLElement>();
+    const styleCardByKey = new Map<string, HTMLButtonElement>();
+    let fontSizeInput: HTMLInputElement | null = null;
+    let lineHeightInput: HTMLInputElement | null = null;
+    let fontWeightInput: HTMLInputElement | null = null;
+
+    function getCurrentSelectedStyle() {
+      const currentField = state.params.textFields.find((candidate) => candidate.id === fieldId);
+      if (!currentField) {
+        return null;
+      }
+
+      return state.params.textStyles.find((style) => style.key === currentField.styleKey) ?? null;
+    }
 
     function syncStylePaletteMeta(): void {
       for (const style of state.params.textStyles) {
@@ -44,6 +57,38 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
 
         meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
       }
+    }
+
+    function syncStylePaletteSelection(): void {
+      const activeStyleKey = getCurrentSelectedStyle()?.key;
+      for (const [styleKey, button] of styleCardByKey) {
+        const isActive = styleKey === activeStyleKey;
+        button.disabled = isActive;
+        button.classList.toggle("is-active", isActive);
+      }
+    }
+
+    function syncSelectedStyleInputs(): void {
+      const currentStyle = getCurrentSelectedStyle();
+      if (!currentStyle) {
+        return;
+      }
+
+      if (fontSizeInput) {
+        fontSizeInput.value = String(currentStyle.fontSizePx);
+      }
+      if (lineHeightInput) {
+        lineHeightInput.value = String(currentStyle.lineHeightPx);
+      }
+      if (fontWeightInput) {
+        fontWeightInput.value = String(currentStyle.fontWeight ?? 400);
+      }
+    }
+
+    function syncTextStyleUi(): void {
+      syncStylePaletteMeta();
+      syncStylePaletteSelection();
+      syncSelectedStyleInputs();
     }
 
     const metadataFields = document.createElement("div");
@@ -91,6 +136,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       }
       button.addEventListener("click", () => {
         ctx.applySelectedTextStyle(style.key);
+        syncTextStyleUi();
       });
 
       const label = document.createElement("span");
@@ -100,6 +146,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       const meta = document.createElement("span");
       meta.className = "bf-option-card-meta";
       meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
+      styleCardByKey.set(style.key, button);
       styleMetaByKey.set(style.key, meta);
 
       button.append(label, meta);
@@ -108,41 +155,64 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
 
     body.append(stylePalette);
 
+    const selectedStyle = getCurrentSelectedStyle();
     if (selectedStyle) {
       const styleGrid = document.createElement("div");
       styleGrid.className = "bf-grid";
 
+      fontSizeInput = createNumberInput(selectedStyle.fontSizePx, { min: 1, max: 512, step: 1 }, (value) => {
+        const currentStyle = getCurrentSelectedStyle();
+        if (!currentStyle) {
+          return;
+        }
+
+        ctx.updateTextStyle(currentStyle.key, (style) => ({ ...style, fontSizePx: value }));
+        if (currentStyle.key === "title" && state.params.logo?.linkTitleSizeToHeight !== false) {
+          ctx.syncLogoToTitleFontSize(value);
+        }
+        ctx.markDocumentDirty();
+        syncTextStyleUi();
+        void ctx.renderStage();
+      });
+
       styleGrid.append(wrapCol(1, createFormGroup("Font Size",
-        createNumberInput(selectedStyle.fontSizePx, { min: 1, max: 512, step: 1 }, (value) => {
-          ctx.updateTextStyle(selectedStyle.key, (style) => ({ ...style, fontSizePx: value }));
-          if (selectedStyle.key === "title" && state.params.logo?.linkTitleSizeToHeight !== false) {
-            ctx.syncLogoToTitleFontSize(value);
-          }
-          ctx.markDocumentDirty();
-          syncStylePaletteMeta();
-          void ctx.renderStage();
-        })
+        fontSizeInput
       )));
+
+      lineHeightInput = createNumberInput(selectedStyle.lineHeightPx, { min: 1, max: 512, step: 1 }, (value) => {
+        const currentStyle = getCurrentSelectedStyle();
+        if (!currentStyle) {
+          return;
+        }
+
+        ctx.updateTextStyle(currentStyle.key, (style) => ({ ...style, lineHeightPx: value }));
+        ctx.markDocumentDirty();
+        syncTextStyleUi();
+        void ctx.renderStage();
+      });
 
       styleGrid.append(wrapCol(1, createFormGroup("Line Height",
-        createNumberInput(selectedStyle.lineHeightPx, { min: 1, max: 512, step: 1 }, (value) => {
-          ctx.updateTextStyle(selectedStyle.key, (style) => ({ ...style, lineHeightPx: value }));
-          ctx.markDocumentDirty();
-          syncStylePaletteMeta();
-          void ctx.renderStage();
-        })
+        lineHeightInput
       )));
 
+      fontWeightInput = createNumberInput(selectedStyle.fontWeight ?? 400, { min: 100, max: 900, step: 100 }, (value) => {
+        const currentStyle = getCurrentSelectedStyle();
+        if (!currentStyle) {
+          return;
+        }
+
+        ctx.updateTextStyle(currentStyle.key, (style) => ({ ...style, fontWeight: value }));
+        ctx.markDocumentDirty();
+        syncTextStyleUi();
+        void ctx.renderStage();
+      });
+
       styleGrid.append(wrapCol(1, createFormGroup("Weight",
-        createNumberInput(selectedStyle.fontWeight ?? 400, { min: 100, max: 900, step: 100 }, (value) => {
-          ctx.updateTextStyle(selectedStyle.key, (style) => ({ ...style, fontWeight: value }));
-          ctx.markDocumentDirty();
-          syncStylePaletteMeta();
-          void ctx.renderStage();
-        })
+        fontWeightInput
       )));
 
       body.append(styleGrid);
+      syncTextStyleUi();
     }
 
     const grid = document.createElement("div");

@@ -152,7 +152,6 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
 
     updateTextField(selectedField.id, (field) => ({ ...field, styleKey }));
     deps.markDocumentDirty();
-    deps.buildConfigEditor();
     void deps.renderStage();
   }
 
