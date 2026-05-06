@@ -54,6 +54,7 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 - Halo labels and echo markers now share one spoke-edge clearance control: `spoke_lines.content_clearance_px` lives beside the spoke geometry sliders, defaults to `24`, and sets the minimum outer radius for both labels and halo markers from the longest thick-spoke edge instead of making text and shapes drift under separate radius rules.
 - Echo-marker clearance now uses the actual rendered marker footprint during late animation, not just the template dot radius, so sparse-boost and pulse-scaled plus/triangle/star/hexagon variants no longer slip inward across the shared clearance boundary near the end of the cycle.
 - Halo label placement and marker clearance now route through one shared content-band path in the renderer instead of duplicating spoke-slot lookup, label font sizing, and radial-band math in separate branches. The remaining halo cleanup should extend that shared path rather than reintroducing parallel radius rules.
+- Halo content-base follow-up is in progress: release labels now pin to the shared authored content base instead of riding the orbit-step offset, the `Label Position` control is gone from the live inspector, and the remaining content controls now live together under `Spoke Content` so the fixed base, first-echo gap, and label size are configured from one surface.
 - Construction-line fade now has a real UI toggle: the halo config panel exposes `vignette.enabled` as `Construction Fade`, the renderer respects that flag instead of always applying the radial vignette to the background spoke layer, and the seeded halo defaults now start with that fade off.
 - The current save/load path still persists the open document's concrete target rows in `project.targets`, but the product direction has shifted again: the user-facing model should be Adobe-like authored format variants with InDesign-style auto-adjust or derivation, seeded by a global document-size preset library. Named export presets should still move onto the future Houdini-like output operator instead of staying in the Formats dialog or source-default modal flows.
 - The shell uses the canonical `baseline-foundry` dark application, overlay, and resize contracts. The old local shell class layer is gone from source. The preview currently imports the valid exported `baseline-foundry/presets/app-tier.css` preset because the sibling repo's exported `presets/panel.css` artifact is malformed.
@@ -61,13 +62,13 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 
 ## Active queue
 
-Lane P is active.
+Lane Q is active. Lane P is paused while the halo content-base cleanup is still settling.
 
 - Lane M is complete: network overlay, deterministic autolayout, selection, composition seam, and named output sinks are all in place.
 - Lane N is complete: Layers-palette graph CRUD now covers add-node, connect, disconnect, shared typed-port validation, and synchronized parameter-pane focus.
 - Lane O is paused after O1-O3, with zoom and pan work deferred until there is a concrete need.
-- Lane P is active: P5a and P5b are landed. Live format identity no longer mutates with the output profile key, and the in-memory preview runtime now keys authored buckets by document format id while the save/load bridge still preserves the older profile-keyed snapshot shape.
-- Next for Lane P: decide how far to push authored same-size variants before touching the persisted schema, because the runtime can now support that distinction but persisted snapshots still normalize through output-profile compatibility keys.
+- Lane P is paused after P5a and P5b. Live format identity no longer mutates with the output profile key, and the in-memory preview runtime now keys authored buckets by document format id while the save/load bridge still preserves the older profile-keyed snapshot shape.
+- Lane Q is active: Q1 is landed and archived in `HISTORY.md`. Next for Q is to pressure-test the remaining halo radii surface against the current breathing cycle and collapse any still-overlapping controls without changing the current pulse look.
 - Future format work should follow the new hybrid rule: global presets seed authored format variants, variant derivation should carry a useful first-guess layout across dimensions, and export presets belong on the future output operator.
 - Content-format as a user-facing concept is retired. The document authoring model replaces it, with Adobe-like format variants on top of the Houdini-like operator core. See `ROADMAP.md` → "Document/project model — Adobe-style variants over a Houdini core" for the full synthesis.
 

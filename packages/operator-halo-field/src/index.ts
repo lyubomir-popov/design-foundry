@@ -200,6 +200,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { key: "angles", title: "Angles & Spoke Geometry" },
     { key: "colors", title: "Colors" },
     { key: "spokeDetails", title: "Spoke Details" },
+    { key: "content", title: "Spoke Content" },
     { key: "echoDetails", title: "Echo Shape Details" },
     { key: "echoPattern", title: "Echo Pattern" },
     { key: "screensaver", title: "Screensaver / Breath" },
@@ -210,7 +211,6 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { key: "motionCurve", title: "Motion Curve" },
     { key: "blinkCurve", title: "Blink Curve" },
     { key: "toggles", title: "Screensaver Toggles" },
-    { key: "labels", title: "Release Labels" },
     { key: "debug", title: "Debug" }
   ],
   fields: [
@@ -232,7 +232,6 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { path: "generator_wrangle.pattern_offset_spokes", label: "Pattern Offset", kind: "number", sectionKey: "angles", min: -120, max: 120, step: 1 },
     { path: "spoke_lines.start_radius_px", label: "Start Radius", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
     { path: "spoke_lines.end_radius_extra_px", label: "End Radius Extra", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
-    { path: "spoke_lines.content_clearance_px", label: "Content Clearance", kind: "slider", sectionKey: "angles", min: 0, max: 200, step: 1 },
 
     // ── Colors ──────────────────────────────────────────────────
     { path: "composition.background_color", label: "Background", kind: "color", sectionKey: "colors" },
@@ -257,12 +256,16 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     ] },
     { path: "spoke_lines.phase_start_width_px", label: "Phase Width", kind: "slider", sectionKey: "spokeDetails", min: 0, max: 32, step: 1 },
 
+    // ── Shared Spoke Content ───────────────────────────────────
+    { path: "spoke_lines.content_clearance_px", label: "Content Clearance", kind: "slider", sectionKey: "content", min: 0, max: 200, step: 1 },
+    { path: "spoke_lines.echo_spacing_offset_px", label: "Echo Gap", kind: "slider", sectionKey: "content", min: 0, max: 64, step: 0.5 },
+    { path: "spoke_text.font_size_px", label: "Label Size", kind: "slider", sectionKey: "content", min: 3, max: 24, step: 0.5, visibleWhen: { path: "spoke_text.enabled", operator: "eq", value: true } },
+
     // ── Echo Shape Details ──────────────────────────────────────
     { path: "spoke_lines.phase_end_width_px", label: "Phase End Width", kind: "slider", sectionKey: "echoDetails", min: 0, max: 32, step: 1 },
     { path: "spoke_lines.echo_marker_stroke_px", label: "Echo Stroke", kind: "slider", sectionKey: "echoDetails", min: 0, max: 12, step: 0.5 },
     { path: "spoke_lines.echo_marker_scale_mult", label: "Echo Scale", kind: "slider", sectionKey: "echoDetails", min: 0.1, max: 6, step: 0.1 },
     { path: "spoke_lines.echo_sparse_scale_boost", label: "Sparse Boost", kind: "slider", sectionKey: "echoDetails", min: 0, max: 6, step: 0.1 },
-    { path: "spoke_lines.echo_spacing_offset_px", label: "Echo Gap", kind: "slider", sectionKey: "echoDetails", min: 0, max: 64, step: 0.5 },
 
     // ── Echo Pattern ────────────────────────────────────────────
     { path: "spoke_lines.echo_shape_seed", label: "Shape Seed", kind: "number", sectionKey: "echoPattern", min: 0, max: 9999, step: 1 },
@@ -315,10 +318,6 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { path: "screensaver.pulse_spokes", label: "Pulse Spokes", kind: "boolean", sectionKey: "toggles" },
     { path: "vignette.enabled", label: "Construction Fade", kind: "boolean", sectionKey: "toggles" },
     { path: "spoke_text.enabled", label: "Release Labels", kind: "boolean", sectionKey: "toggles" },
-
-    // ── Release Labels (conditional) ────────────────────────────
-    { path: "spoke_text.font_size_px", label: "Label Size", kind: "slider", sectionKey: "labels", min: 3, max: 24, step: 0.5, visibleWhen: { path: "spoke_text.enabled", operator: "eq", value: true } },
-    { path: "spoke_text.radial_u", label: "Label Position", kind: "slider", sectionKey: "labels", min: 0, max: 1, step: 0.01, visibleWhen: { path: "spoke_text.enabled", operator: "eq", value: true } },
 
     // ── Debug ───────────────────────────────────────────────────
     { path: "spoke_lines.show_reference_halo", label: "Reference Halo", kind: "boolean", sectionKey: "debug" },
@@ -1134,7 +1133,7 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
     spoke_text: {
       enabled: true,
       font_size_px: 18,
-      radial_u: 0.6
+      radial_u: 0
     },
     screensaver: {
       cycle_sec: 60,

@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Halo content-base stabilization — Q1 (2026-05-06)
+
+- Pinned release-label placement to the shared authored content base in `halo-renderer.ts` instead of deriving label start from the orbit-step offset path, so breathing no longer pushes labels outward.
+- Removed the live `Label Position` control from the halo inspector while keeping the compatibility field in config defaults, making the fixed-base behavior the only active label-placement model.
+- Regrouped the remaining shared content controls into one `Spoke Content` section so `Content Clearance`, `Echo Gap`, and `Label Size` now live together instead of being split across geometry, echo, and label sections.
+- Validation: `npm run typecheck`, live preview reload, and browser checks confirming the halo inspector now shows `Spoke Content` with `Content Clearance`, `Echo Gap`, and `Label Size`, with no `Label Position` control or separate `Release Labels` section.
+
 ## Halo clearance + construction-fade cleanup (2026-05-05)
 
 - Added `spoke_lines.content_clearance_px` so halo labels and echo markers now share one spoke-edge clearance control instead of drifting under separate radius rules.

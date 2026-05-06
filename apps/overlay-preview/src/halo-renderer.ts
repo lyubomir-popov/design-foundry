@@ -830,24 +830,13 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
   }
 
   function getContentBandMetrics(
-    spoke: Spoke | null,
     haloOuterR: number,
     fullFrameR: number,
     contentLengthPx: number,
-    radialU: number,
     config: HaloFieldConfig
   ): ContentBandMetrics {
-    const originRadius = Math.max(0, spoke?.echo_dot_origin_radius ?? haloOuterR);
-    const configuredOrbitCount = Math.max(1, Math.round(config.generator_wrangle.num_orbits || 1));
-    const minimumContentStartRadius = getSharedContentStartRadius(haloOuterR, config);
-    const stableOrbitStepPx = configuredOrbitCount <= 1
-      ? 0
-      : Math.max(0, (fullFrameR - originRadius) / (configuredOrbitCount - 1));
-    const startRadius = clamp(
-      minimumContentStartRadius + stableOrbitStepPx * radialU,
-      minimumContentStartRadius,
-      fullFrameR
-    );
+    const contentStartRadius = Math.min(fullFrameR, getSharedContentStartRadius(haloOuterR, config));
+    const startRadius = contentStartRadius;
     const endRadius = clamp(
       startRadius + contentLengthPx,
       startRadius,
@@ -857,7 +846,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       startRadius,
       endRadius,
       clearStartR: Math.max(
-        minimumContentStartRadius,
+        contentStartRadius,
         startRadius - TEXT_LABEL_MARGIN_PX
       ),
       clearEndR: Math.min(fullFrameR, endRadius + TEXT_LABEL_MARGIN_PX)
@@ -888,11 +877,9 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     return {
       label,
       ...getContentBandMetrics(
-        spoke,
         haloOuterR,
         fullFrameR,
         getTextLabelWidthPx(label, fontSizePx),
-        clamp(config.spoke_text?.radial_u ?? 0.55, 0, 1),
         config
       )
     };
