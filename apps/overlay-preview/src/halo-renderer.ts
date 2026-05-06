@@ -806,6 +806,14 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     label: string;
   }
 
+  interface CachedTextLabelMetrics {
+    width: number;
+    ascent: number;
+    descent: number;
+  }
+
+  const textLabelMetricsCache = new Map<string, CachedTextLabelMetrics>();
+
   function getTextLabelFontSizePx(config: HaloFieldConfig): number {
     return Math.max(
       3,
@@ -817,12 +825,25 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     );
   }
 
-  function getTextLabelWidthPx(label: string, fontSizePx: number): number {
+  function getTextLabelMetrics(label: string, fontSizePx: number): CachedTextLabelMetrics {
+    const cacheKey = `${fontSizePx}:${label}`;
+    const cachedMetrics = textLabelMetricsCache.get(cacheKey);
+    if (cachedMetrics) {
+      return cachedMetrics;
+    }
+
     textCtx.save();
     textCtx.font = `${fontSizePx}px ${TEXT_LABEL_FONT_FAMILY}`;
-    const w = textCtx.measureText(label).width;
+    const measured = textCtx.measureText(label);
     textCtx.restore();
-    return w;
+
+    const nextMetrics = {
+      width: measured.width,
+      ascent: measured.actualBoundingBoxAscent || fontSizePx * 0.38,
+      descent: measured.actualBoundingBoxDescent || fontSizePx * 0.18
+    };
+    textLabelMetricsCache.set(cacheKey, nextMetrics);
+    return nextMetrics;
   }
 
   function getSharedContentStartRadius(haloOuterR: number, config: HaloFieldConfig): number {
@@ -879,7 +900,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       ...getContentBandMetrics(
         haloOuterR,
         fullFrameR,
-        getTextLabelWidthPx(label, fontSizePx),
+        getTextLabelMetrics(label, fontSizePx).width,
         config
       )
     };
@@ -949,10 +970,8 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       const alpha = spokeAlpha * revealAlpha * radialFade;
       if (alpha <= 0) continue;
 
-      const measure = textCtx.measureText(labelBandMetrics.label);
-      const measuredAscent = measure.actualBoundingBoxAscent || fontSize * 0.38;
-      const measuredDescent = measure.actualBoundingBoxDescent || fontSize * 0.18;
-      const measuredHeight = measuredAscent + measuredDescent;
+      const textMetrics = getTextLabelMetrics(labelBandMetrics.label, fontSize);
+      const measuredHeight = textMetrics.ascent + textMetrics.descent;
 
       textCtx.save();
       textCtx.translate(canvasX, canvasY);
@@ -961,9 +980,9 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       textCtx.globalAlpha = alpha;
       textCtx.fillStyle = bgColor;
       textCtx.fillRect(
-        shouldFlip ? -measure.width - labelPadX : -labelPadX,
-        -measuredAscent - labelPadY,
-        measure.width + labelPadX * 2,
+        shouldFlip ? -textMetrics.width - labelPadX : -labelPadX,
+        -textMetrics.ascent - labelPadY,
+        textMetrics.width + labelPadX * 2,
         measuredHeight + labelPadY * 2
       );
       textCtx.fillStyle = textColor;

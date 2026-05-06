@@ -20,6 +20,45 @@ export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
   const { root, body } = buildAccordionSectionEl("Layout Grid");
   const grid = state.params.grid;
 
+  const safeFields = document.createElement("div");
+  safeFields.className = "bf-grid";
+
+  function syncSafeAreaFields(): void {
+    safeFields.replaceChildren();
+
+    if (state.params.grid.fitWithinSafeArea === false) {
+      safeFields.hidden = true;
+      return;
+    }
+
+    safeFields.hidden = false;
+    const safeArea = state.params.safeArea;
+
+    safeFields.append(wrapCol(1, createFormGroup("Safe Top",
+      createNumberInput(safeArea.top, { min: 0, step: 1 }, v => {
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, top: v } }; void ctx.renderStage();
+      })
+    )));
+
+    safeFields.append(wrapCol(1, createFormGroup("Safe Right",
+      createNumberInput(safeArea.right, { min: 0, step: 1 }, v => {
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, right: v } }; void ctx.renderStage();
+      })
+    )));
+
+    safeFields.append(wrapCol(1, createFormGroup("Safe Bottom",
+      createNumberInput(safeArea.bottom, { min: 0, step: 1 }, v => {
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, bottom: v } }; void ctx.renderStage();
+      })
+    )));
+
+    safeFields.append(wrapCol(1, createFormGroup("Safe Left",
+      createNumberInput(safeArea.left, { min: 0, step: 1 }, v => {
+        state.params = { ...state.params, safeArea: { ...state.params.safeArea, left: v } }; void ctx.renderStage();
+      })
+    )));
+  }
+
   const displayFields = document.createElement("div");
   displayFields.className = "bf-grid";
 
@@ -28,7 +67,7 @@ export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
     grid.fitWithinSafeArea ?? true,
     (fitWithinSafeArea) => {
       state.params = { ...state.params, grid: { ...state.params.grid, fitWithinSafeArea } };
-      ctx.buildConfigEditor();
+      syncSafeAreaFields();
       void ctx.renderStage();
     }
   )));
@@ -44,7 +83,6 @@ export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
         ...state.params,
         grid: { ...state.params.grid, baselineStepPx: v }
       });
-      ctx.buildConfigEditor();
       void ctx.renderStage();
     })
   )));
@@ -104,37 +142,8 @@ export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
 
   body.append(margins);
 
-  if (grid.fitWithinSafeArea !== false) {
-    const safeArea = state.params.safeArea;
-    const safeFields = document.createElement("div");
-    safeFields.className = "bf-grid";
-
-    safeFields.append(wrapCol(1, createFormGroup("Safe Top",
-      createNumberInput(safeArea.top, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...state.params.safeArea, top: v } }; void ctx.renderStage();
-      })
-    )));
-
-    safeFields.append(wrapCol(1, createFormGroup("Safe Right",
-      createNumberInput(safeArea.right, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...state.params.safeArea, right: v } }; void ctx.renderStage();
-      })
-    )));
-
-    safeFields.append(wrapCol(1, createFormGroup("Safe Bottom",
-      createNumberInput(safeArea.bottom, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...state.params.safeArea, bottom: v } }; void ctx.renderStage();
-      })
-    )));
-
-    safeFields.append(wrapCol(1, createFormGroup("Safe Left",
-      createNumberInput(safeArea.left, { min: 0, step: 1 }, v => {
-        state.params = { ...state.params, safeArea: { ...state.params.safeArea, left: v } }; void ctx.renderStage();
-      })
-    )));
-
-    body.append(safeFields);
-  }
+  syncSafeAreaFields();
+  body.append(safeFields);
 
   return root;
 }

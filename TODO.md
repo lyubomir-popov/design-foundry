@@ -37,9 +37,9 @@ Status: Active and in progress. The first UI and animation slices are landed: se
 
 | Step | Status | Summary |
 |------|--------|---------|
-| R1 | In Progress | Selected text-style edits now keep the live section DOM and update style-card metadata locally instead of tearing down the whole Parameters rail. Next: remove the same rebuild pattern from grid, logo, and layer-edit paths that still call `buildConfigEditor()` for ordinary edits. |
+| R1 | In Progress | Selected text-style edits and the grid section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining logo and layer-edit paths that still call `buildConfigEditor()` for ordinary edits. |
 | R2 | Next | Replace hidden parameter-pane open-state side effects such as `shouldAutoOpenNextOperatorSection` with explicit, inspectable controller state. |
-| R3 | In Progress | Halo-config fingerprints are now memoized by config object identity so stable playback no longer stringifies the full config every frame. Next: cache repeated label text measurement in the halo renderer. |
+| R3 | Complete | Halo-config fingerprints are memoized by config object identity, and repeated halo label measurement is now cached in the renderer instead of remeasuring the same label text during the hot render path. |
 | R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
 
 ### Lane P — Format variants and preset groundwork
@@ -55,7 +55,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 ## Immediate Next Steps
 
 - Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining hot edit paths after the selected text-style slice.
-- Continue Lane R3 by caching repeated halo label text measurement in the render path.
+- Keep a separate note on the overlay-visible halo fade / hard drop-off regression. Current live evidence points to the overlay SVG safe-area fill path, not the recent Lane R commits, so triage it without blocking the active stabilization lane unless a narrower check ties it to current work.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.

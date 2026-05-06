@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane R follow-up slices — grid local updates + halo label metrics cache (2026-05-06)
+
+- Removed full Parameters-rail rebuilds from the Layout Grid section for `Baseline (px)` and `Fit Safe Area`; baseline edits now keep the existing input mounted, and the safe-area inputs now show or hide inside the section instead of tearing down the whole inspector.
+- Cached halo release-label text metrics in `apps/overlay-preview/src/halo-renderer.ts`, so the renderer now reuses one measured width / ascent / descent tuple per label and font size instead of measuring the same text in both band layout and overlay draw passes.
+- Added an active TODO note for the separate overlay-visible halo fade / hard drop-off regression. Current evidence points to the overlay SVG safe-area fill path rather than the recent Lane R commits, so it stays tracked without blocking the stabilization work.
+- Validation: `npm run typecheck`, live preview check confirming the Layout Grid baseline input stayed mounted during edit, live `Fit Safe Area` toggle check confirming the safe-area inputs hide within the section without a full rail rebuild, and live preview render checks after the halo label-metrics cache landed.
+
 ## Lane R first slices — text-style rail updates + animation fingerprint memoization (2026-05-06)
 
 - Removed full Parameters-rail rebuilds from selected text-style edits in `apps/overlay-preview/src/overlay-section.ts`; font size, line height, and weight now update the local style-card metadata in place and keep the live section DOM connected during committed edits.
