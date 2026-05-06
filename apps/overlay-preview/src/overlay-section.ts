@@ -179,6 +179,29 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     const logo = state.params.logo;
     if (!logo) return root;
 
+    let widthInput: HTMLInputElement | null = null;
+    let heightInput: HTMLInputElement | null = null;
+
+    function syncLogoControls(): void {
+      const currentLogo = state.params.logo;
+      if (!currentLogo) {
+        return;
+      }
+
+      assetInput.value = currentLogo.assetPath ?? "";
+
+      if (widthInput) {
+        widthInput.value = String(currentLogo.widthPx);
+        widthInput.title = currentLogo.linkTitleSizeToHeight === false
+          ? "Width preserves the logo aspect ratio."
+          : "Derived from the locked A Head to logo scale.";
+      }
+
+      if (heightInput) {
+        heightInput.value = String(currentLogo.heightPx);
+      }
+    }
+
     const assetInput = document.createElement("input");
     assetInput.className = "bf-input is-dense";
     assetInput.type = "text";
@@ -197,7 +220,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       });
       ctx.markDocumentDirty();
       void ctx.loadLogoIntrinsicDimensions(nextAssetPath);
-      ctx.buildConfigEditor();
+      syncLogoControls();
       void ctx.renderStage();
     });
     const logoMetaFields = document.createElement("div");
@@ -219,7 +242,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
           }
         }
         ctx.markDocumentDirty();
-        ctx.buildConfigEditor();
+        syncLogoControls();
         void ctx.renderStage();
       }
     )));
@@ -237,36 +260,51 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       createNumberInput(logo.yPx, { step: 1 }, v => { ctx.updateLogo(l => ({ ...l, yPx: v })); ctx.markDocumentDirty(); void ctx.renderStage(); })
     )));
 
-    const widthInput = createNumberInput(logo.widthPx, { min: 1, step: 1 }, v => {
-      const aspectRatio = logo.widthPx > 0 && logo.heightPx > 0 ? logo.widthPx / logo.heightPx : ctx.getCurrentLogoAspectRatio();
+    widthInput = createNumberInput(logo.widthPx, { min: 1, step: 1 }, v => {
+      const currentLogo = state.params.logo;
+      if (!currentLogo) {
+        return;
+      }
+
+      const aspectRatio = currentLogo.widthPx > 0 && currentLogo.heightPx > 0
+        ? currentLogo.widthPx / currentLogo.heightPx
+        : ctx.getCurrentLogoAspectRatio();
       const nextHeightPx = Math.max(1, Math.round(v / Math.max(0.0001, aspectRatio)));
-      if (logo.linkTitleSizeToHeight === false) {
+      if (currentLogo.linkTitleSizeToHeight === false) {
         ctx.updateLogoSizeWithAspectRatio(nextHeightPx);
       } else {
         ctx.syncTitleToLogoHeight(nextHeightPx);
       }
       ctx.markDocumentDirty();
+      syncLogoControls();
       void ctx.renderStage();
     });
-    widthInput.title = logo.linkTitleSizeToHeight === false
-      ? "Width preserves the logo aspect ratio."
-      : "Derived from the locked A Head to logo scale.";
 
     grid.append(wrapCol(1, createFormGroup("Width",
       widthInput
     )));
 
+    heightInput = createNumberInput(logo.heightPx, { min: 1, step: 1 }, v => {
+      const currentLogo = state.params.logo;
+      if (!currentLogo) {
+        return;
+      }
+
+      if (currentLogo.linkTitleSizeToHeight === false) {
+        ctx.updateLogoSizeWithAspectRatio(v);
+      } else {
+        ctx.syncTitleToLogoHeight(v);
+      }
+      ctx.markDocumentDirty();
+      syncLogoControls();
+      void ctx.renderStage();
+    });
+
     grid.append(wrapCol(1, createFormGroup("Height",
-      createNumberInput(logo.heightPx, { min: 1, step: 1 }, v => {
-        if (logo.linkTitleSizeToHeight === false) {
-          ctx.updateLogoSizeWithAspectRatio(v);
-        } else {
-          ctx.syncTitleToLogoHeight(v);
-        }
-        ctx.markDocumentDirty();
-        void ctx.renderStage();
-      })
+      heightInput
     )));
+
+    syncLogoControls();
 
     body.append(grid);
   }
