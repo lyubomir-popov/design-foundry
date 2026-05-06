@@ -33,11 +33,11 @@ Status: Paused after O1-O3. The shell follow-up did its job; O4/O5 stay deferred
 
 Goal: Make release labels and halo markers read from one fixed authored content base so the label start stays stable through breathing, the first echo follows the same base-plus-gap rule as later echoes, and the remaining radius controls read as one coherent surface.
 
-Status: Q1 is complete and archived in `HISTORY.md`. The live inspector now hides `Label Position`, groups `Content Clearance`, `Echo Gap`, and `Label Size` under `Spoke Content`, and the renderer pins label placement to the shared content base instead of the old orbit-step offset path.
+Status: Q1 and Q2 are complete and archived in `HISTORY.md`. The live inspector now hides `Label Position`, groups `Content Clearance`, `Echo Gap`, and `Label Size` under `Spoke Content`, renames the envelope controls to `Orbit Inner Radius` and `Halo Outer Radius`, removes the dead live `End Radius Extra` knob, and clamps `Spoke Line Start` to the halo edge so overshoot no longer drops the thick segment.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| Q2 | Next | Pressure-test the remaining radius controls against the current breathing cycle, then collapse or rename any still-overlapping controls without changing the current pulse look. |
+| Q3 | Next | Decide whether the remaining compatibility-only halo radius fields should stay in runtime/persisted state or be retired behind an explicit migration, without changing the current pulse look. |
 
 ### Lane P — Format variants and preset groundwork
 
@@ -51,7 +51,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 ## Immediate Next Steps
 
-- Pressure-test the halo content-base cleanup through the breathing cycle and identify which remaining radii controls still overlap conceptually.
+- Decide whether the remaining compatibility-only halo radius fields should be removed from runtime and saved-document shape or left as compatibility ballast for now.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
@@ -62,6 +62,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 ## Operational Constraints
 
 - Do not change halo breathing or pulsing behavior just to simplify the radius controls; geometry cleanup must preserve the current motion look.
+- Treat `spoke_lines.end_radius_extra_px` as compatibility-only unless a deliberate renderer-backed replacement is scoped; do not reintroduce a dead live control.
 - Do not re-introduce browser-local preset CRUD as the working-state authority.
 - Do not start a saved-file schema rename until the shell and controller behavior settle.
 - Keep `baseline-foundry` read-only from this repo unless a shared contract clearly belongs upstream.

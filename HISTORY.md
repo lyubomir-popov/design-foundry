@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Halo radius cleanup — Q2 (2026-05-06)
+
+- Renamed the remaining live halo envelope controls to `Orbit Inner Radius` and `Halo Outer Radius`, moved `Spoke Line Start` into `Spoke Details`, and simplified the `Angles` section so the inspector now matches the actual geometry owners instead of reading like four competing radius knobs.
+- Retired the dead live `End Radius Extra` control from the halo inspector while keeping the compatibility field in the config shape for existing files.
+- Clamped `Spoke Line Start` to the halo outer radius in the halo field builder so oversized values no longer make the thick spoke segment drop out while the current breathing look stays intact.
+- Validation: `npm run typecheck`, live preview reload, live inspector checks confirming the renamed sections and labels, and an automation snapshot with `start_radius_px = 400` rendering cleanly through the live preview.
+
 ## Halo content-base stabilization — Q1 (2026-05-06)
 
 - Pinned release-label placement to the shared authored content base in `halo-renderer.ts` instead of deriving label start from the orbit-step offset path, so breathing no longer pushes labels outward.

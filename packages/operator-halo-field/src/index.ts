@@ -197,7 +197,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
   sections: [
     { key: "composition", title: "Composition" },
     { key: "generator", title: "Generator" },
-    { key: "angles", title: "Angles & Spoke Geometry" },
+    { key: "angles", title: "Angles" },
     { key: "colors", title: "Colors" },
     { key: "spokeDetails", title: "Spoke Details" },
     { key: "content", title: "Spoke Content" },
@@ -218,8 +218,8 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     { path: "composition.scale", label: "Scale", kind: "slider", sectionKey: "composition", min: 0.1, max: 2, step: 0.01 },
     { path: "composition.radial_scale", label: "Radial Scale", kind: "slider", sectionKey: "composition", min: 0.1, max: 2, step: 0.01 },
     { path: "composition.center_offset_y_px", label: "Center Y Offset", kind: "slider", sectionKey: "composition", min: -500, max: 500, step: 1 },
-    { path: "generator_wrangle.inner_radius", label: "Inner Radius", kind: "slider", sectionKey: "composition", min: 0, max: 1, step: 0.001 },
-    { path: "generator_wrangle.outer_radius", label: "Outer Radius", kind: "slider", sectionKey: "composition", min: 0, max: 1, step: 0.001 },
+    { path: "generator_wrangle.inner_radius", label: "Orbit Inner Radius", kind: "slider", sectionKey: "composition", min: 0, max: 1, step: 0.001 },
+    { path: "generator_wrangle.outer_radius", label: "Halo Outer Radius", kind: "slider", sectionKey: "composition", min: 0, max: 1, step: 0.001 },
 
     // ── Generator ───────────────────────────────────────────────
     { path: "generator_wrangle.spoke_count", label: "Spokes", kind: "number", sectionKey: "generator", min: 4, max: 120, step: 1 },
@@ -230,8 +230,6 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
     // ── Angles & Spoke Geometry ─────────────────────────────────
     { path: "generator_wrangle.base_angle_deg", label: "Base Angle", kind: "slider", sectionKey: "angles", min: -180, max: 180, step: 0.1 },
     { path: "generator_wrangle.pattern_offset_spokes", label: "Pattern Offset", kind: "number", sectionKey: "angles", min: -120, max: 120, step: 1 },
-    { path: "spoke_lines.start_radius_px", label: "Start Radius", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
-    { path: "spoke_lines.end_radius_extra_px", label: "End Radius Extra", kind: "slider", sectionKey: "angles", min: 0, max: 400, step: 1 },
 
     // ── Colors ──────────────────────────────────────────────────
     { path: "composition.background_color", label: "Background", kind: "color", sectionKey: "colors" },
@@ -243,6 +241,7 @@ export const HALO_FIELD_CONFIG_SCHEMA: OperatorParameterSchema = {
 
     // ── Spoke Details ───────────────────────────────────────────
     { path: "spoke_lines.width_px", label: "Spoke Width", kind: "slider", sectionKey: "spokeDetails", min: 0, max: 16, step: 0.5 },
+    { path: "spoke_lines.start_radius_px", label: "Spoke Line Start", kind: "slider", sectionKey: "spokeDetails", min: 0, max: 400, step: 1 },
     { path: "spoke_lines.echo_count", label: "Echo Count", kind: "number", sectionKey: "spokeDetails", min: 0, max: 32, step: 1 },
     { path: "spoke_lines.echo_style", label: "Echo Style", kind: "select", sectionKey: "spokeDetails", options: [
       { label: "Mixed", value: "mixed" },
@@ -542,6 +541,17 @@ interface FieldBaseContext {
   base_angle_rad: number;
 }
 
+function getClampedSpokeLineStartRadiusPx(
+  config: HaloFieldConfig,
+  ctx: FieldBaseContext
+): number {
+  return clamp(
+    config.spoke_lines.start_radius_px * ctx.geometry_scale,
+    0,
+    ctx.outer_radius_px
+  );
+}
+
 function createFieldBase(config: HaloFieldConfig, mascotBox: MascotBox | null): FieldBaseContext {
   const gen = config.generator_wrangle;
   const trans = config.transition_wrangle;
@@ -682,6 +692,7 @@ export function buildIntroHaloFieldState(
   const pointSpecs: PointSpec[] = [];
   const orbitCounts = new Array(gen.num_orbits).fill(0);
   const labelAnchorSlot = Math.floor(gen.spoke_count * 0.5);
+  const spokeLineStartRadiusPx = getClampedSpokeLineStartRadiusPx(config, ctx);
 
   for (let si = 0; si < gen.spoke_count; si++) {
     const spid = wrapPositive(si - gen.pattern_offset_spokes, gen.spoke_count);
@@ -707,7 +718,7 @@ export function buildIntroHaloFieldState(
       spoke_pattern_id: spid,
       angle,
       phase_u: ps.fill_u,
-      start_radius: config.spoke_lines.start_radius_px * ctx.geometry_scale,
+      start_radius: spokeLineStartRadiusPx,
       end_radius: ctx.outer_radius_px + config.spoke_lines.end_radius_extra_px * ctx.geometry_scale,
       echo_dot_origin_radius: ctx.inner_radius_px,
       echo_dot_step_px: orbitStepPx,
@@ -777,6 +788,7 @@ export function buildPostFinaleHaloFieldState(opts: {
   const nextWPU = new Map<number, number>();
   const nextCCX = new Map<number, number>();
   const haloOuterR = mascotBox ? mascotBox.draw_size_px * 0.5 : ctx.outer_radius_px;
+  const spokeLineStartRadiusPx = getClampedSpokeLineStartRadiusPx(config, ctx);
   const points: Array<{ x: number; y: number; radius_px: number; alpha: number }> = [];
   const spokes: Spoke[] = [];
 
@@ -828,7 +840,7 @@ export function buildPostFinaleHaloFieldState(opts: {
       phase_u: ps.fill_u,
       width_phase_u: wpu,
       seam_overlay_only: false,
-      start_radius: config.spoke_lines.start_radius_px * ctx.geometry_scale,
+      start_radius: spokeLineStartRadiusPx,
       end_radius: ctx.outer_radius_px + config.spoke_lines.end_radius_extra_px * ctx.geometry_scale,
       echo_dot_origin_radius: ctx.inner_radius_px,
       echo_dot_step_px: orbitStepPx,
