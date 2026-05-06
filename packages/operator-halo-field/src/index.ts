@@ -155,7 +155,6 @@ export interface HaloFieldConfig {
     phase_start_width_px: number;
     phase_end_width_px: number;
     start_radius_px: number;
-    end_radius_extra_px: number;
     content_clearance_px: number;
     show_reference_halo: boolean;
     show_debug_masks: boolean;
@@ -1136,7 +1135,6 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
       echo_wave_count: 4,
       echo_opacity_mult: 0.5,
       start_radius_px: 150,
-      end_radius_extra_px: 0,
       content_clearance_px: 24
     },
     spoke_text: {

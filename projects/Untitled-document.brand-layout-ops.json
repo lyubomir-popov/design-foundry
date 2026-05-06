@@ -1374,8 +1374,7 @@
         "echo_width_mult": 0.88,
         "echo_wave_count": 4,
         "echo_opacity_mult": 0.5,
-        "start_radius_px": 150,
-        "end_radius_extra_px": 0
+        "start_radius_px": 150
       },
       "spoke_text": {
         "enabled": true,
@@ -1505,8 +1504,7 @@
           "echo_width_mult": 0.88,
           "echo_wave_count": 4,
           "echo_opacity_mult": 0.5,
-          "start_radius_px": 150,
-          "end_radius_extra_px": 0
+          "start_radius_px": 150
         },
         "spoke_text": {
           "enabled": true,
@@ -1635,8 +1633,7 @@
           "echo_width_mult": 0.88,
           "echo_wave_count": 4,
           "echo_opacity_mult": 0.5,
-          "start_radius_px": 150,
-          "end_radius_extra_px": 0
+          "start_radius_px": 150
         },
         "spoke_text": {
           "enabled": true,
@@ -1765,8 +1762,7 @@
           "echo_width_mult": 0.88,
           "echo_wave_count": 4,
           "echo_opacity_mult": 0.5,
-          "start_radius_px": 150,
-          "end_radius_extra_px": 0
+          "start_radius_px": 150
         },
         "spoke_text": {
           "enabled": true,
@@ -1895,8 +1891,7 @@
           "echo_width_mult": 0.88,
           "echo_wave_count": 4,
           "echo_opacity_mult": 0.5,
-          "start_radius_px": 150,
-          "end_radius_extra_px": 0
+          "start_radius_px": 150
         },
         "spoke_text": {
           "enabled": true,
@@ -2025,8 +2020,7 @@
           "echo_width_mult": 0.88,
           "echo_wave_count": 4,
           "echo_opacity_mult": 0.5,
-          "start_radius_px": 150,
-          "end_radius_extra_px": 0
+          "start_radius_px": 150
         },
         "spoke_text": {
           "enabled": true,

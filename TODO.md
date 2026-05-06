@@ -23,27 +23,17 @@ Reference source repo:
 
 ## Active Execution Queue
 
-Lane Q is active. Lane P is paused until the halo content-base cleanup settles.
+Lane P is active. Lane Q is complete and archived in `HISTORY.md`.
 
 ### Lane O — Stage shell ergonomics
 
 Status: Paused after O1-O3. The shell follow-up did its job; O4/O5 stay deferred until there is a concrete zoom or pan need.
 
-### Lane Q — Halo content-base stabilization
-
-Goal: Make release labels and halo markers read from one fixed authored content base so the label start stays stable through breathing, the first echo follows the same base-plus-gap rule as later echoes, and the remaining radius controls read as one coherent surface.
-
-Status: Q1 and Q2 are complete and archived in `HISTORY.md`. The live inspector now hides `Label Position`, groups `Content Clearance`, `Echo Gap`, and `Label Size` under `Spoke Content`, renames the envelope controls to `Orbit Inner Radius` and `Halo Outer Radius`, removes the dead live `End Radius Extra` knob, clamps `Spoke Line Start` to the halo edge so overshoot no longer drops the thick segment, and removes the dead derived `Spoke.end_radius` runtime ballast.
-
-| Step | Status | Summary |
-|------|--------|---------|
-| Q3 | Next | Decide whether the remaining compatibility-only saved halo radius field should stay on disk as ballast or be retired behind an explicit migration, without changing the current pulse look. |
-
 ### Lane P — Format variants and preset groundwork
 
 Goal: Stop treating saved sizes as if they were only export targets. The live workflow is already closer to authored per-format variants, so the next pass should make the shell, controller behavior, and terminology match that reality without breaking the current document format.
 
-Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is paused while Lane Q stabilizes halo content geometry. The next format question is still whether same-size authored variants should become first-class before the saved-file redesign.
+Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is active again now that Lane Q's halo content and radius cleanup is closed. The next format question is still whether same-size authored variants should become first-class before the saved-file redesign.
 
 | Step | Status | Summary |
 |------|--------|---------|
@@ -51,7 +41,6 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 ## Immediate Next Steps
 
-- Decide whether the remaining compatibility-only saved halo radius field should be removed from the document/config shape or left as compatibility ballast for now.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
@@ -62,7 +51,6 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 ## Operational Constraints
 
 - Do not change halo breathing or pulsing behavior just to simplify the radius controls; geometry cleanup must preserve the current motion look.
-- Treat `spoke_lines.end_radius_extra_px` as compatibility-only unless a deliberate renderer-backed replacement is scoped; do not reintroduce a dead live control.
 - Do not re-introduce browser-local preset CRUD as the working-state authority.
 - Do not start a saved-file schema rename until the shell and controller behavior settle.
 - Keep `baseline-foundry` read-only from this repo unless a shared contract clearly belongs upstream.
