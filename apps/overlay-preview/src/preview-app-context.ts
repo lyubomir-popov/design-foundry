@@ -111,6 +111,8 @@ export interface PreviewAppContext {
   renderStage(mode?: SceneFamilyPreviewMode): Promise<void>;
   /** Rebuild all accordion sections from the section registry. */
   buildConfigEditor(): void;
+  /** Sync the currently rendered overlay section inputs from current selected state. */
+  syncSelectedOverlaySectionInputs(): void;
   /** Rebuild the document formats sub-panel. */
   buildFormatOptions(): void;
   /** Resize the Three.js renderer to match current frame dimensions. */

@@ -37,7 +37,7 @@ Status: Active and in progress. The first UI and animation slices are landed: se
 
 | Step | Status | Summary |
 |------|--------|---------|
-| R1 | In Progress | Selected text-style edits and style switches, the grid section, and the logo section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining controller-driven add/delete, authoring, and document-target paths that still call `buildConfigEditor()` for ordinary changes. |
+| R1 | In Progress | Selected text-style edits and style switches, authoring drag refreshes, the grid section, and the logo section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining controller-driven add/delete and any genuinely non-structural document-target paths that still call `buildConfigEditor()` for ordinary changes. |
 | R2 | Next | Replace hidden parameter-pane open-state side effects such as `shouldAutoOpenNextOperatorSection` with explicit, inspectable controller state. |
 | R3 | Complete | Halo-config fingerprints are memoized by config object identity, and repeated halo label measurement is now cached in the renderer instead of remeasuring the same label text during the hot render path. |
 | R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
@@ -54,7 +54,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 ## Immediate Next Steps
 
-- Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining controller-driven add/delete, authoring, and document-target paths.
+- Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining controller-driven add/delete and any genuinely non-structural document-target paths.
 - Keep a separate note on the overlay-visible halo fade / hard drop-off regression. Current live evidence points to the overlay SVG safe-area fill path, not the recent Lane R commits, so triage it without blocking the active stabilization lane unless a narrower check ties it to current work.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.

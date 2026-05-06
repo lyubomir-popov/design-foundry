@@ -13,6 +13,10 @@ import type { PreviewAppContext, Selection } from "./preview-app-context.js";
 type DragMode = "move" | "resize";
 type ResizeEdge = "e" | "w" | "nw" | "ne" | "sw" | "se";
 
+function isSameSelection(left: Selection | null, right: Selection | null): boolean {
+  return left?.kind === right?.kind && left?.id === right?.id;
+}
+
 interface DragState {
   selection: Selection;
   metrics: LayoutGridMetrics;
@@ -518,11 +522,15 @@ export function createAuthoringInteractionController(
 
     const hit = findHitTarget(event.clientX, event.clientY);
     if (!hit) {
-      ctx.select(null);
+      if (ctx.state.selected) {
+        ctx.select(null);
+      }
       return;
     }
 
-    ctx.select(hit);
+    if (!isSameSelection(ctx.state.selected, hit)) {
+      ctx.select(hit);
+    }
 
     if (!currentScene) {
       return;
@@ -694,8 +702,8 @@ export function createAuthoringInteractionController(
     setDocumentSelectionSuppressed(false);
     if (didMutateDocument) {
       ctx.markDocumentDirty();
+      ctx.syncSelectedOverlaySectionInputs();
     }
-    ctx.buildConfigEditor();
     render();
   }
 

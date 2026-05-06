@@ -107,7 +107,7 @@ import {
 import { buildFuzzyBoidsSection } from "./fuzzy-boids-section.js";
 import { buildGridSection } from "./grid-section.js";
 import { buildHaloConfigSection } from "./halo-config-section.js";
-import { buildOverlaySection } from "./overlay-section.js";
+import { buildOverlaySection, syncOverlaySectionInputs } from "./overlay-section.js";
 import { buildPhyllotaxisSection } from "./phyllotaxis-section.js";
 import { buildScatterSection } from "./scatter-section.js";
 
@@ -740,6 +740,7 @@ const ctx: PreviewAppContext = {
   state,
   renderStage,
   buildConfigEditor,
+  syncSelectedOverlaySectionInputs,
   buildFormatOptions,
   resizeRenderer,
   syncOverlayVisibilityUi,
@@ -1000,6 +1001,15 @@ documentFormatController = createDocumentFormatController({
 
 function buildConfigEditor() {
   configEditorController!.buildConfigEditor();
+}
+
+function syncSelectedOverlaySectionInputs() {
+  const overlaySection = configEditorController?.getRenderedSectionElement("overlay-layer");
+  if (!overlaySection) {
+    return;
+  }
+
+  syncOverlaySectionInputs(overlaySection, ctx);
 }
 const initPromise = previewShellController.init();
 exportAutomationController?.installAutomationApi(initPromise);

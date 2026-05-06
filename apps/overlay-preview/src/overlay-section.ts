@@ -15,6 +15,74 @@ import {
 } from "@brand-layout-ops/parameter-ui";
 import type { PreviewAppContext } from "./preview-app-context.js";
 
+function findOverlayFieldInput(sectionRoot: ParentNode, label: string): HTMLInputElement | HTMLTextAreaElement | null {
+  const fields = Array.from(sectionRoot.querySelectorAll<HTMLElement>(".bf-field"));
+  for (const field of fields) {
+    const fieldLabel = field.querySelector<HTMLElement>(".bf-form-label");
+    if (fieldLabel?.textContent?.trim() !== label) {
+      continue;
+    }
+
+    return field.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
+  }
+
+  return null;
+}
+
+function setOverlayFieldInputValue(sectionRoot: ParentNode, label: string, value: string | number): void {
+  const input = findOverlayFieldInput(sectionRoot, label);
+  if (!input) {
+    return;
+  }
+
+  input.value = String(value);
+}
+
+export function syncOverlaySectionInputs(sectionRoot: ParentNode, ctx: PreviewAppContext): void {
+  const { state } = ctx;
+
+  if (!state.selected) {
+    return;
+  }
+
+  if (state.selected.kind === "text") {
+    const field = ctx.getSelectedTextField();
+    if (!field) {
+      return;
+    }
+
+    const style = state.params.textStyles.find((entry) => entry.key === field.styleKey);
+    if (style) {
+      setOverlayFieldInputValue(sectionRoot, "Font Size", style.fontSizePx);
+      setOverlayFieldInputValue(sectionRoot, "Line Height", style.lineHeightPx);
+      setOverlayFieldInputValue(sectionRoot, "Weight", style.fontWeight ?? 400);
+    }
+
+    setOverlayFieldInputValue(sectionRoot, "Keyline", field.keylineIndex);
+    setOverlayFieldInputValue(sectionRoot, "Row", field.rowIndex);
+    setOverlayFieldInputValue(sectionRoot, "Y Offset", ctx.getDisplayedTextFieldOffsetBaselines(field));
+    setOverlayFieldInputValue(sectionRoot, "Span", field.columnSpan);
+    return;
+  }
+
+  const logo = state.params.logo;
+  if (!logo) {
+    return;
+  }
+
+  setOverlayFieldInputValue(sectionRoot, "X", logo.xPx);
+  setOverlayFieldInputValue(sectionRoot, "Y", logo.yPx);
+  setOverlayFieldInputValue(sectionRoot, "Width", logo.widthPx);
+  setOverlayFieldInputValue(sectionRoot, "Height", logo.heightPx);
+
+  const widthInput = findOverlayFieldInput(sectionRoot, "Width");
+  if (widthInput instanceof HTMLInputElement) {
+    widthInput.title = logo.linkTitleSizeToHeight === false
+      ? "Width preserves the logo aspect ratio."
+      : "Derived from the locked A Head to logo scale.";
+  }
+}
+
 export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
   const { root, body } = buildAccordionSectionEl(ctx.getSelectedOverlaySectionTitle());
   const { state } = ctx;

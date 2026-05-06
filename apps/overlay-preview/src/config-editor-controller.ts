@@ -58,6 +58,7 @@ export interface ConfigEditorControllerDeps {
 
 export interface ConfigEditorController {
   buildConfigEditor(): void;
+  getRenderedSectionElement(sectionKey: string): HTMLElement | null;
 }
 
 interface RenderedSection {
@@ -80,6 +81,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
   const { state } = deps;
   const configSectionRegistry = createParameterSectionRegistry(deps.sectionDefinitions);
   let shouldAutoOpenNextOperatorSection = false;
+  let renderedSectionElementsByKey = new Map<string, HTMLElement>();
 
   function getConfigSections(): ParameterSectionDefinition[] {
     return configSectionRegistry.getSections();
@@ -700,6 +702,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
 
   function buildConfigEditor(): void {
     const container = deps.getConfigEditor();
+    renderedSectionElementsByKey.clear();
     if (!container) {
       return;
     }
@@ -754,6 +757,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
         element.dataset.sectionKey = section.key;
         operatorList?.append(element);
         renderedSections.push({ section, element });
+        renderedSectionElementsByKey.set(section.key, element);
       }
 
       container.append(
@@ -797,6 +801,9 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
   }
 
   return {
-    buildConfigEditor
+    buildConfigEditor,
+    getRenderedSectionElement(sectionKey: string): HTMLElement | null {
+      return renderedSectionElementsByKey.get(sectionKey) ?? null;
+    }
   };
 }
