@@ -61,6 +61,8 @@ These are not roadmap stages; they are current code-shape risks worth watching w
 |--------|----------|--------|
 | `main.ts` at ~1014 lines | Medium | The app is now mostly controllerized, but the composition root still carries DOM query helpers, overlay-visibility glue, and final bootstrap wiring. Keep extracting only where the seam becomes genuinely reusable or clarifying. |
 | `scene-family-preview.ts` at ~818 lines | Medium | Graph orchestration is now on the shared runtime, which is correct. Further splitting should happen only if preview-operator wrappers or draw adapters become reusable, not as churn. |
+| Parameters rail rebuilds | High | `config-editor-controller.ts` still tears down and rebuilds the full rail for several ordinary edit paths even though `schema-renderer.ts` already has an incremental sync path. If this is not corrected, UI complexity will continue to grow faster than the shell can explain it. |
+| Profile-scoped state mirroring | Medium | The preview still mirrors current export settings, halo config, and document buckets into per-format stores via explicit multi-step persistence calls. The pattern works today but remains fragile if more format behavior is layered onto it without consolidation. |
 
 ## Operator-surface north star
 
@@ -71,6 +73,11 @@ The current multi-surface parameter shell is still an interim shape. The longer-
 - document, file, playback, and export settings stay shell-level rather than posing as operator parameters
 - operator panels are driven by manifests or schemas through shared parameter rendering instead of preview-local DOM builders
 - typed graph payloads such as `PointField` stay first-order so operators can feed one another without preview-only glue
+
+The current audit adds two constraints to that direction:
+
+- the Parameters rail should stop acting as a mixed control plane for rendered-output switching, graph wiring, and operator fields in the same rebuild-heavy surface
+- pane-open state and surface selection should be explicit controller state, not hidden one-shot flags consumed during rebuild
 
 This implies a gradual shift, not a rewrite: section builders move out of the composition root first, operator-owned panels stabilize second, and only then does a selected-operator pane become a composition decision instead of a structural rewrite.
 
@@ -144,6 +151,8 @@ The file on disk carries everything needed to reconstruct the full runtime state
 
 These are important, but they are not active execution items until explicitly promoted into `TODO.md`.
 
+- How far should the shell/operator boundary go before the Layers palette and rendered-output switching stop living inside the same Parameters rail as operator fields?
+- What is the smallest durable state model that removes the current mirrored `current` vs `per-format` persistence choreography without forcing a premature saved-file rewrite?
 - Reusable size presets should live in a global library rather than hiding behind per-document CRUD or source-default writeback.
 - Global size presets should stay coupled to their default safe area and grid seed. Those defaults are the first guess, not immutable authority, so document variants must remain free to override or replace them.
 - Variant derivation and auto-adjust should carry forward a useful first guess for grid intent, keylines, and overlay anchoring when a new format is derived from another.

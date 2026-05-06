@@ -23,17 +23,30 @@ Reference source repo:
 
 ## Active Execution Queue
 
-Lane P is active. Lane Q is complete and archived in `HISTORY.md`.
+Lane R is active. Lane P is paused while the editor and animation hot paths are stabilized.
 
 ### Lane O — Stage shell ergonomics
 
 Status: Paused after O1-O3. The shell follow-up did its job; O4/O5 stay deferred until there is a concrete zoom or pan need.
 
+### Lane R — Editor and animation hot-path stabilization
+
+Goal: Pay down the concrete iterative-work risks uncovered in the fresh-eyes audit before adding more control surface or format behavior.
+
+Status: Newly active. Priority order is driven by real user-facing cost, not cleanup aesthetics.
+
+| Step | Status | Summary |
+|------|--------|---------|
+| R1 | Next | Stop full Parameters-rail teardown on routine grid, overlay, and layer edits. Prefer incremental sync or explicit local rebuild boundaries instead of `buildConfigEditor()` on normal field changes. |
+| R2 | Next | Replace hidden parameter-pane open-state side effects such as `shouldAutoOpenNextOperatorSection` with explicit, inspectable controller state. |
+| R3 | Next | Remove hot-path animation waste: stop per-frame halo-config serialization and cache repeated label text measurement where the render path currently remeasures each frame. |
+| R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
+
 ### Lane P — Format variants and preset groundwork
 
 Goal: Stop treating saved sizes as if they were only export targets. The live workflow is already closer to authored per-format variants, so the next pass should make the shell, controller behavior, and terminology match that reality without breaking the current document format.
 
-Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is active again now that Lane Q's halo content and radius cleanup is closed. The next format question is still whether same-size authored variants should become first-class before the saved-file redesign.
+Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is paused while Lane R stabilizes the current editor/control surface and hot animation paths. The next format question is still whether same-size authored variants should become first-class before the saved-file redesign.
 
 | Step | Status | Summary |
 |------|--------|---------|
@@ -41,6 +54,8 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is act
 
 ## Immediate Next Steps
 
+- Land the first Lane R slice by removing unnecessary full inspector rebuilds from the hottest edit paths.
+- Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
@@ -51,6 +66,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is act
 ## Operational Constraints
 
 - Do not change halo breathing or pulsing behavior just to simplify the radius controls; geometry cleanup must preserve the current motion look.
+- Treat UI and state-sync fixes as architecture work, not styling passes. Only take changes that remove real rebuild, synchronization, or ownership hazards.
 - Do not re-introduce browser-local preset CRUD as the working-state authority.
 - Do not start a saved-file schema rename until the shell and controller behavior settle.
 - Keep `baseline-foundry` read-only from this repo unless a shared contract clearly belongs upstream.
