@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Overlay safe-area fade regression fix (2026-05-06)
+
+- Fixed the overlay-visible halo fade / hard drop-off regression in `apps/overlay-preview/src/stage-render-controller.ts` by treating the preview safe-area matte as guide UI instead of unconditional overlay content.
+- The stage now emits `.safe-area-fill` only when guide mode is not `off`, so hiding guides no longer darkens the halo while the authored overlay remains visible.
+- Validation: `npm run typecheck`, live preview check with guide mode forced to `off` confirming `.safe-area-fill` dropped from `1` to `0` while overlay content stayed visible, and live preview check with guide mode restored to `composition` confirming the safe-area fill and guide labels returned together.
+
 ## Lane R follow-up slices — grid local updates + halo label metrics cache (2026-05-06)
 
 - Removed the full Parameters-rail rebuild from selected text style switching in `apps/overlay-preview/src/overlay-editing-controller.ts`; switching a selected text layer between paragraph styles now keeps the existing style controls mounted while the active style card and Font Size / Line Height / Weight inputs retarget locally in `apps/overlay-preview/src/overlay-section.ts`.
@@ -13,7 +19,6 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 - Removed full Parameters-rail rebuilds from the Layout Grid section for `Baseline (px)` and `Fit Safe Area`; baseline edits now keep the existing input mounted, and the safe-area inputs now show or hide inside the section instead of tearing down the whole inspector.
 - Removed full Parameters-rail rebuilds from the Logo section for `Lock A Head to Logo`; the logo lock toggle now keeps the existing checkbox and width input mounted while the width-field title and logo dimensions sync locally from current state.
 - Cached halo release-label text metrics in `apps/overlay-preview/src/halo-renderer.ts`, so the renderer now reuses one measured width / ascent / descent tuple per label and font size instead of measuring the same text in both band layout and overlay draw passes.
-- Added an active TODO note for the separate overlay-visible halo fade / hard drop-off regression. Current evidence points to the overlay SVG safe-area fill path rather than the recent Lane R commits, so it stays tracked without blocking the stabilization work.
 - Validation: `npm run typecheck`, live preview check confirming a selected text layer's Font Size input stayed connected while a style switch retargeted it from `64` to the clicked `B Head` style's `32`, live preview drag check confirming the existing `Keyline` input stayed connected while the selected `A Head` text moved from keyline `2` to `1`, live preview check confirming the explicit config-editor restore state still reopened `Text: A Head` after leaving `Layout Grid` and still left an operator section expanded after switching to the halo node, fresh preview reload check confirming the halo scene still loads cleanly after the mascot asset redraw callback moved out of cached renderer state, live preview check confirming the Layout Grid baseline input stayed mounted during edit, live `Fit Safe Area` toggle check confirming the safe-area inputs hide within the section without a full rail rebuild, live logo lock toggle check confirming the checkbox and width input stayed connected while the width-field title updated locally, and live preview render checks after the halo label-metrics cache landed.
 
 ## Lane R first slices — text-style rail updates + animation fingerprint memoization (2026-05-06)

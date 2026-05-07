@@ -269,13 +269,15 @@ export function createStageRenderController(
       parts.push(createGuideMarkup(scene.grid, frame, deps.state.guideMode));
     }
 
-    parts.push(
-      createSafeAreaMarkup(
-        frame,
-        deps.state.params.safeArea,
-        deps.state.haloConfig.composition.background_color
-      )
-    );
+    if (deps.state.guideMode !== "off") {
+      parts.push(
+        createSafeAreaMarkup(
+          frame,
+          deps.state.params.safeArea,
+          deps.state.haloConfig.composition.background_color
+        )
+      );
+    }
 
     for (const text of scene.texts) {
       const style = styleByKey.get(text.styleKey);

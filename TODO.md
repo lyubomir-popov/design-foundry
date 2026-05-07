@@ -56,7 +56,6 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 - Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining controller-driven add/delete and any genuinely non-structural document-target paths.
 - Continue Lane R2 by finishing the operator-pane open-state cleanup after the explicit queued restore / last-open section state landed.
-- Keep a separate note on the overlay-visible halo fade / hard drop-off regression. Current live evidence points to the overlay SVG safe-area fill path, not the recent Lane R commits, so triage it without blocking the active stabilization lane unless a narrower check ties it to current work.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
