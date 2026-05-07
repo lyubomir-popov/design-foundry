@@ -341,7 +341,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
   }): void {
     pendingOperatorSectionRestore = {
       preferredSectionKey: options?.preferredSectionKey ?? lastOpenOperatorSectionKey,
-      fallbackToFirstSection: options?.fallbackToFirstSection ?? true
+      fallbackToFirstSection: options?.fallbackToFirstSection ?? false
     };
   }
 
@@ -394,7 +394,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
       return;
     }
 
-    queueOperatorSectionRestore();
+    queueOperatorSectionRestore({ fallbackToFirstSection: true });
     deps.selectOverlayItem(selection);
   }
 
@@ -443,7 +443,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           ...state.documentProject,
           sceneFamilyKey: sceneFamilyKey as OverlaySceneFamilyKey
         };
-        queueOperatorSectionRestore();
+        queueOperatorSectionRestore({ fallbackToFirstSection: true });
         deps.syncDocumentBackgroundGraph();
         deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
         deps.markDocumentDirty();
@@ -493,7 +493,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           return;
         }
 
-        queueOperatorSectionRestore();
+        queueOperatorSectionRestore({ fallbackToFirstSection: true });
         buildConfigEditor();
       });
 
@@ -525,7 +525,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           }
 
           deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
-          queueOperatorSectionRestore();
+          queueOperatorSectionRestore({ fallbackToFirstSection: true });
           deps.markDocumentDirty();
           buildConfigEditor();
           void deps.renderStage();
@@ -560,7 +560,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
         }
 
         deps.setSelectedOperator(nextNodeId);
-        queueOperatorSectionRestore();
+        queueOperatorSectionRestore({ fallbackToFirstSection: true });
         deps.markDocumentDirty();
         buildConfigEditor();
         void deps.renderStage();

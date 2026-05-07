@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane R operator-pane fallback policy slice (2026-05-07)
+
+- Changed `apps/overlay-preview/src/config-editor-controller.ts` so `queueOperatorSectionRestore()` no longer treats `fallbackToFirstSection` as an implicit default. First-section reopening is now opt-in at the call sites that actually change selection.
+- Same-node background-graph connect and disconnect actions now preserve a fully collapsed Parameters pane instead of reopening the top-level operator section after rebuild, while overlay-layer and background-node selection changes still open a relevant section when no restorable section key exists.
+- Validation: `npm run typecheck`, live preview check confirming collapsed `Fuzzy Boids` stayed collapsed after `Connect`, live preview check confirming it also stayed collapsed after `Disconnect`, and live preview check confirming selecting `Text: A Head` still opened the `Text: A Head` section.
+
 ## Lane R persistence choreography helper slice (2026-05-06)
 
 - Added `persistActiveDocumentFormatRuntimeState()` to `apps/overlay-preview/src/profile-state-controller.ts` so the active document format's params bucket, export settings, and halo config are persisted through one explicit helper instead of repeated manual three-call sequences.
