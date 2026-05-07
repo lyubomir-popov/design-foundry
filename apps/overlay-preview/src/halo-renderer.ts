@@ -74,6 +74,7 @@ export interface HaloRendererConfig {
   textOverlayCanvas: HTMLCanvasElement;
   widthPx: number;
   heightPx: number;
+  onMascotAssetsReady?: (() => void) | undefined;
 }
 
 export interface HaloRendererLayers {
@@ -173,8 +174,6 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
   let cachedConfigFingerprint = "";
   let introField: IntroFieldState | null = null;
   let runtimePoints: RuntimePoint[] = [];
-  let lastSceneDescriptor: UbuntuSummitAnimationSceneDescriptor | null = null;
-  let lastTransparentBackground = false;
   let mascotFaceImage: HTMLImageElement | null = null;
   let mascotHaloImage: HTMLImageElement | null = null;
   let mascotAssetsRequested = false;
@@ -202,9 +201,7 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
       .then(([faceImage, haloImage]) => {
         mascotFaceImage = faceImage;
         mascotHaloImage = haloImage;
-        if (lastSceneDescriptor) {
-          renderFrame(lastSceneDescriptor, lastTransparentBackground);
-        }
+        opts.onMascotAssetsReady?.();
       })
       .catch(() => {
         mascotFaceImage = null;
@@ -1073,8 +1070,6 @@ export function createHaloRenderer(opts: HaloRendererConfig): HaloRenderer {
     sceneDescriptor: UbuntuSummitAnimationSceneDescriptor,
     transparentBackground: boolean = false
   ) {
-    lastSceneDescriptor = sceneDescriptor;
-    lastTransparentBackground = transparentBackground;
     const config = sceneDescriptor.haloConfig;
     const mascotBox = sceneDescriptor.mascotBox;
     const frameState = sceneDescriptor.frameState;

@@ -39,7 +39,7 @@ Status: Active and in progress. The first UI and animation slices are landed: se
 |------|--------|---------|
 | R1 | In Progress | Selected text-style edits and style switches, authoring drag refreshes, the grid section, and the logo section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining controller-driven add/delete and any genuinely non-structural document-target paths that still call `buildConfigEditor()` for ordinary changes. |
 | R2 | In Progress | The hidden `shouldAutoOpenNextOperatorSection` flag is gone. The config editor now queues explicit section-restore requests and tracks the last open operator section key in controller state instead of inferring reopen behavior from a hidden boolean and live DOM state. Next: finish moving remaining operator-pane open/selection intent out of rebuild side effects and decide whether the remaining initial-open policy should become first-class controller state instead of rebuild-time fallback logic. |
-| R3 | Complete | Halo-config fingerprints are memoized by config object identity, and repeated halo label measurement is now cached in the renderer instead of remeasuring the same label text during the hot render path. |
+| R3 | Complete | Halo-config fingerprints are memoized by config object identity, repeated halo label measurement is cached in the renderer, and mascot asset completion now requests a fresh halo redraw from current stage state instead of replaying a cached scene descriptor. |
 | R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
 
 ### Lane P — Format variants and preset groundwork

@@ -152,7 +152,14 @@ export function createStageRenderController(
       canvas,
       textOverlayCanvas: textCanvas,
       widthPx,
-      heightPx
+      heightPx,
+      onMascotAssetsReady: () => {
+        if (deps.state.documentProject.sceneFamilyKey !== "halo") {
+          return;
+        }
+
+        renderBackgroundFrame("interactive");
+      }
     });
 
     syncStageShellMetrics();
