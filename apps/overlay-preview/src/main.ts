@@ -178,9 +178,7 @@ const state: PreviewState = {
 const backgroundGraphController = createBackgroundGraphController({ state });
 
 const previewDocumentBridge = {
-  persistActiveDocumentFormatBuckets,
-  persistActiveExportSettings,
-  persistActiveHaloConfig,
+  persistActiveDocumentFormatRuntimeState,
   getOrCreateDocumentFormatParams,
   normalizeParams: normalizeParamsTextFieldOffsets,
   syncHaloConfigForActiveDocumentFormat
@@ -462,6 +460,10 @@ function persistActiveExportSettings(): void {
 
 function persistActiveHaloConfig(): void {
   profileStateController!.persistActiveHaloConfig();
+}
+
+function persistActiveDocumentFormatRuntimeState(): void {
+  profileStateController!.persistActiveDocumentFormatRuntimeState();
 }
 
 function updateExportSettings(updater: (settings: ExportSettings) => ExportSettings): void {
@@ -991,9 +993,7 @@ documentFormatController = createDocumentFormatController({
   state,
   getFormatOptions,
   switchOutputProfile,
-  persistActiveDocumentFormatBuckets,
-  persistActiveExportSettings,
-  persistActiveHaloConfig,
+  persistActiveDocumentFormatRuntimeState,
   markDocumentDirty,
   buildConfigEditor,
   renderStage

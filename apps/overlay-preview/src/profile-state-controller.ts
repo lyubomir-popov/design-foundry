@@ -31,6 +31,7 @@ export interface ProfileStateControllerOptions {
 
 export interface ProfileStateController {
   getDocumentFormatBucket(formatId: string): Record<string, OverlayLayoutOperatorParams>;
+  persistActiveDocumentFormatRuntimeState(): void;
   persistActiveExportSettings(): void;
   persistActiveHaloConfig(): void;
   updateExportSettings(updater: (settings: ExportSettings) => ExportSettings): void;
@@ -133,6 +134,12 @@ export function createProfileStateController(
     state.haloConfigByDocumentFormatId[activeFormat.id] = cloneJson(state.haloConfig);
   }
 
+  function persistActiveDocumentFormatRuntimeState(): void {
+    persistActiveDocumentFormatBuckets();
+    persistActiveExportSettings();
+    persistActiveHaloConfig();
+  }
+
   function updateExportSettings(updater: (settings: ExportSettings) => ExportSettings): void {
     state.exportSettings = updater(state.exportSettings);
     persistActiveExportSettings();
@@ -213,9 +220,7 @@ export function createProfileStateController(
     switchOptions: SwitchOutputProfileOptions = {}
   ): void {
     if (switchOptions.persistCurrentState !== false) {
-      persistActiveDocumentFormatBuckets();
-      persistActiveExportSettings();
-      persistActiveHaloConfig();
+      persistActiveDocumentFormatRuntimeState();
     }
 
     const nextFormat = getDocumentFormatByProfileKey(profileKey)
@@ -275,6 +280,7 @@ export function createProfileStateController(
 
   return {
     getDocumentFormatBucket,
+    persistActiveDocumentFormatRuntimeState,
     persistActiveExportSettings,
     persistActiveHaloConfig,
     updateExportSettings,

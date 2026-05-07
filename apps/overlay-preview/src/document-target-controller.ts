@@ -44,9 +44,7 @@ export interface DocumentFormatControllerDeps {
   readonly state: PreviewState;
   getFormatOptions(): HTMLElement | null;
   switchOutputProfile(profileKey: string, options?: { persistCurrentState?: boolean }): void;
-  persistActiveDocumentFormatBuckets(): void;
-  persistActiveExportSettings(): void;
-  persistActiveHaloConfig(): void;
+  persistActiveDocumentFormatRuntimeState(): void;
   markDocumentDirty(): void;
   buildConfigEditor(): void;
   renderStage(): Promise<void>;
@@ -232,9 +230,7 @@ export function createDocumentFormatController(
   }
 
   function persistActiveDocumentTargetRuntimeState(): void {
-    deps.persistActiveDocumentFormatBuckets();
-    deps.persistActiveExportSettings();
-    deps.persistActiveHaloConfig();
+    deps.persistActiveDocumentFormatRuntimeState();
   }
 
   function pruneDocumentTargetRuntimeState(targetId: string): void {

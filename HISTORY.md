@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane R persistence choreography helper slice (2026-05-06)
+
+- Added `persistActiveDocumentFormatRuntimeState()` to `apps/overlay-preview/src/profile-state-controller.ts` so the active document format's params bucket, export settings, and halo config are persisted through one explicit helper instead of repeated manual three-call sequences.
+- Updated `apps/overlay-preview/src/preview-document-bridge.ts` and `apps/overlay-preview/src/document-target-controller.ts` to consume that shared helper, so source-default snapshot creation and document-format target switching now share the same persistence contract as profile switching.
+- Validation: `npm run typecheck` and `npm run verify:document-persistence`.
+
 ## Overlay safe-area fade regression fix (2026-05-06)
 
 - Fixed the overlay-visible halo fade / hard drop-off regression in `apps/overlay-preview/src/stage-render-controller.ts` by treating the preview safe-area matte as guide UI instead of unconditional overlay content.

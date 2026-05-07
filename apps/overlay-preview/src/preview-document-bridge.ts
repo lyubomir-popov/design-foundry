@@ -63,9 +63,7 @@ import {
   }
 
   export interface OverlayPreviewDocumentBridgeAdapter<THaloConfig extends object> {
-    persistActiveDocumentFormatBuckets(): void;
-    persistActiveExportSettings(): void;
-    persistActiveHaloConfig(): void;
+    persistActiveDocumentFormatRuntimeState(): void;
     getOrCreateDocumentFormatParams(formatId: string, formatKey: string): OverlayLayoutOperatorParams;
     normalizeParams(params: OverlayLayoutOperatorParams): OverlayLayoutOperatorParams;
     syncHaloConfigForActiveDocumentFormat(): void;
@@ -113,9 +111,7 @@ import {
     state: OverlayPreviewDocumentBridgeState<THaloConfig, TGuideMode, TSelection>,
     adapter: OverlayPreviewDocumentBridgeAdapter<THaloConfig>
   ): OverlaySourceDefaultSnapshot<ExportSettings, THaloConfig, TGuideMode> {
-    adapter.persistActiveDocumentFormatBuckets();
-    adapter.persistActiveExportSettings();
-    adapter.persistActiveHaloConfig();
+    adapter.persistActiveDocumentFormatRuntimeState();
 
     const activeDocumentFormat = getActiveDocumentFormat(state.documentProject, state.outputProfileKey);
     const activeProfileKey = activeDocumentFormat?.outputProfileKey ?? state.outputProfileKey;

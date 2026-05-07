@@ -40,7 +40,7 @@ Status: Active and in progress. The first UI and animation slices are landed: se
 | R1 | In Progress | Selected text-style edits and style switches, authoring drag refreshes, the grid section, and the logo section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining controller-driven add/delete and any genuinely non-structural document-target paths that still call `buildConfigEditor()` for ordinary changes. |
 | R2 | In Progress | The hidden `shouldAutoOpenNextOperatorSection` flag is gone. The config editor now queues explicit section-restore requests and tracks the last open operator section key in controller state instead of inferring reopen behavior from a hidden boolean and live DOM state. Next: finish moving remaining operator-pane open/selection intent out of rebuild side effects and decide whether the remaining initial-open policy should become first-class controller state instead of rebuild-time fallback logic. |
 | R3 | Complete | Halo-config fingerprints are memoized by config object identity, repeated halo label measurement is cached in the renderer, and mascot asset completion now requests a fresh halo redraw from current stage state instead of replaying a cached scene descriptor. |
-| R4 | Next | Consolidate profile-scoped persistence writes so format buckets, halo config, and export settings do not depend on scattered manual triple-persist choreography. |
+| R4 | In Progress | Active-document-format runtime persistence now has a shared helper in the profile controller, and format switching plus source-default snapshot creation no longer hand-choreograph the same three writes. Next: thread that helper through any remaining manual save/apply seams and keep reducing persistence choreography debt. |
 
 ### Lane P — Format variants and preset groundwork
 
@@ -56,6 +56,7 @@ Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is pau
 
 - Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining controller-driven add/delete and any genuinely non-structural document-target paths.
 - Continue Lane R2 by finishing the operator-pane open-state cleanup after the explicit queued restore / last-open section state landed.
+- Continue Lane R4 by replacing any remaining manual active-format persistence sequences with the shared runtime-state helper now used by profile switching, source-default snapshot creation, and document-format target switching.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
 - Decide whether same-size authored variants should become first-class before any saved-file schema rename.
