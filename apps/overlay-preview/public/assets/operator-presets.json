@@ -1,0 +1,7 @@
+{
+  "kind": "brand-layout-ops.operator-presets",
+  "version": 1,
+  "operators": {
+    "halo": []
+  }
+}

@@ -4,6 +4,96 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Selected-text inspector compaction (2026-05-09)
+
+- Removed the remaining selected-overlay duplication from the Parameters rail in `apps/overlay-preview/src/config-editor-controller.ts`, `apps/overlay-preview/src/overlay-editing-controller.ts`, and `apps/overlay-preview/src/overlay-section.ts`: the rail no longer repeats the selected layer's identity line, the readonly `Label` / `ID` metadata row is gone, and the text section now uses generic `Text` and `Paragraph Style` labels instead of echoing the sidenav selection.
+- Replaced the tall paragraph-style option-card stack in `apps/overlay-preview/src/overlay-section.ts` with a compact `Paragraph Style` dropdown so selected text layers consume less vertical space in the demo inspector.
+- Validation: `npm run typecheck`, `npm run preview:build`, and a live browser check confirming selected text layers no longer show the redundant help copy or metadata row and now expose one paragraph-style combobox with no remaining option cards.
+
+## Panel-hosted Formats + Layout Grid readability cleanup (2026-05-09)
+
+- Moved the existing Formats editor out of the modal path and into the right-hand control panel. `File -> Formats...` and `D` now replace the rail body with a panel-hosted Formats view, keep the stage visible while format selection updates live, and `D`, `P`, or the panel dismiss control restore the ordinary Parameters view without leaving mixed content behind.
+- Reworked the Layout Grid section in `apps/overlay-preview/src/grid-section.ts` for narrow-width readability: Baseline now owns its own row, Rows and Row Gutter share one two-up row, Columns and Col Gutter share the next, and Margins / Safe Area now use group headings with short directional labels instead of repeating long labels in every field.
+- Added a local control-rail override in `apps/overlay-preview/src/styles.css` so numeric and text inputs use `2px` inline padding inside the panel, which keeps values visible at narrow widths.
+- Simplified the `W` shortcut in `apps/overlay-preview/src/preview-shell-controller.ts` so it toggles directly between `off` and `baseline`; because baseline mode already includes the composition or layout guides, this gives a fast two-state demo toggle instead of cycling through three states.
+- Validation: `npm run typecheck`, `npm run preview:build`, clean editor diagnostics, live check confirming the grouped Layout Grid labels plus `2px` input padding, live check confirming `W` flips between guides on and guides off, and live check confirming selecting `1280×720 X LI` from the panel-hosted Formats view changes the stage `viewBox` from `1920 1080` to `1280 720` while the panel stays open.
+
+## Demo-polish rail cleanup + panel preset return (2026-05-09)
+
+- Removed the temporary `Family` and `Add` controls from the Layers rail in `apps/overlay-preview/src/config-editor-controller.ts`, keeping only the current background-operator selection list until a better insertion surface exists.
+- Switched the preview stylesheet import in `apps/overlay-preview/src/main.ts` from `baseline-foundry/presets/app-tier.css` back to `baseline-foundry/presets/panel.css`, so the live inspector now uses the shared panel tokens for zero-radius controls and tighter inline padding instead of carrying a roomier app-tier control shape.
+- Shortened Layout Grid unit labels in `apps/overlay-preview/src/grid-section.ts` from `baselines` to `bU` while keeping safe-area labels explicit as pixels.
+- Validation: `npm run preview:build`, `npm run typecheck`, clean editor diagnostics, and a live preview check confirming the Background rail now shows only `Halo Field`, the Layout Grid labels read `bU`, and a rendered select control reports `border-radius: 0px`.
+
+## Inspector local-override cleanup slice (2026-05-09)
+
+- Confirmed the narrow numeric-input failure was caused by local inspector composition, not by a Baseline Foundry numeric-control bug.
+- Removed the stale local `.bf-panel.is-fill` / `.bf-panel-content` workaround from `apps/overlay-preview/src/styles.css` now that Baseline Foundry owns that contract upstream.
+- Stopped adding extra local right padding inside the Layers drawer, increased the app aside width ceiling, and made the overlay text and logo placement grids span two columns so the numeric values remain visible even at the minimum `18rem` aside width.
+- Validation: `npm run typecheck`, `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`, and a live preview check at forced `18rem` aside width confirming `Keyline`, `Row`, `Y Offset`, and `Span` remain readable.
+
+## Lane P Halo durable save-preset slice (2026-05-09)
+
+- Added a file-backed operator-preset library at `apps/overlay-preview/public/assets/operator-presets.json` plus a matching Vite authoring route so user-saved Halo presets persist outside individual documents without falling back to browser-local storage.
+- Added `apps/overlay-preview/src/operator-preset-controller.ts` and wired it through `apps/overlay-preview/src/main.ts` so user-saved Halo presets are loaded before the Parameters rail builds.
+- Extended `apps/overlay-preview/src/halo-config-section.ts` with `Save Current as Preset`, merged built-in and saved preset browsing, and kept the copy-on-apply rule: saving a preset captures non-composition Halo behavior for reuse, while the document keeps owning its local composition tweaks and later edits.
+- Validation: `npm run typecheck`, `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`, and a focused Playwright round-trip that saved a Halo preset through the new UI, confirmed the file-backed preset library changed, then restored the asset to its clean checked-in state.
+
+## Lane P Halo copy-on-apply preset slice (2026-05-09)
+
+- Added built-in Halo operator presets in `packages/operator-halo-field/src/index.ts` so operator-owned reusable seeds now live with the Halo operator instead of in preview-only UI code.
+- Updated `apps/overlay-preview/src/halo-config-section.ts` to expose a `Halo Preset` picker in Parameters. Applying a preset now reseeds non-composition Halo behavior from a known-good preset while preserving the current document's composition tweaks.
+- The preset flow is copy-on-apply: once applied, later local Halo edits remain document-owned and persist through normal document save without requiring an explicit preset save.
+- Extended `scripts/verify-ui-regressions.ts` to assert that applying the `Dense Signal` preset changes Halo generator values while preserving the current `Center Y Offset` composition adjustment.
+- Validation: `npm run typecheck` and `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`.
+
+## Lane R node-controls localized refresh slice (2026-05-08)
+## Lane R stabilization complete (2026-05-08)
+
+- Completed all four R-lane slices: R1 (localized inspector updates), R2 (per-group accordion state), R3 (animation optimization), R4 (persistence consolidation).
+- Audited all `buildConfigEditor()` call sites; verified all are genuinely structural changes (selection, add/remove, format/family switching).
+- No further inspector-localization opportunities identified; all value edits already incremental; all state-mutations that change selections correctly rebuild.
+- Regression suite confirms: same-node collapse preservation, cross-group state survival, overlay-selected scoping, Parameters content selection.
+- **Next:** Lane P6 decision point on same-size format variant unlock timing.
+
+## Lane R node-controls localized refresh slice (2026-05-08)
+
+- Updated `apps/overlay-preview/src/config-editor-controller.ts` so same-node background `Connect` and `Disconnect` actions refresh only the selected `Node` controls panel instead of rebuilding the full inspector.
+- Kept a safe fallback to the existing full rebuild path when localized panel replacement cannot run, so behavior remains resilient while avoiding unnecessary rebuild work on the common path.
+- Validation: `npm run typecheck` and `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`.
+
+## Lane R operator-pane per-group state slice (2026-05-08)
+
+- Updated `apps/overlay-preview/src/config-editor-controller.ts` so operator accordion state is tracked per operator group instead of with one global section key.
+- Refined fallback behavior so first-section auto-open now runs only when a group has no tracked state yet (or when a previously tracked section key is stale), while explicitly collapsed groups stay collapsed across group switches.
+- Extended `scripts/verify-ui-regressions.ts` to assert cross-group persistence of collapsed operator panes (`Fuzzy Boids` and `Composition`) in addition to the existing same-node connect/disconnect collapsed-pane checks.
+- Validation: `npm run typecheck` and `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`.
+
+## Lane R layers navigator compaction slice (2026-05-07)
+
+- Reworked the `Layers` rail in `apps/overlay-preview/src/config-editor-controller.ts` so it drops the extra explanatory copy, renames the navigator surface from `Workspace` to `Layers`, replaces wrapped family radios with a `Background Family` select, and collapses add-node creation to one compact `Add Node` control.
+- Moved selected background-node graph actions out of the navigator and into a dedicated `Node` section in Parameters, where connect, disconnect, and remove now stay attached to the selected node instead of competing with layer selection.
+- Removed the now-unused local layer-palette CSS from `apps/overlay-preview/src/styles.css`, changed background-node fallback opening so the `Node` section is immediately visible on selection, and updated `scripts/verify-ui-regressions.ts` to cover the new `Layers` model plus add/connect/disconnect/remove behavior.
+- Followed that with a keyboard-first cleanup: selected overlay text layers are now removed with `Delete` instead of a Parameters button, the root overlay copy points at that shortcut, and overlay visibility toggles rerender the stage so authored SVG text reappears immediately after `Show Overlay`.
+- Finished the next UX cleanup by keeping `Layers` adjacent to `Parameters` inside the control panel as a narrow baseline-foundry side navigation, showing overlay and background items together in one persistent navigator, and flattening overlay-root `Overlay Layout` plus `Layout Grid` into always-open small-caps sections instead of accordion tabs.
+- Validation: `npm run verify:ui-regressions -- --url http://127.0.0.1:4173` and `npm run typecheck`.
+
+## Lane R selected-element scoping audit slice (2026-05-07)
+
+- Audited the Parameters rail ownership in `apps/overlay-preview/src/config-editor-controller.ts` and confirmed the operator section grouping logic was already correct. The cross-selection leak came from always mounting the `Layers` palette inside the operator rail, which let background selections still show overlay selection UI in Parameters.
+- Moved the `Layers` palette into a dedicated shell-level rail so selection and graph-authoring controls stay outside the selected-element Parameters surface.
+- Updated the Parameters help copy and overlay-root helper text so the UI now explicitly describes the Layers rail as the place for selection and document-level controls.
+- Made the overlay action row selection-aware in `apps/overlay-preview/src/overlay-section.ts` and `apps/overlay-preview/src/overlay-editing-controller.ts`: overlay root now shows `Add Text` only, selected text shows `Delete Text` only, and logo parameters no longer inherit unrelated text actions.
+- Expanded `scripts/verify-ui-regressions.ts` to cover overlay-root scoping, text-layer scoping, logo scoping, halo-only scoping, and the earlier collapsed same-node graph connect or disconnect behavior.
+- Validation: `npm run verify:ui-regressions -- --url http://127.0.0.1:4173` and `npm run typecheck`.
+
+## Lane R Layers scoping + regression guardrails slice (2026-05-07)
+
+- Updated `apps/overlay-preview/src/config-editor-controller.ts` so the Layers palette stops showing `Rendered Background` and `Background Graph` while Overlay Layout is selected. Those background controls now appear only after a background operator is selected from the network overlay, which keeps overlay-root editing scoped to authored layers instead of always showing the graph surface.
+- Added `npm run verify:ui-regressions` in `scripts/verify-ui-regressions.ts`, covering the overlay-selected Layers scoping rule and the collapsed same-node `Fuzzy Boids` connect or disconnect behavior that the earlier operator-fallback slice fixed.
+- Brought verification scripts into the TypeScript compile surface by adding `scripts/**/*.ts` to `tsconfig.json`, and updated `scripts/verify-document-persistence.ts` to match the current preview-document bridge contract while asserting that snapshot creation goes through `persistActiveDocumentFormatRuntimeState()`.
+- Validation: `npm run verify:ui-regressions -- --url http://127.0.0.1:4173`, `npm run verify:document-persistence`, and `npm run typecheck`.
+
 ## Lane R operator-pane fallback policy slice (2026-05-07)
 
 - Changed `apps/overlay-preview/src/config-editor-controller.ts` so `queueOperatorSectionRestore()` no longer treats `fallbackToFirstSection` as an implicit default. First-section reopening is now opt-in at the call sites that actually change selection.

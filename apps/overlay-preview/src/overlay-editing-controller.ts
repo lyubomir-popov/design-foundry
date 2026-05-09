@@ -12,7 +12,6 @@ import type {
 } from "@brand-layout-ops/core-types";
 import { getLinkedLogoDimensionsPx, getLinkedTitleFontSizePx } from "@brand-layout-ops/layout-engine";
 import {
-  getOverlayFieldDisplayLabel,
   getOverlayMainHeadingField,
   normalizeOverlayTextFieldOffsetBaselines,
   setOverlayTextValue,
@@ -47,7 +46,11 @@ export interface OverlayEditingController {
   getSelectedOverlaySectionTitle(): string;
   getSelectedTextField(): TextFieldPlacementSpec | null;
   applySelectedTextStyle(styleKey: string): void;
-  createOverlayItemActionRow(): HTMLElement;
+  deleteSelectedOverlayItem(): boolean;
+  createOverlayItemActionRow(options?: {
+    showAdd?: boolean;
+    showDelete?: boolean;
+  }): HTMLElement | null;
 }
 
 export function createOverlayEditingController(deps: OverlayEditingControllerDeps): OverlayEditingController {
@@ -133,7 +136,7 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
 
     return state.selected.kind === "logo"
       ? "Logo"
-      : `Text: ${getOverlayFieldDisplayLabel(state.params, state.selected.id)}`;
+      : "Text";
   }
 
   function getSelectedTextField(): TextFieldPlacementSpec | null {
@@ -229,32 +232,42 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
     deps.markDocumentDirty();
   }
 
-  function createOverlayItemActionRow(): HTMLElement {
+  function deleteSelectedOverlayItem(): boolean {
+    if (!canDeleteSelectedText()) {
+      return false;
+    }
+
+    deleteSelectedTextField();
+    return true;
+  }
+
+  function createOverlayItemActionRow(options?: {
+    showAdd?: boolean;
+    showDelete?: boolean;
+  }): HTMLElement | null {
+    const showAdd = options?.showAdd ?? true;
+    const showDelete = false;
+
+    if (!showAdd && !showDelete) {
+      return null;
+    }
+
     const actions = document.createElement("div");
     actions.className = "bf-cluster is-tight-cluster";
 
-    const addButton = document.createElement("button");
-    addButton.className = "bf-button is-dense";
-    addButton.type = "button";
-    addButton.textContent = "Add Text";
-    addButton.addEventListener("click", () => {
-      addTextField();
-      deps.buildConfigEditor();
-      void deps.renderStage();
-    });
+    if (showAdd) {
+      const addButton = document.createElement("button");
+      addButton.className = "bf-button is-dense";
+      addButton.type = "button";
+      addButton.textContent = "Add Text";
+      addButton.addEventListener("click", () => {
+        addTextField();
+        deps.buildConfigEditor();
+        void deps.renderStage();
+      });
+      actions.append(addButton);
+    }
 
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "bf-button is-base is-dense";
-    deleteButton.type = "button";
-    deleteButton.textContent = "Delete Text";
-    deleteButton.disabled = !canDeleteSelectedText();
-    deleteButton.addEventListener("click", () => {
-      deleteSelectedTextField();
-      deps.buildConfigEditor();
-      void deps.renderStage();
-    });
-
-    actions.append(addButton, deleteButton);
     return actions;
   }
 
@@ -271,6 +284,7 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
     getSelectedOverlaySectionTitle,
     getSelectedTextField,
     applySelectedTextStyle,
+    deleteSelectedOverlayItem,
     createOverlayItemActionRow
   };
 }

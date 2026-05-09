@@ -78,6 +78,7 @@ The current audit adds two constraints to that direction:
 
 - the Parameters rail should stop acting as a mixed control plane for rendered-output switching, graph wiring, and operator fields in the same rebuild-heavy surface
 - pane-open state and surface selection should be explicit controller state, not hidden one-shot flags consumed during rebuild
+- operator insertion should eventually move to a Houdini-like add-operator tab or menu surface, so temporary `Family` / `Add` controls do not live in the Layers navigator long term
 
 This implies a gradual shift, not a rewrite: section builders move out of the composition root first, operator-owned panels stabilize second, and only then does a selected-operator pane become a composition decision instead of a structural rewrite.
 
@@ -132,6 +133,19 @@ This is not a pure Houdini ROP model. It is closer to Adobe alternate layouts wi
 - **The active preview shows one variant at a time.** The shell should make switching explicit, and export can render one or many variants.
 - **Global presets are seeds, not authority.** The preset library provides starting sizes; the document owns the authored variants and their per-format adjustments.
 - **Export presets belong with output.** Named export preset CRUD should move toward the future Houdini-like output operator rather than staying as shell-only modal state.
+
+### Audit outcome — May 2026
+
+The latest editor and model audit narrows the document-shape decision:
+
+- Keep the fast radio-button workflow for switching formats in the live shell. That interaction is good and should survive.
+- Do not collapse authored variants into a pure Houdini-style output-node concept. Background animation, overlay layout, safe area, grid, and related tweaks are authored state, not just render targets.
+- Do not move to one-document-per-size as the primary model either. That would make routine campaign work heavier and would fight the current quick-switch workflow.
+- Prefer a hybrid: one document is the campaign container, each switched format is an authored variant inside that document, and output/export recipes remain a separate output concern.
+- Cross-document reuse is a separate problem from variant switching. If the user wants a tweaked background animation or foreground layout to carry into future documents, that should come from reusable template or preset seeds, not by forcing documents or variants to impersonate export nodes.
+- Same-size authored duplicate variants remain optional future work. They should unlock only when there is a concrete workflow that needs multiple authored alternatives at the same dimensions.
+- Presets should be copy-on-apply. The normal workflow is: start from a known-good preset, make local adaptations for the current format or dimensions, save the file, and expect those adapted settings to reopen with the document without explicitly saving a new preset. Saving back into the preset library is an optional reuse action, not the default persistence path.
+- This implies a clean ownership split: documents persist concrete operator instances and their adapted settings, operator presets provide reusable seeds for those instances, and output presets describe delivery only.
 
 ### Persistence architecture summary
 

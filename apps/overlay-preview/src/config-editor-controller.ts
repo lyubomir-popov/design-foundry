@@ -2,7 +2,7 @@
  * config-editor-controller.ts — Inspector pane registration and rebuild.
  *
  * Owns the accordion section registry, the operator selector UI, and the
- * policy for rebuilding the split workspace/parameter rails.
+ * policy for rebuilding the split layers/parameter rails.
  */
 
 import { initRangeControls } from "baseline-foundry";
@@ -40,6 +40,7 @@ export interface ConfigEditorControllerDeps {
   readonly state: PreviewState;
   readonly sectionDefinitions: ParameterSectionDefinition[];
   getConfigEditor(): HTMLElement | null;
+  getLayersEditor(): HTMLElement | null;
   getSelectedOperatorId(): string;
   getSelectedOperatorGroup(): string;
   getSceneFamilyLabel(key: OverlaySceneFamilyKey): string;
@@ -76,6 +77,11 @@ interface PendingOperatorSectionRestore {
   fallbackToFirstSection: boolean;
 }
 
+interface BackgroundNodePanelElements {
+  panel: HTMLElement;
+  sectionKey: string;
+}
+
 const OVERLAY_LOGO_LAYER_TOKEN = "overlay:logo";
 
 function getOverlayTextLayerToken(fieldId: string): string {
@@ -85,9 +91,22 @@ function getOverlayTextLayerToken(fieldId: string): string {
 export function createConfigEditorController(deps: ConfigEditorControllerDeps): ConfigEditorController {
   const { state } = deps;
   const configSectionRegistry = createParameterSectionRegistry(deps.sectionDefinitions);
-  let lastOpenOperatorSectionKey: string | null = null;
+  const operatorSectionStateByGroup = new Map<string, string | null>();
   let pendingOperatorSectionRestore: PendingOperatorSectionRestore | null = null;
   let renderedSectionElementsByKey = new Map<string, HTMLElement>();
+  let layerPaletteInputIdSequence = 0;
+
+  function getOperatorSectionState(groupKey: string): string | null {
+    return operatorSectionStateByGroup.get(groupKey) ?? null;
+  }
+
+  function hasOperatorSectionState(groupKey: string): boolean {
+    return operatorSectionStateByGroup.has(groupKey);
+  }
+
+  function setOperatorSectionState(groupKey: string, sectionKey: string | null): void {
+    operatorSectionStateByGroup.set(groupKey, sectionKey);
+  }
 
   function getConfigSections(): ParameterSectionDefinition[] {
     return configSectionRegistry.getSections();
@@ -183,6 +202,27 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     });
   }
 
+  function getSelectedBackgroundNode(): OverlayBackgroundNode | null {
+    const selectedOperatorId = deps.getSelectedOperatorId();
+    if (selectedOperatorId === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID) {
+      return null;
+    }
+
+    return state.documentProject.backgroundGraph.nodes.find((node) => node.id === selectedOperatorId) ?? null;
+  }
+
+  function removeBackgroundNodeAndSelectFallback(node: OverlayBackgroundNode): void {
+    if (!deps.removeBackgroundNode(node.id)) {
+      return;
+    }
+
+    deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
+    queueOperatorSectionRestore({ fallbackToFirstSection: true });
+    deps.markDocumentDirty();
+    buildConfigEditor();
+    void deps.renderStage();
+  }
+
   function buildBackgroundConnectionControls(node: OverlayBackgroundNode): HTMLElement | null {
     const connectionFields = getOverlayBackgroundInputPorts(node.operatorKey).flatMap((inputPort) => {
       const existingEdge = findOverlayBackgroundIncomingEdge(state.documentProject.backgroundGraph, node.id, inputPort.key);
@@ -225,9 +265,11 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
             }
 
             deps.setSelectedOperator(node.id);
-            queueOperatorSectionRestore();
             deps.markDocumentDirty();
-            buildConfigEditor();
+            if (!refreshSelectedBackgroundNodeControls(node.id)) {
+              queueOperatorSectionRestore();
+              buildConfigEditor();
+            }
             void deps.renderStage();
           });
           controls.append(disconnectButton);
@@ -284,9 +326,11 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
         }
 
         deps.setSelectedOperator(node.id);
-        queueOperatorSectionRestore();
         deps.markDocumentDirty();
-        buildConfigEditor();
+        if (!refreshSelectedBackgroundNodeControls(node.id)) {
+          queueOperatorSectionRestore();
+          buildConfigEditor();
+        }
         void deps.renderStage();
       });
       select.addEventListener("change", syncConnectButtonState);
@@ -305,9 +349,11 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
           }
 
           deps.setSelectedOperator(node.id);
-          queueOperatorSectionRestore();
           deps.markDocumentDirty();
-          buildConfigEditor();
+          if (!refreshSelectedBackgroundNodeControls(node.id)) {
+            queueOperatorSectionRestore();
+            buildConfigEditor();
+          }
           void deps.renderStage();
         });
         controls.append(disconnectButton);
@@ -327,6 +373,108 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     return container;
   }
 
+  function buildBackgroundNodeControlsPanel(node: OverlayBackgroundNode): BackgroundNodePanelElements | null {
+    const connectionControls = buildBackgroundConnectionControls(node);
+    const canRemoveNode = state.documentProject.backgroundGraph.nodes.length > 1;
+
+    if (!connectionControls && !canRemoveNode) {
+      return null;
+    }
+
+    const sectionKey = `background-node-controls:${node.id}`;
+    const group = document.createElement("li");
+    group.dataset.sectionKey = sectionKey;
+    group.className = "bf-accordion-group";
+
+    const heading = document.createElement("h3");
+    heading.className = "bf-accordion-heading";
+
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "bf-accordion-tab";
+    tab.textContent = "Node";
+    tab.setAttribute("aria-expanded", "false");
+
+    const panelId = nextLayerPaletteInputId("background-node-controls-panel");
+    tab.setAttribute("aria-controls", panelId);
+    heading.append(tab);
+    group.append(heading);
+
+    const panel = document.createElement("div");
+    panel.id = panelId;
+    panel.className = "bf-accordion-panel";
+    panel.setAttribute("aria-hidden", "true");
+
+    const body = document.createElement("div");
+    body.className = "bf-accordion-body bf-stack is-compact-stack";
+
+    if (connectionControls) {
+      const connectionField = document.createElement("div");
+      connectionField.className = "bf-field";
+
+      const connectionLabel = document.createElement("span");
+      connectionLabel.className = "bf-form-label";
+      connectionLabel.textContent = "Inputs";
+
+      connectionField.append(connectionLabel, connectionControls);
+      body.append(connectionField);
+    }
+
+    if (canRemoveNode) {
+      const actions = document.createElement("div");
+      actions.className = "bf-cluster";
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "bf-button is-base is-dense";
+      removeButton.textContent = `Remove ${getBackgroundNodeSelectionLabel(node)}`;
+      removeButton.addEventListener("click", () => {
+        removeBackgroundNodeAndSelectFallback(node);
+      });
+
+      actions.append(removeButton);
+      body.append(actions);
+    }
+
+    panel.append(body);
+    group.append(panel);
+
+    return { panel: group, sectionKey };
+  }
+
+  function refreshSelectedBackgroundNodeControls(nodeId: string): boolean {
+    const selectedNode = state.documentProject.backgroundGraph.nodes.find((node) => node.id === nodeId) ?? null;
+    if (!selectedNode) {
+      return false;
+    }
+
+    const nextPanel = buildBackgroundNodeControlsPanel(selectedNode);
+    if (!nextPanel) {
+      return false;
+    }
+
+    const container = deps.getConfigEditor();
+    const currentPanel = container?.querySelector<HTMLElement>(`[data-section-key="${nextPanel.sectionKey}"]`) ?? null;
+    if (!currentPanel) {
+      return false;
+    }
+
+    const accordion = currentPanel.closest<HTMLElement>(".bf-accordion");
+    const wasExpanded = currentPanel.querySelector<HTMLElement>(".bf-accordion-tab")?.getAttribute("aria-expanded") === "true";
+
+    currentPanel.replaceWith(nextPanel.panel);
+
+    if (accordion) {
+      setupAccordion(accordion);
+    }
+
+    if (wasExpanded) {
+      openAccordionSection(nextPanel.panel, deps.getSelectedOperatorGroup());
+    }
+
+    return true;
+  }
+
   function findRenderedSection(renderedSections: RenderedSection[], key: string | null): HTMLElement | null {
     if (!key) {
       return null;
@@ -339,13 +487,14 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     preferredSectionKey?: string | null;
     fallbackToFirstSection?: boolean;
   }): void {
+    const selectedGroup = deps.getSelectedOperatorGroup();
     pendingOperatorSectionRestore = {
-      preferredSectionKey: options?.preferredSectionKey ?? lastOpenOperatorSectionKey,
+      preferredSectionKey: options?.preferredSectionKey ?? getOperatorSectionState(selectedGroup),
       fallbackToFirstSection: options?.fallbackToFirstSection ?? false
     };
   }
 
-  function trackOperatorAccordionState(accordion: HTMLElement): void {
+  function trackOperatorAccordionState(accordion: HTMLElement, groupKey: string): void {
     accordion.addEventListener("click", (event) => {
       const target = (event.target as HTMLElement).closest<HTMLElement>(".bf-accordion-tab");
       if (!target) {
@@ -363,7 +512,7 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
       }
 
       const isOpen = target.getAttribute("aria-expanded") === "true";
-      lastOpenOperatorSectionKey = isOpen ? null : sectionGroup.dataset.sectionKey ?? null;
+      setOperatorSectionState(groupKey, isOpen ? null : sectionGroup.dataset.sectionKey ?? null);
     });
   }
 
@@ -398,293 +547,110 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     deps.selectOverlayItem(selection);
   }
 
-  function buildLayerPaletteEl(): HTMLElement {
-    const section = document.createElement("li");
-    section.className = "bf-accordion-group is-layer-palette";
+  function nextLayerPaletteInputId(prefix: string): string {
+    layerPaletteInputIdSequence += 1;
+    return `layer-palette-${prefix}-${layerPaletteInputIdSequence}`;
+  }
 
-    const heading = document.createElement("div");
-    heading.className = "is-layer-palette-heading";
+  function createSideNavigationSection(title: string): { heading: HTMLElement; list: HTMLUListElement } {
+    const heading = document.createElement("h3");
+    heading.className = "bf-side-navigation-heading";
+    heading.textContent = title;
+
+    const list = document.createElement("ul");
+    list.className = "bf-side-navigation-list";
+    return { heading, list };
+  }
+
+  function createSideNavigationItem(options: {
+    label: string;
+    selected: boolean;
+    onSelect: () => void;
+  }): HTMLLIElement {
+    const item = document.createElement("li");
+    item.className = "bf-side-navigation-item";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "bf-side-navigation-link";
+    if (options.selected) {
+      button.setAttribute("aria-current", "page");
+    }
+    button.addEventListener("click", options.onSelect);
 
     const label = document.createElement("span");
-    label.className = "bf-form-label";
-    label.textContent = "Layers";
-    heading.append(label);
+    label.className = "bf-side-navigation-label";
+    label.textContent = options.label;
 
-    const help = document.createElement("p");
-    help.className = "bf-form-help is-tight bf-u-no-margin--bottom is-layer-palette-help";
-    help.textContent = "Select the rendered background and the authored layer you want to tune. The parameter pane follows this selection.";
+    button.append(label);
+    item.append(button);
+    return item;
+  }
 
-    const outputSection = document.createElement("div");
-    outputSection.className = "is-layer-palette-section";
+  function getBackgroundNodeSelectionLabel(node: OverlayBackgroundNode): string {
+    const baseLabel = getBackgroundNodeLabel(node);
+    const duplicateCount = state.documentProject.backgroundGraph.nodes.filter((entry) => entry.operatorKey === node.operatorKey).length;
+    return duplicateCount > 1 ? `${baseLabel} (${node.id})` : baseLabel;
+  }
 
-    const outputLabel = document.createElement("div");
-    outputLabel.className = "is-layer-palette-subheading";
-    outputLabel.textContent = "Rendered Background";
-    outputSection.append(outputLabel);
-
-    const radioGroup = document.createElement("div");
-    radioGroup.className = "is-layer-palette-options";
-
-    for (const sceneFamilyKey of OVERLAY_SCENE_FAMILY_ORDER) {
-      const radioLabel = document.createElement("label");
-      radioLabel.className = "is-layer-palette-option";
-
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "background-family-selector";
-      radio.value = sceneFamilyKey;
-      radio.checked = sceneFamilyKey === state.documentProject.sceneFamilyKey;
-      radio.addEventListener("change", () => {
-        if (!radio.checked) {
-          return;
-        }
-
-        state.documentProject = {
-          ...state.documentProject,
-          sceneFamilyKey: sceneFamilyKey as OverlaySceneFamilyKey
-        };
-        queueOperatorSectionRestore({ fallbackToFirstSection: true });
-        deps.syncDocumentBackgroundGraph();
-        deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
-        deps.markDocumentDirty();
-        buildConfigEditor();
-        deps.syncBackgroundRendererVisibility();
-        void deps.renderStage();
-      });
-
-      const text = document.createElement("span");
-      text.textContent = deps.getSceneFamilyLabel(sceneFamilyKey);
-
-      radioLabel.append(radio, text);
-      radioGroup.append(radioLabel);
-    }
-
-    outputSection.append(radioGroup);
+  function buildLayerPaletteEl(): HTMLElement {
+    const section = document.createElement("div");
+    section.className = "bf-stack is-compact-stack";
 
     const selectedLayerToken = getSelectedLayerToken();
 
-    const backgroundSection = document.createElement("div");
-    backgroundSection.className = "is-layer-palette-section";
+    const { heading: overlayHeading, list: overlayList } = createSideNavigationSection("Overlay");
 
-    const backgroundLabel = document.createElement("div");
-    backgroundLabel.className = "is-layer-palette-subheading";
-    backgroundLabel.textContent = "Background Graph";
-    backgroundSection.append(backgroundLabel);
-
-    const backgroundList = document.createElement("div");
-    backgroundList.className = "bf-choice-list bf-stack is-compact-stack";
-
-    const canRemoveNodes = state.documentProject.backgroundGraph.nodes.length > 1;
-
-    for (const node of state.documentProject.backgroundGraph.nodes) {
-      const nodeEntry = document.createElement("div");
-      nodeEntry.className = "is-layer-palette-node";
-
-      const row = document.createElement("label");
-      row.className = "bf-choice-row is-layer-palette-row";
-
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "layer-selection";
-      radio.value = node.id;
-      radio.checked = node.id === selectedLayerToken;
-      radio.addEventListener("change", () => {
-        if (!radio.checked || !deps.setSelectedOperator(node.id)) {
-          return;
-        }
-
-        queueOperatorSectionRestore({ fallbackToFirstSection: true });
-        buildConfigEditor();
-      });
-
-      const copy = document.createElement("span");
-      copy.className = "is-layer-palette-copy";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "bf-choice-row-name";
-      nameSpan.textContent = getBackgroundNodeLabel(node);
-
-      const metaSpan = document.createElement("span");
-      metaSpan.className = "bf-choice-row-meta";
-      metaSpan.textContent = getBackgroundNodeStatus(node);
-
-      copy.append(nameSpan, metaSpan);
-      row.append(radio, copy);
-
-      if (canRemoveNodes) {
-        const removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.className = "bf-choice-row-action is-remove-node";
-        removeBtn.textContent = "×";
-        removeBtn.title = `Remove ${getBackgroundNodeLabel(node)}`;
-        removeBtn.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!deps.removeBackgroundNode(node.id)) {
-            return;
-          }
-
-          deps.setSelectedOperator(state.documentProject.backgroundGraph.activeNodeId);
-          queueOperatorSectionRestore({ fallbackToFirstSection: true });
-          deps.markDocumentDirty();
-          buildConfigEditor();
-          void deps.renderStage();
-        });
-        row.append(removeBtn);
+    overlayList.append(createSideNavigationItem({
+      label: "Layout",
+      selected: selectedLayerToken === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,
+      onSelect: () => {
+        activateOverlayLayer(null);
       }
-
-      nodeEntry.append(row);
-
-      const connectionControls = buildBackgroundConnectionControls(node);
-      if (connectionControls) {
-        nodeEntry.append(connectionControls);
-      }
-
-      backgroundList.append(nodeEntry);
-    }
-
-    backgroundSection.append(backgroundList);
-
-    const addActions = document.createElement("div");
-    addActions.className = "is-layer-palette-actions";
-
-    for (const operatorKey of deps.getAvailableBackgroundOperatorKeys()) {
-      const addButton = document.createElement("button");
-      addButton.type = "button";
-      addButton.className = "bf-button is-base is-dense";
-      addButton.textContent = `Add ${getBackgroundOperatorLabel(operatorKey)}`;
-      addButton.addEventListener("click", () => {
-        const nextNodeId = deps.addBackgroundNode(operatorKey);
-        if (!nextNodeId) {
-          return;
-        }
-
-        deps.setSelectedOperator(nextNodeId);
-        queueOperatorSectionRestore({ fallbackToFirstSection: true });
-        deps.markDocumentDirty();
-        buildConfigEditor();
-        void deps.renderStage();
-      });
-      addActions.append(addButton);
-    }
-
-    backgroundSection.append(addActions);
-
-    const overlaySection = document.createElement("div");
-    overlaySection.className = "is-layer-palette-section";
-
-    const overlayLabel = document.createElement("div");
-    overlayLabel.className = "is-layer-palette-subheading";
-    overlayLabel.textContent = "Overlay Layers";
-    overlaySection.append(overlayLabel);
-
-    const overlayList = document.createElement("div");
-    overlayList.className = "bf-choice-list bf-stack is-compact-stack";
-
-    const overlayRow = document.createElement("label");
-    overlayRow.className = "bf-choice-row is-layer-palette-row";
-
-    const overlayRadio = document.createElement("input");
-    overlayRadio.type = "radio";
-    overlayRadio.name = "layer-selection";
-    overlayRadio.value = OVERLAY_LAYOUT_OPERATOR_SELECTION_ID;
-    overlayRadio.checked = selectedLayerToken === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID;
-    overlayRadio.addEventListener("change", () => {
-      if (!overlayRadio.checked) {
-        return;
-      }
-
-      activateOverlayLayer(null);
-    });
-
-    const overlayCopy = document.createElement("span");
-    overlayCopy.className = "is-layer-palette-copy";
-
-    const overlayName = document.createElement("span");
-    overlayName.className = "bf-choice-row-name";
-    overlayName.textContent = "Overlay Layout";
-
-    const overlayMeta = document.createElement("span");
-    overlayMeta.className = "bf-choice-row-meta";
-    overlayMeta.textContent = "Root layer | text, logo, guides, and overlay document controls.";
-
-    overlayCopy.append(overlayName, overlayMeta);
-    overlayRow.append(overlayRadio, overlayCopy);
-    overlayList.append(overlayRow);
+    }));
 
     for (const field of state.params.textFields) {
-      const row = document.createElement("label");
-      row.className = "bf-choice-row is-layer-palette-row is-child";
-
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "layer-selection";
-      radio.value = getOverlayTextLayerToken(field.id);
-      radio.checked = selectedLayerToken === getOverlayTextLayerToken(field.id);
-      radio.addEventListener("change", () => {
-        if (!radio.checked) {
-          return;
+      overlayList.append(createSideNavigationItem({
+        label: getOverlayFieldDisplayLabel(state.params, field.id),
+        selected: selectedLayerToken === getOverlayTextLayerToken(field.id),
+        onSelect: () => {
+          activateOverlayLayer({ kind: "text", id: field.id });
         }
-
-        activateOverlayLayer({ kind: "text", id: field.id });
-      });
-
-      const copy = document.createElement("span");
-      copy.className = "is-layer-palette-copy";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "bf-choice-row-name";
-      nameSpan.textContent = `Text: ${getOverlayFieldDisplayLabel(state.params, field.id)}`;
-
-      const metaSpan = document.createElement("span");
-      metaSpan.className = "bf-choice-row-meta";
-      metaSpan.textContent = `Overlay text layer | ${field.id}`;
-
-      copy.append(nameSpan, metaSpan);
-      row.append(radio, copy);
-      overlayList.append(row);
+      }));
     }
 
     if (state.params.logo) {
-      const row = document.createElement("label");
-      row.className = "bf-choice-row is-layer-palette-row is-child";
-
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "layer-selection";
-      radio.value = OVERLAY_LOGO_LAYER_TOKEN;
-      radio.checked = selectedLayerToken === OVERLAY_LOGO_LAYER_TOKEN;
-      radio.addEventListener("change", () => {
-        if (!radio.checked) {
-          return;
+      overlayList.append(createSideNavigationItem({
+        label: "Logo",
+        selected: selectedLayerToken === OVERLAY_LOGO_LAYER_TOKEN,
+        onSelect: () => {
+          activateOverlayLayer({ kind: "logo", id: state.params.logo?.id ?? "brand-mark" });
         }
-
-        activateOverlayLayer({ kind: "logo", id: state.params.logo?.id ?? "brand-mark" });
-      });
-
-      const copy = document.createElement("span");
-      copy.className = "is-layer-palette-copy";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "bf-choice-row-name";
-      nameSpan.textContent = "Logo";
-
-      const metaSpan = document.createElement("span");
-      metaSpan.className = "bf-choice-row-meta";
-      metaSpan.textContent = "Overlay brand mark layer.";
-
-      copy.append(nameSpan, metaSpan);
-      row.append(radio, copy);
-      overlayList.append(row);
+      }));
     }
 
-    overlaySection.append(overlayList);
+    const { heading: backgroundHeading, list: backgroundList } = createSideNavigationSection("Background");
 
-    section.append(heading, help, outputSection, backgroundSection, overlaySection);
+    for (const node of state.documentProject.backgroundGraph.nodes) {
+      backgroundList.append(createSideNavigationItem({
+        label: getBackgroundNodeSelectionLabel(node),
+        selected: node.id === selectedLayerToken,
+        onSelect: () => {
+          if (!deps.setSelectedOperator(node.id)) {
+            return;
+          }
+
+          queueOperatorSectionRestore({ fallbackToFirstSection: true });
+          buildConfigEditor();
+        }
+      }));
+    }
+
+    section.append(overlayHeading, overlayList, backgroundHeading, backgroundList);
     return section;
   }
 
-  function openAccordionSection(group: HTMLElement | null): boolean {
+  function openAccordionSection(group: HTMLElement | null, groupKey: string): boolean {
     const tab = group?.querySelector<HTMLElement>(".bf-accordion-tab");
     const panelId = tab?.getAttribute("aria-controls");
     const panel = panelId ? document.getElementById(panelId) : null;
@@ -694,14 +660,14 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
 
     tab.setAttribute("aria-expanded", "true");
     panel.setAttribute("aria-hidden", "false");
-    lastOpenOperatorSectionKey = group?.dataset.sectionKey ?? null;
+    setOperatorSectionState(groupKey, group?.dataset.sectionKey ?? null);
     return true;
   }
 
   function buildSectionAccordion(
     sections: ParameterSectionDefinition[],
     renderedSections: RenderedSection[]
-  ): HTMLElement {
+  ): { accordion: HTMLElement; list: HTMLUListElement } {
     const accordion = document.createElement("aside");
     accordion.className = "bf-accordion";
 
@@ -716,46 +682,114 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     }
 
     accordion.append(list);
-    return accordion;
+    return { accordion, list };
   }
 
-  function buildInspectorRail(title: string, description: string, accordion: HTMLElement): HTMLElement {
-    const rail = document.createElement("section");
-    rail.className = "bf-stack is-compact-stack is-inspector-rail";
+  function buildStaticSectionFromAccordionGroup(group: HTMLElement): HTMLElement {
+    const section = document.createElement("section");
+    section.className = "bf-stack is-compact-stack";
+    if (group.dataset.sectionKey) {
+      section.dataset.sectionKey = group.dataset.sectionKey;
+    }
 
-    const heading = document.createElement("div");
-    heading.className = "is-inspector-rail-heading";
-
+    const title = group.querySelector<HTMLElement>(".bf-accordion-tab")?.textContent?.trim() ?? "";
     const label = document.createElement("span");
     label.className = "bf-form-label is-inspector-rail-label";
     label.textContent = title;
+    section.append(label);
 
-    const help = document.createElement("p");
-    help.className = "bf-form-help is-tight bf-u-no-margin--bottom";
-    help.textContent = description;
+    const panel = group.querySelector<HTMLElement>(".bf-accordion-panel");
+    if (!panel) {
+      return section;
+    }
 
-    heading.append(label, help);
-    rail.append(heading, accordion);
-    return rail;
+    panel.removeAttribute("aria-hidden");
+    panel.removeAttribute("aria-labelledby");
+    panel.removeAttribute("id");
+    panel.hidden = false;
+    panel.classList.remove("bf-accordion-panel");
+    panel.classList.add("bf-stack", "is-compact-stack");
+    section.append(panel);
+    return section;
+  }
+
+  function appendSectionsToStaticStack(
+    stack: HTMLElement,
+    sections: ParameterSectionDefinition[],
+    renderedSections: RenderedSection[],
+    options?: {
+      trackRenderedElements?: boolean;
+    }
+  ): void {
+    for (const section of sections) {
+      const group = section.factory();
+      group.dataset.sectionKey = section.key;
+      const element = buildStaticSectionFromAccordionGroup(group);
+      stack.append(element);
+      renderedSections.push({ section, element });
+
+      if (options?.trackRenderedElements) {
+        renderedSectionElementsByKey.set(section.key, element);
+      }
+    }
+  }
+
+  function appendSectionsToAccordionList(
+    list: HTMLUListElement,
+    sections: ParameterSectionDefinition[],
+    renderedSections: RenderedSection[],
+    options?: {
+      trackRenderedElements?: boolean;
+    }
+  ): void {
+    for (const section of sections) {
+      const element = section.factory();
+      element.dataset.sectionKey = section.key;
+      list.append(element);
+      renderedSections.push({ section, element });
+
+      if (options?.trackRenderedElements) {
+        renderedSectionElementsByKey.set(section.key, element);
+      }
+    }
+  }
+
+  function buildInspectorPanelContent(description: string | null, content: HTMLElement): HTMLElement {
+    const panelContent = document.createElement("section");
+    panelContent.className = "bf-stack is-compact-stack is-inspector-rail";
+
+    if (description) {
+      const help = document.createElement("p");
+      help.className = "bf-form-help is-tight bf-u-no-margin--bottom";
+      help.textContent = description;
+      panelContent.append(help);
+    }
+
+    panelContent.append(content);
+    return panelContent;
   }
 
   function buildConfigEditor(): void {
     const container = deps.getConfigEditor();
+    const layersContainer = deps.getLayersEditor();
     renderedSectionElementsByKey.clear();
-    if (!container) {
+    container?.replaceChildren();
+    layersContainer?.replaceChildren();
+    if (!container && !layersContainer) {
       return;
     }
 
-    const preferredOpenSectionKey = pendingOperatorSectionRestore?.preferredSectionKey ?? lastOpenOperatorSectionKey;
-    const fallbackToFirstSection = pendingOperatorSectionRestore?.fallbackToFirstSection ?? false;
-
-    container.innerHTML = "";
-
     const sections = getConfigSections();
     const activeGroup = deps.getSelectedOperatorGroup();
+    const preferredOpenSectionKey = pendingOperatorSectionRestore?.preferredSectionKey ?? getOperatorSectionState(activeGroup);
+    const fallbackToFirstSection = pendingOperatorSectionRestore?.fallbackToFirstSection ?? false;
+    const selectedBackgroundNode = getSelectedBackgroundNode();
 
     const shellSections = sections.filter((section) => section.scope === "shell");
     const operatorSections = sections.filter((section) => section.scope !== "shell");
+    const selectedBackgroundNodePanel = activeGroup === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID
+      ? null
+      : (selectedBackgroundNode ? buildBackgroundNodeControlsPanel(selectedBackgroundNode) : null);
     const selectedOperatorSections = operatorSections.filter((section) => {
       if (section.group !== activeGroup) {
         return false;
@@ -772,58 +806,91 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
       return section.key === "overlay-layer";
     });
     const renderedSections: RenderedSection[] = [];
+    const shouldRenderLayersRail = shellSections.length > 0 || operatorSections.length > 0;
 
-    if (shellSections.length > 0) {
-      const shellAccordion = buildSectionAccordion(shellSections, renderedSections);
-      container.append(
-        buildInspectorRail(
-          "Workspace",
-          "Document, export, playback, and source-default actions stay shell-level.",
-          shellAccordion
-        )
-      );
-      setupAccordion(shellAccordion);
+    if (shouldRenderLayersRail && layersContainer) {
+      const layersRoot = document.createElement("div");
+      layersRoot.className = "bf-stack is-compact-stack";
+      layersRoot.append(buildLayerPaletteEl());
+      for (const section of shellSections) {
+        layersRoot.append(section.factory());
+      }
+      layersContainer.append(layersRoot);
     }
 
-    if (operatorSections.length > 0) {
-      const operatorAccordion = buildSectionAccordion([], renderedSections);
-      const operatorList = operatorAccordion.querySelector(".bf-accordion-list");
-      operatorList?.append(buildLayerPaletteEl());
+    const shouldFlattenOverlaySections = activeGroup === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID;
 
-      for (const section of selectedOperatorSections) {
-        const element = section.factory();
-        element.dataset.sectionKey = section.key;
-        operatorList?.append(element);
-        renderedSections.push({ section, element });
-        renderedSectionElementsByKey.set(section.key, element);
+    if (operatorSections.length > 0 && container) {
+      let parametersContent: HTMLElement | null = null;
+      if (shouldFlattenOverlaySections) {
+        const stack = document.createElement("div");
+        stack.className = "bf-stack is-compact-stack";
+        appendSectionsToStaticStack(stack, selectedOperatorSections, renderedSections, {
+          trackRenderedElements: true
+        });
+        parametersContent = stack;
+      } else {
+        const { accordion: operatorAccordion, list: operatorList } = buildSectionAccordion([], renderedSections);
+        appendSectionsToAccordionList(operatorList, selectedOperatorSections, renderedSections, {
+          trackRenderedElements: true
+        });
+        if (selectedBackgroundNodePanel) {
+          operatorList.prepend(selectedBackgroundNodePanel.panel);
+          renderedSections.push({
+            section: {
+              key: selectedBackgroundNodePanel.sectionKey,
+              order: -1,
+              scope: "operator",
+              group: activeGroup,
+              factory: () => selectedBackgroundNodePanel.panel
+            },
+            element: selectedBackgroundNodePanel.panel
+          });
+        }
+
+        trackOperatorAccordionState(operatorAccordion, activeGroup);
+        setupAccordion(operatorAccordion);
+        parametersContent = operatorAccordion;
       }
 
-      container.append(
-        buildInspectorRail(
-          "Parameters",
+      if (parametersContent) {
+        container.append(buildInspectorPanelContent(
           activeGroup === OVERLAY_LAYOUT_OPERATOR_SELECTION_ID
-            ? state.selected
-              ? "The parameter pane is following the selected overlay layer. Root overlay controls stay hidden until the overlay root is selected again."
-              : "Overlay Layout is selected. Root overlay controls are shown here."
-            : "Only the selected saved background operator surface is shown here.",
-          operatorAccordion
-        )
-      );
-      trackOperatorAccordionState(operatorAccordion);
-      setupAccordion(operatorAccordion);
+            ? null
+            : "Only the selected background operator controls are shown here.",
+          parametersContent
+        ));
+      }
     }
 
-    initRangeControls({ root: container });
+    if (layersContainer) {
+      initRangeControls({ root: layersContainer });
+    }
+    if (container) {
+      initRangeControls({ root: container });
+    }
 
     let restoredSection = false;
-    if (preferredOpenSectionKey && selectedOperatorSections.some((section) => section.key === preferredOpenSectionKey)) {
+    const restorableSectionKeys = selectedBackgroundNodePanel
+      ? [selectedBackgroundNodePanel.sectionKey, ...selectedOperatorSections.map((section) => section.key)]
+      : selectedOperatorSections.map((section) => section.key);
+
+    const hasTrackedStateForGroup = hasOperatorSectionState(activeGroup);
+    const hasValidPreferredSection = Boolean(preferredOpenSectionKey && restorableSectionKeys.includes(preferredOpenSectionKey));
+
+    if (!shouldFlattenOverlaySections && hasValidPreferredSection) {
       const targetGroup = findRenderedSection(renderedSections, preferredOpenSectionKey);
-      restoredSection = openAccordionSection(targetGroup);
+      restoredSection = openAccordionSection(targetGroup, activeGroup);
     }
 
-    if (!restoredSection && fallbackToFirstSection) {
-      const firstOperatorSection = findRenderedSection(renderedSections, selectedOperatorSections[0]?.key ?? null);
-      restoredSection = openAccordionSection(firstOperatorSection);
+    if (!shouldFlattenOverlaySections && !restoredSection && fallbackToFirstSection) {
+      const shouldOpenFallbackSection = !hasTrackedStateForGroup
+        || Boolean(preferredOpenSectionKey && !hasValidPreferredSection);
+      if (shouldOpenFallbackSection) {
+        const firstFallbackSectionKey = selectedBackgroundNodePanel?.sectionKey ?? selectedOperatorSections[0]?.key ?? null;
+        const firstOperatorSection = findRenderedSection(renderedSections, firstFallbackSectionKey);
+        restoredSection = openAccordionSection(firstOperatorSection, activeGroup);
+      }
     }
 
     pendingOperatorSectionRestore = null;

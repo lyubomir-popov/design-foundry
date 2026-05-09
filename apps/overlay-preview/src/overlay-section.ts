@@ -2,7 +2,6 @@
  * overlay-section.ts — Overlay layer accordion section builder.
  */
 import {
-  getOverlayFieldDisplayLabel,
   getOverlayStyleDisplayLabel
 } from "@brand-layout-ops/operator-overlay-layout";
 import {
@@ -10,7 +9,6 @@ import {
   createCheckboxFormGroup,
   createFormGroup,
   createNumberInput,
-  createReadonlySpan,
   wrapCol
 } from "@brand-layout-ops/parameter-ui";
 import type { PreviewAppContext } from "./preview-app-context.js";
@@ -87,13 +85,11 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
   const { root, body } = buildAccordionSectionEl(ctx.getSelectedOverlaySectionTitle());
   const { state } = ctx;
 
-  body.append(ctx.createOverlayItemActionRow());
-
   if (!state.selected) {
-    const p = document.createElement("p");
-    p.className = "bf-form-help";
-    p.textContent = "Overlay Layout is selected. Add text here, or pick a text or logo layer from the Layers palette to edit its parameters.";
-    body.append(p);
+    const overlayActions = ctx.createOverlayItemActionRow({ showAdd: true, showDelete: false });
+    if (overlayActions) {
+      body.append(overlayActions);
+    }
     return root;
   }
 
@@ -101,8 +97,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     const field = ctx.getSelectedTextField();
     if (!field) return root;
     const fieldId = field.id;
-    const styleMetaByKey = new Map<string, HTMLElement>();
-    const styleCardByKey = new Map<string, HTMLButtonElement>();
+    let styleSelect: HTMLSelectElement | null = null;
     let fontSizeInput: HTMLInputElement | null = null;
     let lineHeightInput: HTMLInputElement | null = null;
     let fontWeightInput: HTMLInputElement | null = null;
@@ -116,23 +111,10 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       return state.params.textStyles.find((style) => style.key === currentField.styleKey) ?? null;
     }
 
-    function syncStylePaletteMeta(): void {
-      for (const style of state.params.textStyles) {
-        const meta = styleMetaByKey.get(style.key);
-        if (!meta) {
-          continue;
-        }
-
-        meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
-      }
-    }
-
-    function syncStylePaletteSelection(): void {
+    function syncStyleSelection(): void {
       const activeStyleKey = getCurrentSelectedStyle()?.key;
-      for (const [styleKey, button] of styleCardByKey) {
-        const isActive = styleKey === activeStyleKey;
-        button.disabled = isActive;
-        button.classList.toggle("is-active", isActive);
+      if (styleSelect && activeStyleKey) {
+        styleSelect.value = activeStyleKey;
       }
     }
 
@@ -154,18 +136,9 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     }
 
     function syncTextStyleUi(): void {
-      syncStylePaletteMeta();
-      syncStylePaletteSelection();
+      syncStyleSelection();
       syncSelectedStyleInputs();
     }
-
-    const metadataFields = document.createElement("div");
-    metadataFields.className = "bf-grid";
-
-    metadataFields.append(wrapCol(2, createFormGroup("Label", createReadonlySpan(getOverlayFieldDisplayLabel(state.params, field.id)))));
-    metadataFields.append(wrapCol(2, createFormGroup("ID", createReadonlySpan(field.id))));
-
-    body.append(metadataFields);
 
     if (ctx.getContentSource() === "inline") {
       const textarea = document.createElement("textarea");
@@ -176,7 +149,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
         ctx.updateSelectedTextValue(field.id, textarea.value);
         void ctx.renderStage();
       });
-      body.append(createFormGroup(`${getOverlayFieldDisplayLabel(state.params, field.id)} Text`, textarea));
+      body.append(createFormGroup("Text", textarea));
     } else {
       const csvNote = document.createElement("p");
       csvNote.className = "bf-form-help is-tight bf-u-no-margin--bottom";
@@ -186,47 +159,25 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
       body.append(csvNote);
     }
 
-    const styleHelper = document.createElement("p");
-    styleHelper.className = "bf-form-help is-tight bf-u-no-margin--bottom";
-    styleHelper.textContent = `Apply a paragraph style to ${getOverlayFieldDisplayLabel(state.params, field.id)}.`;
-    body.append(styleHelper);
-
-    const stylePalette = document.createElement("div");
-    stylePalette.className = "bf-option-grid";
-
+    styleSelect = document.createElement("select");
+    styleSelect.className = "bf-input is-dense";
     for (const style of state.params.textStyles) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "bf-option-card";
-      button.disabled = field.styleKey === style.key;
-      if (field.styleKey === style.key) {
-        button.classList.add("is-active");
-      }
-      button.addEventListener("click", () => {
-        ctx.applySelectedTextStyle(style.key);
-        syncTextStyleUi();
-      });
-
-      const label = document.createElement("span");
-      label.className = "bf-option-card-label";
-      label.textContent = getOverlayStyleDisplayLabel(style.key);
-
-      const meta = document.createElement("span");
-      meta.className = "bf-option-card-meta";
-      meta.textContent = `${style.fontSizePx}px / ${style.lineHeightPx}px / ${style.fontWeight ?? 400}`;
-      styleCardByKey.set(style.key, button);
-      styleMetaByKey.set(style.key, meta);
-
-      button.append(label, meta);
-      stylePalette.append(button);
+      const option = document.createElement("option");
+      option.value = style.key;
+      option.textContent = getOverlayStyleDisplayLabel(style.key);
+      option.selected = field.styleKey === style.key;
+      styleSelect.append(option);
     }
-
-    body.append(stylePalette);
+    styleSelect.addEventListener("change", () => {
+      ctx.applySelectedTextStyle(styleSelect?.value ?? "");
+      syncTextStyleUi();
+    });
+    body.append(createFormGroup("Paragraph Style", styleSelect));
 
     const selectedStyle = getCurrentSelectedStyle();
     if (selectedStyle) {
       const styleGrid = document.createElement("div");
-      styleGrid.className = "bf-grid";
+      styleGrid.className = "bf-grid is-overlay-style-grid";
 
       fontSizeInput = createNumberInput(selectedStyle.fontSizePx, { min: 1, max: 512, step: 1 }, (value) => {
         const currentStyle = getCurrentSelectedStyle();
@@ -284,7 +235,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     }
 
     const grid = document.createElement("div");
-    grid.className = "bf-grid";
+    grid.className = "bf-grid is-overlay-placement-grid";
 
     grid.append(wrapCol(1, createFormGroup("Keyline",
       createNumberInput(field.keylineIndex, { min: 1, max: 24, step: 1 }, v => {
@@ -388,7 +339,7 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     body.append(logoMetaFields);
 
     const grid = document.createElement("div");
-    grid.className = "bf-grid";
+    grid.className = "bf-grid is-overlay-logo-grid";
 
     grid.append(wrapCol(1, createFormGroup("X",
       createNumberInput(logo.xPx, { step: 1 }, v => { ctx.updateLogo(l => ({ ...l, xPx: v })); ctx.markDocumentDirty(); void ctx.renderStage(); })

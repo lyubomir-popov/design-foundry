@@ -23,7 +23,11 @@ Reference source repo:
 
 ## Active Execution Queue
 
-Lane R is active. Lane P is paused while the editor and animation hot paths are stabilized.
+Lane P is active. Lane R is complete.
+
+### Demo Priority — May 13 lightning talk
+
+Status: Active. The top short-term priority is now a polished format-switching demo artifact for the Ubuntu Summit 26.04 identity. Demo polish and reliability take precedence over new preset or architecture lanes until the slide-ready URL and capture artifact are confirmed.
 
 ### Lane O — Stage shell ergonomics
 
@@ -33,33 +37,38 @@ Status: Paused after O1-O3. The shell follow-up did its job; O4/O5 stay deferred
 
 Goal: Pay down the concrete iterative-work risks uncovered in the fresh-eyes audit before adding more control surface or format behavior.
 
-Status: Active and in progress. The first UI and animation slices are landed: selected text-style edits no longer rebuild the entire Parameters rail, and the animation builder now memoizes halo-config fingerprints instead of serializing the whole config every frame.
+Status: Complete and archived in `HISTORY.md`. Lane R closed after the rebuild audit confirmed all remaining inspector rebuilds are genuinely structural.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| R1 | In Progress | Selected text-style edits and style switches, authoring drag refreshes, the grid section, and the logo section now keep their live DOM mounted during routine edits. Next: remove the same rebuild pattern from the remaining controller-driven add/delete and any genuinely non-structural document-target paths that still call `buildConfigEditor()` for ordinary changes. |
-| R2 | In Progress | The hidden `shouldAutoOpenNextOperatorSection` flag is gone. The config editor now queues explicit section-restore requests, tracks the last open operator section key in controller state, and only falls back to the first section on real selection changes. Same-node graph connect/disconnect rebuilds now preserve a fully collapsed pane. Next: decide whether the remaining initial-open policy should become first-class controller state per operator group instead of restore-time fallback logic. |
+| R1 | Complete | Selected text-style edits and style switches, authoring drag refreshes, grid baseline / safe-area edits, logo lock / size edits, and same-node background connect/disconnect actions all keep their live DOM mounted during routine edits with localized refresh and safe fallback to full rebuild. All remaining `buildConfigEditor()` calls verified as genuinely structural (selection, add/remove, format switching, scene family changes). |
+| R2 | Complete | Operator accordion state is tracked per operator group instead of globally. Fallback behavior is explicit: first-section auto-open only runs when a group has no tracked state, and explicitly collapsed groups stay collapsed across group switches. Cross-group accordion state preservation is covered by regression suite. |
 | R3 | Complete | Halo-config fingerprints are memoized by config object identity, repeated halo label measurement is cached in the renderer, and mascot asset completion now requests a fresh halo redraw from current stage state instead of replaying a cached scene descriptor. |
-| R4 | In Progress | Active-document-format runtime persistence now has a shared helper in the profile controller, and format switching plus source-default snapshot creation no longer hand-choreograph the same three writes. Next: thread that helper through any remaining manual save/apply seams and keep reducing persistence choreography debt. |
+| R4 | Complete | Removed duplicate document-format render calls, tightened controller API (removed unused public persistence methods), and created `persistActiveDocumentFormatRuntimeState()` as the canonical shared helper. Format switching, source-default creation, and profile switching all route through the shared helper; no manual persistence choreography remains. |
 
 ### Lane P — Format variants and preset groundwork
 
 Goal: Stop treating saved sizes as if they were only export targets. The live workflow is already closer to authored per-format variants, so the next pass should make the shell, controller behavior, and terminology match that reality without breaking the current document format.
 
-Status: P1-P5 groundwork is complete and archived in `HISTORY.md`. Lane P is paused while Lane R stabilizes the current editor/control surface and hot animation paths. The next format question is still whether same-size authored variants should become first-class before the saved-file redesign.
+Status: Active. P1-P6 groundwork is complete, and the first operator-preset slice is landed: Halo now has copy-on-apply preset browsing in Parameters plus a file-backed save path for user presets. Applying a preset reseeds Halo behavior from a known-good preset while preserving the current document's composition adjustments, and later local tweaks persist through ordinary file save.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| P6 | Next | Decide whether to unlock same-size authored variants before a saved-file schema change, and if the answer is yes, land the smallest compatibility-safe slice first. |
+| P6 | Complete | Model decision: keep one document as the campaign container, keep fast radio-button switching between authored format variants, and keep export/output recipes separate from those variants. Same-size authored duplicates stay deferred until a concrete workflow need appears. |
+| P7 | In Progress | Operator reuse is now copy-on-apply for Halo. The Parameters panel can browse built-in Halo presets, browse saved Halo presets from a file-backed library, apply either as a document-local seed, reset Halo behavior to the current format seed, and save the current Halo settings as a reusable preset. Next: decide whether to lift this into a shared operator-preset library surface and which operator follows Halo. |
 
 ## Immediate Next Steps
 
-- Continue Lane R1 by removing unnecessary full inspector rebuilds from the remaining controller-driven add/delete and any genuinely non-structural document-target paths.
-- Continue Lane R2 by finishing the operator-pane open-state cleanup after the explicit queued restore / last-open section state landed.
-- Continue Lane R4 by replacing any remaining manual active-format persistence sequences with the shared runtime-state helper now used by profile switching, source-default snapshot creation, and document-format target switching.
+- **Top priority until May 13:** polish the Ubuntu Summit format-switching demo for the lightning talk. Focus on visible quality, not new architecture.
+- Confirm the happy-path save → close → reopen flow on the demo machine without relying on the dev-browser `/__authoring/document-file` fallback.
+- Rehearse the recording path now that `D` opens panel-hosted Formats and format selection updates the stage while the control rail stays visible.
+- Produce one browser URL plus a screenshot or short screen recording artifact suitable for the presentation slide.
+- **Lane R is complete.** All major interactive paths use localized updates; remaining `buildConfigEditor()` calls are all genuinely structural.
+- **Lane P is active.** The first copy-on-apply operator preset slice is landed for Halo and validated.
+- **Next:** decide whether the file-backed Halo preset path should become a shared operator-preset library surface, then extend the same copy-on-apply model to the next operator that benefits from reusable seeded behavior.
 - Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
 - Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
-- Decide whether same-size authored variants should become first-class before any saved-file schema rename.
+- Do not treat cross-document reuse as a document-model problem alone; reusable background-animation and foreground-layout carryover should land as template or preset behavior.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
 - Use the current format-id keyed runtime to pressure-test same-size variants, derivation rules, and active-format restore behavior before changing the disk shape.
 - Treat format work as authoring behavior first. Variant switching, derivation, and persistence come before more shell polish or export-recipe work.

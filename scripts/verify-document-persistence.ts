@@ -18,6 +18,7 @@ import {
 
 import {
   applySourceDefaultSnapshotToState,
+  createCurrentSourceDefaultSnapshot,
   type OverlayPreviewDocumentBridgeAdapter,
   type OverlayPreviewDocumentBridgeState
 } from "../apps/overlay-preview/src/preview-document-bridge.js";
@@ -166,9 +167,7 @@ function assertBridgeActivatesProjectFormat(project: OverlayDocumentProject): vo
     documentProject: project
   };
   const adapter: OverlayPreviewDocumentBridgeAdapter<TestHaloConfig> = {
-    persistActiveDocumentFormatBuckets() {},
-    persistActiveExportSettings() {},
-    persistActiveHaloConfig() {},
+    persistActiveDocumentFormatRuntimeState() {},
     getOrCreateDocumentFormatParams(formatId, formatKey) {
       const target = state.documentProject.targets.find((candidate) => candidate.id === formatId);
       const profileKey = target?.outputProfileKey ?? state.outputProfileKey;
@@ -189,8 +188,74 @@ function assertBridgeActivatesProjectFormat(project: OverlayDocumentProject): vo
   assert.equal(state.params.frame.heightPx, 1080);
 }
 
+function assertSnapshotPersistsActiveFormatRuntimeState(project: OverlayDocumentProject): void {
+  const staleDefaultSnapshot = createSnapshot(DEFAULT_OUTPUT_PROFILE_KEY);
+  const state: OverlayPreviewDocumentBridgeState<TestHaloConfig, TestGuideMode> = {
+    params: createDefaultOverlayParams(customProfileKey, contentFormatKey),
+    selected: null,
+    guideMode: "bounds",
+    overlayVisible: true,
+    pendingCsvDraftsByBucket: {},
+    outputProfileKey: customProfileKey,
+    contentFormatKey,
+    documentFormatBuckets: {
+      [defaultFormatId]: {
+        [contentFormatKey]: createDefaultOverlayParams(DEFAULT_OUTPUT_PROFILE_KEY, contentFormatKey)
+      }
+    },
+    contentFormatKeyByDocumentFormatId: {
+      [defaultFormatId]: contentFormatKey
+    },
+    exportSettings: createDefaultExportSettings(customProfileKey),
+    exportSettingsByDocumentFormatId: {
+      [defaultFormatId]: createDefaultExportSettings(DEFAULT_OUTPUT_PROFILE_KEY)
+    },
+    haloConfig: createHaloConfig(customProfileKey),
+    haloConfigByDocumentFormatId: {
+      [defaultFormatId]: createHaloConfig(DEFAULT_OUTPUT_PROFILE_KEY)
+    },
+    sourceDefaults: staleDefaultSnapshot,
+    sourceDefaultProject: project,
+    documentProject: project
+  };
+  let persistCalls = 0;
+
+  const adapter: OverlayPreviewDocumentBridgeAdapter<TestHaloConfig> = {
+    persistActiveDocumentFormatRuntimeState() {
+      persistCalls += 1;
+      state.documentFormatBuckets[customFormatId] = {
+        [contentFormatKey]: createDefaultOverlayParams(customProfileKey, contentFormatKey)
+      };
+      state.contentFormatKeyByDocumentFormatId[customFormatId] = contentFormatKey;
+      state.exportSettingsByDocumentFormatId[customFormatId] = createDefaultExportSettings(customProfileKey);
+      state.haloConfigByDocumentFormatId[customFormatId] = createHaloConfig(customProfileKey);
+    },
+    getOrCreateDocumentFormatParams(formatId, formatKey) {
+      const target = state.documentProject.targets.find((candidate) => candidate.id === formatId);
+      const profileKey = target?.outputProfileKey ?? state.outputProfileKey;
+      state.documentFormatBuckets[formatId] ??= {};
+      state.documentFormatBuckets[formatId][formatKey] ??= createDefaultOverlayParams(profileKey, formatKey);
+      return state.documentFormatBuckets[formatId][formatKey];
+    },
+    normalizeParams(params) {
+      return params;
+    },
+    syncHaloConfigForActiveDocumentFormat() {}
+  };
+
+  const snapshot = createCurrentSourceDefaultSnapshot(state, adapter);
+
+  assert.equal(persistCalls, 1);
+  assert.equal(snapshot.outputProfileKey, customProfileKey);
+  assert.equal(snapshot.profileFormatBuckets[customProfileKey]?.[contentFormatKey]?.frame.widthPx, 1920);
+  assert.equal(snapshot.profileFormatBuckets[customProfileKey]?.[contentFormatKey]?.frame.heightPx, 1080);
+  assert.equal(snapshot.exportSettingsByProfile[customProfileKey]?.frameRate, state.exportSettings.frameRate);
+  assert.equal(snapshot.haloConfigByProfile[customProfileKey]?.profileKey, customProfileKey);
+}
+
 const normalizedProject = assertActiveCustomProjectSurvivesNormalization();
 const roundTrippedProject = assertDocumentRoundTripKeepsNameAndActiveFormat(normalizedProject);
 assertBridgeActivatesProjectFormat(roundTrippedProject);
+assertSnapshotPersistsActiveFormatRuntimeState(roundTrippedProject);
 
 console.log("document persistence verification passed");

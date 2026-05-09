@@ -47,7 +47,6 @@ export interface DocumentFormatControllerDeps {
   persistActiveDocumentFormatRuntimeState(): void;
   markDocumentDirty(): void;
   buildConfigEditor(): void;
-  renderStage(): Promise<void>;
 }
 
 export interface DocumentFormatController {
@@ -557,7 +556,6 @@ export function createDocumentFormatController(
         setActiveDocumentTarget(target.id);
         deps.markDocumentDirty();
         deps.buildConfigEditor();
-        void deps.renderStage();
         buildFormatOptions();
       });
       activeCell.append(radio);
@@ -597,7 +595,6 @@ export function createDocumentFormatController(
         deps.markDocumentDirty();
         if (result.activeChanged) {
           deps.buildConfigEditor();
-          void deps.renderStage();
         }
         buildFormatOptions();
       });
@@ -680,7 +677,6 @@ export function createDocumentFormatController(
 
       deps.markDocumentDirty();
       deps.buildConfigEditor();
-      void deps.renderStage();
       buildFormatOptions();
     });
     presetActionCell.append(addPresetButton);
@@ -702,7 +698,6 @@ export function createDocumentFormatController(
 
       deps.markDocumentDirty();
       deps.buildConfigEditor();
-      void deps.renderStage();
       buildFormatOptions();
     };
 

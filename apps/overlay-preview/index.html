@@ -75,13 +75,23 @@
       ></div>
       <div class="bf-panel is-fill">
         <div class="bf-panel-header is-sticky">
-          <h2 class="bf-panel-title">Parameters</h2>
+          <h2 class="bf-panel-title" data-control-panel-title>Parameters</h2>
           <div class="bf-panel-controls">
-            <button class="bf-panel-toggle" type="button" data-panel-drawer-close data-panel-drawer-autofocus aria-controls="control-drawer">Close</button>
+            <button class="bf-panel-toggle" type="button" data-control-panel-dismiss data-panel-drawer-autofocus aria-controls="control-drawer">Close</button>
           </div>
         </div>
         <div class="bf-panel-content bf-grid-scope">
-          <div class="bf-stack is-compact-stack" data-config-editor></div>
+          <div class="is-inspector-workspace" data-panel-parameters-view>
+            <div class="bf-side-navigation is-raw-html is-drawer-expanded is-inspector-layers-nav">
+              <nav class="bf-side-navigation-drawer" aria-label="Layers">
+                <div class="bf-stack is-compact-stack" data-layers-editor></div>
+              </nav>
+            </div>
+            <div class="bf-stack is-compact-stack is-inspector-parameters" data-config-editor></div>
+          </div>
+          <div class="bf-stack is-compact-stack is-panel-formats-view" data-panel-formats-view hidden>
+            <div class="bf-stack is-compact-stack" data-format-options></div>
+          </div>
         </div>
       </div>
     </aside>

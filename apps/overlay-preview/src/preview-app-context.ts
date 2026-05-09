@@ -23,7 +23,7 @@ import type {
   OverlaySceneFamilyKey,
   OverlaySourceDefaultSnapshot
 } from "@brand-layout-ops/operator-overlay-layout";
-import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
+import type { HaloFieldConfig, HaloFieldPresetDefinition } from "@brand-layout-ops/operator-halo-field";
 import type { ExportSettings } from "./sample-document.js";
 import type { OverlayPreviewDocument as OverlayPreviewDocumentModel } from "./preview-document.js";
 import type { DocumentWorkspaceController } from "./document-workspace.js";
@@ -171,8 +171,11 @@ export interface PreviewAppContext {
   getSelectedTextField(): TextFieldPlacementSpec | null;
   /** Get the title string for the current overlay-layer accordion section. */
   getSelectedOverlaySectionTitle(): string;
-  /** Create the Add Text / Delete Text action row for the overlay section. */
-  createOverlayItemActionRow(): HTMLElement;
+  /** Create the selection-aware overlay action row for the overlay section. */
+  createOverlayItemActionRow(options?: {
+    showAdd?: boolean;
+    showDelete?: boolean;
+  }): HTMLElement | null;
 
   // — Content format —
 
@@ -206,6 +209,13 @@ export interface PreviewAppContext {
   writeCurrentAsSourceDefault(): Promise<SourceDefaultWriteResult>;
   /** Show a status message in the source-default area. */
   setSourceDefaultStatus(message: string, severity?: string): void;
+  /** Get the current user-saved Halo preset definitions. */
+  getUserHaloPresetDefinitions(): readonly HaloFieldPresetDefinition[];
+  /** Save the current Halo settings as a reusable user preset. */
+  saveCurrentHaloPreset(label: string, description?: string): Promise<{
+    preset: HaloFieldPresetDefinition;
+    message: string;
+  }>;
 
   // — Scene family —
 

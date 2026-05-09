@@ -1171,11 +1171,18 @@ export function createDefaultHaloFieldConfig(): HaloFieldConfig {
 // Each profile stores only the fields that differ from the landscape baseline.
 // Each profile stores only the fields that differ from the landscape baseline.
 
-type HaloProfileOverride = {
+export type HaloFieldConfigOverride = {
   [K in keyof HaloFieldConfig]?: Partial<HaloFieldConfig[K]>;
 };
 
-const HALO_PROFILE_OVERRIDES: Record<string, HaloProfileOverride> = {
+export interface HaloFieldPresetDefinition {
+  key: string;
+  label: string;
+  description: string;
+  config: HaloFieldConfigOverride;
+}
+
+const HALO_PROFILE_OVERRIDES: Record<string, HaloFieldConfigOverride> = {
   landscape_1280x720: {
     composition: { center_offset_y_px: -26 }
   },
@@ -1201,6 +1208,104 @@ const HALO_PROFILE_OVERRIDES: Record<string, HaloProfileOverride> = {
     spoke_text: { font_size_px: 14 }
   }
 };
+
+export const HALO_FIELD_PRESET_DEFINITIONS: readonly HaloFieldPresetDefinition[] = Object.freeze([
+  {
+    key: "quiet-echo",
+    label: "Quiet Echo",
+    description: "A softer field with fewer spokes, gentler echoes, and calmer timing.",
+    config: {
+      generator_wrangle: {
+        num_orbits: 6,
+        spoke_count: 42,
+        min_active_orbits: 2
+      },
+      transition_wrangle: {
+        duration_sec: 1.15,
+        spins: 2,
+        base_pscale: 0.68
+      },
+      point_style: {
+        base_pscale_px_per_unit: 3.4,
+        min_scale: 0.24
+      },
+      spoke_lines: {
+        echo_count: 10,
+        width_px: 2.4,
+        phase_start_width_px: 6,
+        phase_end_width_px: 3.2,
+        echo_opacity_mult: 0.38,
+        echo_marker_scale_mult: 1.2
+      },
+      spoke_text: {
+        font_size_px: 16
+      }
+    }
+  },
+  {
+    key: "dense-signal",
+    label: "Dense Signal",
+    description: "A tighter, higher-energy field with more spokes, more echoes, and faster reveal.",
+    config: {
+      generator_wrangle: {
+        num_orbits: 10,
+        spoke_count: 84,
+        min_active_orbits: 4
+      },
+      transition_wrangle: {
+        duration_sec: 0.9,
+        spins: 4,
+        base_pscale: 0.82,
+        phase_frontier_amount: 0.78
+      },
+      point_style: {
+        base_pscale_px_per_unit: 4.6,
+        min_scale: 0.34
+      },
+      spoke_lines: {
+        echo_count: 20,
+        width_px: 3.6,
+        phase_start_width_px: 9,
+        phase_end_width_px: 4.8,
+        echo_opacity_mult: 0.62,
+        echo_marker_scale_mult: 1.8,
+        echo_sparse_scale_boost: 0.7
+      },
+      spoke_text: {
+        font_size_px: 14
+      }
+    }
+  },
+  {
+    key: "graphic-pulse",
+    label: "Graphic Pulse",
+    description: "A more graphic construction look with stronger spoke lines and fade for presentation use.",
+    config: {
+      generator_wrangle: {
+        num_orbits: 7,
+        spoke_count: 56,
+        min_active_orbits: 3
+      },
+      transition_wrangle: {
+        duration_sec: 1,
+        spins: 3,
+        base_pscale: 0.78
+      },
+      spoke_lines: {
+        width_px: 4.2,
+        phase_start_width_px: 10,
+        phase_end_width_px: 5.2,
+        echo_count: 12,
+        echo_opacity_mult: 0.44
+      },
+      vignette: {
+        enabled: true,
+        shape_fade_start: 0.26,
+        shape_fade_end: 0.84
+      }
+    }
+  }
+]);
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function deepMerge(base: any, overrides: any): any {

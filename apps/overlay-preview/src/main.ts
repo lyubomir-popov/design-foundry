@@ -1,4 +1,4 @@
-import "baseline-foundry/presets/app-tier.css";
+import "baseline-foundry/presets/panel.css";
 import "./styles.css";
 
 import type {
@@ -79,6 +79,10 @@ import {
   createOverlayEditingController,
   type OverlayEditingController
 } from "./overlay-editing-controller.js";
+import {
+  createOperatorPresetController,
+  type OperatorPresetController
+} from "./operator-preset-controller.js";
 import {
   createPlaybackController,
   type PlaybackController
@@ -208,6 +212,7 @@ let sourceDefaultController: SourceDefaultController | null = null;
 let csvDraftController: CsvDraftController | null = null;
 let playbackController: PlaybackController | null = null;
 let overlayEditingController: OverlayEditingController | null = null;
+let operatorPresetController: OperatorPresetController | null = null;
 let configEditorController: ConfigEditorController | null = null;
 let documentFormatController: DocumentFormatController | null = null;
 let profileStateController: ProfileStateController | null = null;
@@ -253,6 +258,10 @@ function getNetworkOverlayEl(): HTMLElement | null {
 
 function getConfigEditor(): HTMLElement | null {
   return $("[data-config-editor]");
+}
+
+function getLayersEditor(): HTMLElement | null {
+  return $("[data-layers-editor]");
 }
 
 function getFormatOptions(): HTMLElement | null {
@@ -454,24 +463,12 @@ function getDocumentFormatBucket(formatId: string): Record<string, OverlayLayout
   return profileStateController!.getDocumentFormatBucket(formatId);
 }
 
-function persistActiveExportSettings(): void {
-  profileStateController!.persistActiveExportSettings();
-}
-
-function persistActiveHaloConfig(): void {
-  profileStateController!.persistActiveHaloConfig();
-}
-
 function persistActiveDocumentFormatRuntimeState(): void {
   profileStateController!.persistActiveDocumentFormatRuntimeState();
 }
 
 function updateExportSettings(updater: (settings: ExportSettings) => ExportSettings): void {
   profileStateController!.updateExportSettings(updater);
-}
-
-function persistActiveDocumentFormatBuckets(): void {
-  profileStateController!.persistActiveDocumentFormatBuckets();
 }
 
 function getOrCreateDocumentFormatParams(
@@ -547,8 +544,22 @@ function updateLogoSizeWithAspectRatio(nextHeightPx: number) {
   overlayEditingController!.updateLogoSizeWithAspectRatio(nextHeightPx);
 }
 
-function createOverlayItemActionRow(): HTMLElement {
-  return overlayEditingController!.createOverlayItemActionRow();
+function createOverlayItemActionRow(options?: {
+  showAdd?: boolean;
+  showDelete?: boolean;
+}): HTMLElement | null {
+  return overlayEditingController!.createOverlayItemActionRow(options);
+}
+
+function deleteSelectedOverlayItem(): boolean {
+  const didDelete = overlayEditingController!.deleteSelectedOverlayItem();
+  if (!didDelete) {
+    return false;
+  }
+
+  buildConfigEditor();
+  void renderStage();
+  return true;
 }
 
 function select(sel: Selection | null) {
@@ -643,6 +654,7 @@ function setOverlayVisible(nextVisible: boolean) {
     authoringController?.render();
     networkOverlayController?.render();
     previewShellController?.updateViewUi();
+    void renderStage();
     return;
   }
 
@@ -658,6 +670,7 @@ function setOverlayVisible(nextVisible: boolean) {
   authoringController?.render();
   networkOverlayController?.render();
   previewShellController?.updateViewUi();
+  void renderStage();
 }
 
 function setNetworkOverlayVisible(nextVisible: boolean) {
@@ -787,6 +800,12 @@ const ctx: PreviewAppContext = {
   },
   setSourceDefaultStatus(message, severity) {
     sourceDefaultController?.setSourceDefaultStatus(message, severity as "neutral" | "success" | "error");
+  },
+  getUserHaloPresetDefinitions() {
+    return operatorPresetController?.getUserHaloPresetDefinitions() ?? [];
+  },
+  saveCurrentHaloPreset(label, description) {
+    return operatorPresetController!.saveCurrentHaloPreset(label, description);
   },
   setSelectedBackgroundNode,
   getSelectedBackgroundNode,
@@ -918,6 +937,10 @@ sourceDefaultController = createSourceDefaultController({
   normalizeSelection
 });
 
+operatorPresetController = createOperatorPresetController({
+  state
+});
+
 previewShellController = createPreviewShellController({
   state,
   untitledName: UNTITLED_DOCUMENT_NAME,
@@ -952,6 +975,7 @@ previewShellController = createPreviewShellController({
   initAuthoring: () => {
     authoringController?.init();
   },
+  deleteSelectedOverlayItem,
   handleAuthoringEditingKeyDown: (event) => {
     return authoringController?.handleEditingKeyDown(event) ?? false;
   },
@@ -973,6 +997,7 @@ configEditorController = createConfigEditorController({
   state,
   sectionDefinitions: CORE_CONFIG_SECTION_DEFINITIONS,
   getConfigEditor,
+  getLayersEditor,
   getSelectedOperatorId,
   getSelectedOperatorGroup,
   getSceneFamilyLabel,
@@ -995,8 +1020,7 @@ documentFormatController = createDocumentFormatController({
   switchOutputProfile,
   persistActiveDocumentFormatRuntimeState,
   markDocumentDirty,
-  buildConfigEditor,
-  renderStage
+  buildConfigEditor
 });
 
 function buildConfigEditor() {
@@ -1011,7 +1035,10 @@ function syncSelectedOverlaySectionInputs() {
 
   syncOverlaySectionInputs(overlaySection, ctx);
 }
-const initPromise = previewShellController.init();
+const initPromise = (async () => {
+  await operatorPresetController?.readOperatorPresetLibrary();
+  await previewShellController!.init();
+})();
 exportAutomationController?.installAutomationApi(initPromise);
 void initPromise.then(() => {
   networkOverlayController?.render();

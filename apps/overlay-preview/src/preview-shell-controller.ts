@@ -24,6 +24,8 @@ import type { SourceDefaultController } from "./source-default-controller.js";
 
 const GUIDE_MODES: readonly GuideMode[] = ["off", "composition", "baseline"];
 
+type ControlPanelView = "parameters" | "formats";
+
 type MenuItemSpec =
   | { kind: "separator" }
   | {
@@ -74,6 +76,7 @@ export interface PreviewShellControllerDeps {
   exportMp4(): Promise<void>;
   initHaloRenderer(): void;
   initAuthoring(): void;
+  deleteSelectedOverlayItem(): boolean;
   handleAuthoringEditingKeyDown(event: KeyboardEvent): boolean;
   handleAuthoringInteractionKeyDown(event: KeyboardEvent): boolean;
 }
@@ -92,8 +95,10 @@ export function createPreviewShellController(
   let pendingStageResizeFrame = 0;
   let hasBoundDocumentInputs = false;
   let hasBoundControlPanelToggle = false;
+  let hasBoundControlPanelDismiss = false;
   let hasBoundResize = false;
   let isInitialized = false;
+  let controlPanelView: ControlPanelView = "parameters";
 
   const shellDialogs: ShellDialogRefs = {
     documentDialog: null,
@@ -127,6 +132,22 @@ export function createPreviewShellController(
 
   function getControlPanelToggleEl(): HTMLElement | null {
     return $("[data-control-panel-toggle]");
+  }
+
+  function getControlPanelTitleEl(): HTMLElement | null {
+    return $("[data-control-panel-title]");
+  }
+
+  function getControlPanelDismissEl(): HTMLButtonElement | null {
+    return $("[data-control-panel-dismiss]");
+  }
+
+  function getParametersPanelViewEl(): HTMLElement | null {
+    return $("[data-panel-parameters-view]");
+  }
+
+  function getFormatsPanelViewEl(): HTMLElement | null {
+    return $("[data-panel-formats-view]");
   }
 
   function getControlPanelOverlayEl(): HTMLElement | null {
@@ -171,6 +192,54 @@ export function createPreviewShellController(
     for (const dropdownItem of topNavigation.querySelectorAll<HTMLElement>(".bf-top-navigation-item.is-dropdown-toggle")) {
       dropdownItem.classList.remove("is-active");
     }
+  }
+
+  function applyControlPanelView(): void {
+    const controlPanel = getControlPanelEl();
+    const title = getControlPanelTitleEl();
+    const dismissButton = getControlPanelDismissEl();
+    const parametersView = getParametersPanelViewEl();
+    const formatsView = getFormatsPanelViewEl();
+
+    controlPanel?.setAttribute("data-panel-view", controlPanelView);
+    if (title) {
+      title.textContent = controlPanelView === "formats" ? "Formats" : "Parameters";
+    }
+    if (dismissButton) {
+      dismissButton.textContent = controlPanelView === "formats" ? "Done" : "Close";
+    }
+    if (parametersView) {
+      parametersView.hidden = controlPanelView !== "parameters";
+    }
+    if (formatsView) {
+      formatsView.hidden = controlPanelView !== "formats";
+    }
+  }
+
+  function setControlPanelView(nextView: ControlPanelView): void {
+    if (controlPanelView === nextView) {
+      applyControlPanelView();
+      return;
+    }
+
+    controlPanelView = nextView;
+    applyControlPanelView();
+  }
+
+  function openFormatsPanel(): void {
+    syncFormatsDialog();
+    setControlPanelView("formats");
+    setDrawerOpen(true);
+  }
+
+  function dismissControlPanel(): void {
+    if (controlPanelView !== "parameters") {
+      setControlPanelView("parameters");
+      setDrawerOpen(true);
+      return;
+    }
+
+    setDrawerOpen(false);
   }
 
   function queueStageResizeRefresh(): void {
@@ -480,7 +549,7 @@ export function createPreviewShellController(
     const openFormatsButton = createFooterButton("Open Formats", "primary");
     openFormatsButton.addEventListener("click", () => {
       dialog.close();
-      openFormatsDialog();
+      openFormatsPanel();
     });
     footer.append(openFormatsButton);
 
@@ -652,7 +721,6 @@ export function createPreviewShellController(
 
   function ensureShellDialogs(): void {
     ensureDocumentDialog();
-    ensureFormatsDialog();
     ensurePresetLibraryDialog();
     ensureExportSettingsDialog();
     ensureSourceDefaultDialog();
@@ -665,9 +733,7 @@ export function createPreviewShellController(
   }
 
   function openFormatsDialog(): void {
-    ensureFormatsDialog();
-    syncFormatsDialog();
-    showDialog(shellDialogs.formatsDialog!);
+    openFormatsPanel();
   }
 
   function openPresetLibraryDialog(): void {
@@ -945,6 +1011,10 @@ export function createPreviewShellController(
     setGuideMode(GUIDE_MODES[(idx + 1) % GUIDE_MODES.length]);
   }
 
+  function toggleBaselineAndLayoutGuides(): void {
+    setGuideMode(deps.state.guideMode === "baseline" ? "off" : "baseline");
+  }
+
   function handleKeyDown(event: KeyboardEvent): void {
     if (deps.handleAuthoringEditingKeyDown(event)) {
       return;
@@ -999,13 +1069,34 @@ export function createPreviewShellController(
       return;
     }
 
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key === "Delete") {
+      if (deps.deleteSelectedOverlayItem()) {
+        event.preventDefault();
+        return;
+      }
+    }
+
     if (!event.ctrlKey && !event.metaKey && !event.altKey && (event.key === "p" || event.key === "P")) {
+      if (controlPanelView !== "parameters") {
+        setControlPanelView("parameters");
+        setDrawerOpen(true);
+        event.preventDefault();
+        return;
+      }
+
       setDrawerOpen(!isControlPanelOpen());
       event.preventDefault();
       return;
     }
 
     if (!event.ctrlKey && !event.metaKey && !event.altKey && (event.key === "d" || event.key === "D")) {
+      if (controlPanelView === "formats" && isControlPanelOpen()) {
+        setControlPanelView("parameters");
+        setDrawerOpen(true);
+        event.preventDefault();
+        return;
+      }
+
       openFormatsDialog();
       event.preventDefault();
       return;
@@ -1031,7 +1122,12 @@ export function createPreviewShellController(
       return;
     }
 
-    if (event.key === "g" || event.key === "G" || event.key === "w" || event.key === "W") {
+    if (event.key === "w" || event.key === "W") {
+      toggleBaselineAndLayoutGuides();
+      return;
+    }
+
+    if (event.key === "g" || event.key === "G") {
       cycleGuideMode();
       return;
     }
@@ -1043,6 +1139,12 @@ export function createPreviewShellController(
     }
 
     if (event.key === "Escape") {
+      if (controlPanelView === "formats" && isControlPanelOpen()) {
+        setControlPanelView("parameters");
+        event.preventDefault();
+        return;
+      }
+
       if (!isDockedViewport() && isControlPanelOpen()) {
         setDrawerOpen(false);
         event.preventDefault();
@@ -1085,9 +1187,24 @@ export function createPreviewShellController(
       controlPanelToggle?.addEventListener("click", (event) => {
         event.preventDefault();
         collapseTopNavigation();
+        if (controlPanelView !== "parameters") {
+          setControlPanelView("parameters");
+          setDrawerOpen(true);
+          return;
+        }
+
         setDrawerOpen(!isControlPanelOpen());
       });
       hasBoundControlPanelToggle = true;
+    }
+
+    if (!hasBoundControlPanelDismiss) {
+      const dismissButton = getControlPanelDismissEl();
+      dismissButton?.addEventListener("click", (event) => {
+        event.preventDefault();
+        dismissControlPanel();
+      });
+      hasBoundControlPanelDismiss = true;
     }
   }
 
@@ -1156,6 +1273,7 @@ export function createPreviewShellController(
     }
 
     ensureShellDialogs();
+    applyControlPanelView();
     buildShellChrome();
     syncFormatsDialog();
     syncExportSettingsDialog();

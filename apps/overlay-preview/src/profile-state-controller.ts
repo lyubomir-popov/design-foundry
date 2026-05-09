@@ -32,10 +32,7 @@ export interface ProfileStateControllerOptions {
 export interface ProfileStateController {
   getDocumentFormatBucket(formatId: string): Record<string, OverlayLayoutOperatorParams>;
   persistActiveDocumentFormatRuntimeState(): void;
-  persistActiveExportSettings(): void;
-  persistActiveHaloConfig(): void;
   updateExportSettings(updater: (settings: ExportSettings) => ExportSettings): void;
-  persistActiveDocumentFormatBuckets(): void;
   getOrCreateDocumentFormatParams(formatId: string, formatKey: string): OverlayLayoutOperatorParams;
   syncHaloConfigForActiveDocumentFormat(): void;
   switchOutputProfile(profileKey: string, options?: SwitchOutputProfileOptions): void;
@@ -281,10 +278,7 @@ export function createProfileStateController(
   return {
     getDocumentFormatBucket,
     persistActiveDocumentFormatRuntimeState,
-    persistActiveExportSettings,
-    persistActiveHaloConfig,
     updateExportSettings,
-    persistActiveDocumentFormatBuckets,
     getOrCreateDocumentFormatParams,
     syncHaloConfigForActiveDocumentFormat,
     switchOutputProfile,

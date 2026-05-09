@@ -10,6 +10,7 @@
     "dev": "vite --config apps/overlay-preview/vite.config.ts --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify:document-persistence": "tsx scripts/verify-document-persistence.ts",
+    "verify:ui-regressions": "tsx scripts/verify-ui-regressions.ts",
     "verify:export-geometry": "tsx examples/export-geometry-parity.ts",
     "demo:overlay-layout": "tsx examples/overlay-layout-demo.ts",
     "demo:copy-to-points": "tsx examples/copy-to-points-demo.ts",

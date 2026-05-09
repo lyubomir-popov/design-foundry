@@ -4,11 +4,11 @@
   "metadata": {
     "name": "1080p",
     "createdAt": "2026-05-05T13:23:10.969Z",
-    "updatedAt": "2026-05-05T18:25:44.236Z"
+    "updatedAt": "2026-05-09T19:17:07.353Z"
   },
   "project": {
     "sceneFamilyKey": "halo",
-    "activeTargetId": "fullhd_1920x1080",
+    "activeTargetId": "format-6",
     "targets": [
       {
         "id": "landscape_1280x720",
@@ -44,6 +44,13 @@
         "outputProfileKey": "screen_3840x2160",
         "formatPresetKey": "screen_3840x2160",
         "derivedFromFormatId": null
+      },
+      {
+        "id": "format-6",
+        "label": "2560×1600",
+        "outputProfileKey": "tablet_2560x1600",
+        "formatPresetKey": "tablet_2560x1600",
+        "derivedFromFormatId": "screen_3840x2160"
       }
     ],
     "sceneFamilyGraphs": {
@@ -162,7 +169,7 @@
     }
   },
   "state": {
-    "outputProfileKey": "fullhd_1920x1080",
+    "outputProfileKey": "tablet_2560x1600",
     "contentFormatKey": "generic_social",
     "profileFormatBuckets": {
       "landscape_1280x720": {
@@ -439,7 +446,7 @@
               "contentFieldId": "body_intro",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 3,
+              "keylineIndex": 4,
               "rowIndex": 1,
               "offsetBaselines": 2,
               "columnSpan": 1
@@ -451,7 +458,7 @@
               "text": "",
               "keylineIndex": 4,
               "rowIndex": 1,
-              "offsetBaselines": 2,
+              "offsetBaselines": 24,
               "columnSpan": 1
             },
             {
@@ -461,7 +468,7 @@
               "text": "",
               "keylineIndex": 4,
               "rowIndex": 1,
-              "offsetBaselines": 6,
+              "offsetBaselines": 29,
               "columnSpan": 1
             }
           ],
@@ -609,7 +616,7 @@
             "baselineStepPx": 8,
             "rowCount": 8,
             "columnCount": 4,
-            "marginTopBaselines": 5,
+            "marginTopBaselines": 6,
             "marginBottomBaselines": 6,
             "marginLeftBaselines": 6,
             "marginRightBaselines": 6,
@@ -626,8 +633,8 @@
             },
             {
               "key": "b_head",
-              "fontSizePx": 32,
-              "lineHeightPx": 36,
+              "fontSizePx": 24,
+              "lineHeightPx": 32,
               "fontWeight": 400
             },
             {
@@ -653,9 +660,9 @@
               "contentFieldId": "body_intro",
               "styleKey": "b_head",
               "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 2,
-              "offsetBaselines": 14,
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 2,
               "columnSpan": 2
             },
             {
@@ -663,9 +670,9 @@
               "contentFieldId": "detail_primary",
               "styleKey": "b_head",
               "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 4,
-              "offsetBaselines": 17,
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 18,
               "columnSpan": 2
             },
             {
@@ -673,9 +680,9 @@
               "contentFieldId": "detail_secondary",
               "styleKey": "b_head",
               "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 4,
-              "offsetBaselines": 20,
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 22,
               "columnSpan": 1
             }
           ],
@@ -715,7 +722,7 @@
             "baselineStepPx": 8,
             "rowCount": 8,
             "columnCount": 4,
-            "marginTopBaselines": 5,
+            "marginTopBaselines": 6,
             "marginBottomBaselines": 6,
             "marginLeftBaselines": 6,
             "marginRightBaselines": 6,
@@ -732,8 +739,8 @@
             },
             {
               "key": "b_head",
-              "fontSizePx": 32,
-              "lineHeightPx": 36,
+              "fontSizePx": 24,
+              "lineHeightPx": 32,
               "fontWeight": 400
             },
             {
@@ -1089,21 +1096,21 @@
             {
               "id": "detail_primary",
               "contentFieldId": "detail_primary",
-              "styleKey": "paragraph",
+              "styleKey": "b_head",
               "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 4,
-              "offsetBaselines": 15,
-              "columnSpan": 1
+              "keylineIndex": 5,
+              "rowIndex": 1,
+              "offsetBaselines": 77,
+              "columnSpan": 3
             },
             {
               "id": "detail_secondary",
               "contentFieldId": "detail_secondary",
-              "styleKey": "paragraph",
+              "styleKey": "b_head",
               "text": "",
-              "keylineIndex": 3,
-              "rowIndex": 4,
-              "offsetBaselines": 15,
+              "keylineIndex": 5,
+              "rowIndex": 1,
+              "offsetBaselines": 80,
               "columnSpan": 1
             }
           ],
@@ -1234,6 +1241,220 @@
             "rowIndex": 1
           }
         }
+      },
+      "tablet_2560x1600": {
+        "generic_social": {
+          "frame": {
+            "widthPx": 2560,
+            "heightPx": 1600
+          },
+          "safeArea": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "grid": {
+            "baselineStepPx": 16,
+            "rowCount": 4,
+            "columnCount": 4,
+            "marginTopBaselines": 4,
+            "marginBottomBaselines": 9,
+            "marginLeftBaselines": 0,
+            "marginRightBaselines": 0,
+            "rowGutterBaselines": 4,
+            "columnGutterBaselines": 4,
+            "fitWithinSafeArea": true
+          },
+          "textStyles": [
+            {
+              "key": "title",
+              "fontSizePx": 73,
+              "lineHeightPx": 72,
+              "fontWeight": 200
+            },
+            {
+              "key": "b_head",
+              "fontSizePx": 55,
+              "lineHeightPx": 72,
+              "fontWeight": 400
+            },
+            {
+              "key": "paragraph",
+              "fontSizePx": 32,
+              "lineHeightPx": 36,
+              "fontWeight": 400
+            }
+          ],
+          "textFields": [
+            {
+              "id": "main_heading",
+              "contentFieldId": "main_heading",
+              "styleKey": "title",
+              "text": "Ubuntu\nSummit\n26.04",
+              "keylineIndex": 2,
+              "rowIndex": 1,
+              "offsetBaselines": 3,
+              "columnSpan": 1
+            },
+            {
+              "id": "body_intro",
+              "contentFieldId": "body_intro",
+              "styleKey": "title",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 3,
+              "columnSpan": 3
+            },
+            {
+              "id": "detail_primary",
+              "contentFieldId": "detail_primary",
+              "styleKey": "b_head",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 171,
+              "columnSpan": 3
+            },
+            {
+              "id": "detail_secondary",
+              "contentFieldId": "detail_secondary",
+              "styleKey": "b_head",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 180,
+              "columnSpan": 1
+            }
+          ],
+          "logo": {
+            "id": "brand-mark",
+            "xPx": 96,
+            "yPx": 0,
+            "widthPx": 73,
+            "heightPx": 125,
+            "assetPath": "/assets/UbuntuTagLogo.svg",
+            "linkTitleSizeToHeight": true
+          },
+          "contentSource": "inline",
+          "inlineTextByFieldId": {
+            "main_heading": "Ubuntu\nSummit\n26.04",
+            "body_intro": "A showcase\nfor the innovative\nand the ambitious",
+            "detail_primary": "May 27-28, 2026",
+            "detail_secondary": "Online"
+          },
+          "csvContent": {
+            "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
+            "rowIndex": 1
+          }
+        },
+        "speaker_highlight": {
+          "frame": {
+            "widthPx": 2560,
+            "heightPx": 1600
+          },
+          "safeArea": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "grid": {
+            "baselineStepPx": 16,
+            "rowCount": 4,
+            "columnCount": 4,
+            "marginTopBaselines": 4,
+            "marginBottomBaselines": 9,
+            "marginLeftBaselines": 0,
+            "marginRightBaselines": 0,
+            "rowGutterBaselines": 4,
+            "columnGutterBaselines": 4,
+            "fitWithinSafeArea": true
+          },
+          "textStyles": [
+            {
+              "key": "title",
+              "fontSizePx": 73,
+              "lineHeightPx": 72,
+              "fontWeight": 200
+            },
+            {
+              "key": "b_head",
+              "fontSizePx": 55,
+              "lineHeightPx": 72,
+              "fontWeight": 400
+            },
+            {
+              "key": "paragraph",
+              "fontSizePx": 32,
+              "lineHeightPx": 36,
+              "fontWeight": 400
+            }
+          ],
+          "textFields": [
+            {
+              "id": "main_heading",
+              "contentFieldId": "main_heading",
+              "styleKey": "title",
+              "text": "Ubuntu\nSummit\n26.04",
+              "keylineIndex": 2,
+              "rowIndex": 1,
+              "offsetBaselines": 3,
+              "columnSpan": 1
+            },
+            {
+              "id": "body_intro",
+              "contentFieldId": "body_intro",
+              "styleKey": "title",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 3,
+              "columnSpan": 3
+            },
+            {
+              "id": "detail_primary",
+              "contentFieldId": "detail_primary",
+              "styleKey": "b_head",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 171,
+              "columnSpan": 3
+            },
+            {
+              "id": "detail_secondary",
+              "contentFieldId": "detail_secondary",
+              "styleKey": "b_head",
+              "text": "",
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 180,
+              "columnSpan": 1
+            }
+          ],
+          "logo": {
+            "id": "brand-mark",
+            "xPx": 96,
+            "yPx": 0,
+            "widthPx": 73,
+            "heightPx": 125,
+            "assetPath": "/assets/UbuntuTagLogo.svg",
+            "linkTitleSizeToHeight": true
+          },
+          "contentSource": "inline",
+          "inlineTextByFieldId": {
+            "main_heading": "Ubuntu\nSummit\n26.04",
+            "body_intro": "A showcase\nfor the innovative\nand the ambitious",
+            "detail_primary": "May 27-28, 2026",
+            "detail_secondary": "Online"
+          },
+          "csvContent": {
+            "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
+            "rowIndex": 1
+          }
+        }
       }
     },
     "contentFormatKeyByProfile": {
@@ -1241,11 +1462,12 @@
       "fullhd_1920x1080": "generic_social",
       "instagram_1080x1350": "generic_social",
       "story_1080x1920": "generic_social",
-      "screen_3840x2160": "generic_social"
+      "screen_3840x2160": "generic_social",
+      "tablet_2560x1600": "generic_social"
     },
     "exportSettings": {
-      "exportName": "UbuntuSummit2026-AV",
-      "frameRate": 30,
+      "exportName": "UbuntuSummit2026",
+      "frameRate": 24,
       "transparentBackground": false
     },
     "exportSettingsByProfile": {
@@ -1270,6 +1492,11 @@
         "transparentBackground": false
       },
       "screen_3840x2160": {
+        "exportName": "UbuntuSummit2026",
+        "frameRate": 24,
+        "transparentBackground": false
+      },
+      "tablet_2560x1600": {
         "exportName": "UbuntuSummit2026",
         "frameRate": 24,
         "transparentBackground": false
@@ -1304,13 +1531,13 @@
         "nose_bob_up_px": 1.5
       },
       "composition": {
-        "center_x_px": 960,
-        "center_y_px": 469,
-        "center_offset_y_px": -71,
-        "scale": 0.42,
+        "center_x_px": 1280,
+        "center_y_px": 800,
+        "center_offset_y_px": 0,
+        "scale": 0.75,
         "radial_scale": 1,
         "global_rotation_deg": 0,
-        "background_color": "#202020"
+        "background_color": "#2b2b2b"
       },
       "generator_wrangle": {
         "inner_radius": 0.26,
@@ -1362,9 +1589,10 @@
         "color": "#ffffff",
         "echo_color": "#444444",
         "width_px": 3,
-        "echo_marker_stroke_px": 3,
-        "echo_marker_scale_mult": 2.5,
-        "echo_sparse_scale_boost": 1.5,
+        "echo_marker_stroke_px": 2.2,
+        "echo_marker_scale_mult": 1.5,
+        "echo_sparse_scale_boost": 0.5,
+        "echo_spacing_offset_px": 0,
         "phase_start_width_px": 8,
         "phase_end_width_px": 4,
         "echo_count": 16,
@@ -1379,8 +1607,8 @@
       },
       "spoke_text": {
         "enabled": true,
-        "font_size_px": 23,
-        "radial_u": 0.6
+        "font_size_px": 14,
+        "radial_u": 0
       },
       "screensaver": {
         "cycle_sec": 60,
@@ -1496,6 +1724,7 @@
           "echo_marker_stroke_px": 2.2,
           "echo_marker_scale_mult": 1.5,
           "echo_sparse_scale_boost": 0.5,
+          "echo_spacing_offset_px": 0,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
@@ -1626,6 +1855,7 @@
           "echo_marker_stroke_px": 3,
           "echo_marker_scale_mult": 2.5,
           "echo_sparse_scale_boost": 1.5,
+          "echo_spacing_offset_px": 0,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
@@ -1696,9 +1926,9 @@
         },
         "composition": {
           "center_x_px": 540,
-          "center_y_px": 554,
-          "center_offset_y_px": -121,
-          "scale": 0.67,
+          "center_y_px": 714,
+          "center_offset_y_px": 39,
+          "scale": 0.48,
           "radial_scale": 1,
           "global_rotation_deg": 0,
           "background_color": "#202020"
@@ -1756,6 +1986,7 @@
           "echo_marker_stroke_px": 2.2,
           "echo_marker_scale_mult": 1.5,
           "echo_sparse_scale_boost": 0.5,
+          "echo_spacing_offset_px": 0,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
@@ -1886,6 +2117,7 @@
           "echo_marker_stroke_px": 3.5,
           "echo_marker_scale_mult": 2.5,
           "echo_sparse_scale_boost": 0.5,
+          "echo_spacing_offset_px": 0,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
@@ -1956,8 +2188,8 @@
         },
         "composition": {
           "center_x_px": 1920,
-          "center_y_px": 1162,
-          "center_offset_y_px": 82,
+          "center_y_px": 1091,
+          "center_offset_y_px": 11,
           "scale": 1,
           "radial_scale": 1,
           "global_rotation_deg": 0,
@@ -2016,6 +2248,7 @@
           "echo_marker_stroke_px": 2.5,
           "echo_marker_scale_mult": 4.4,
           "echo_sparse_scale_boost": 0.5,
+          "echo_spacing_offset_px": 0,
           "phase_start_width_px": 8,
           "phase_end_width_px": 4,
           "echo_count": 16,
@@ -2055,9 +2288,140 @@
           "shape_fade_start": 0.3,
           "shape_fade_end": 0.85
         }
+      },
+      "tablet_2560x1600": {
+        "mascot_fade": {
+          "enabled": false,
+          "duration_sec": 3
+        },
+        "head_turn": {
+          "enabled": true,
+          "duration_sec": 0.333,
+          "peak_angle_deg": -30,
+          "reverse_angle_deg": 30,
+          "overshoot_angle_deg": -3,
+          "peak_frac": 0.25,
+          "reverse_frac": 0.56,
+          "dot_overlap_sec": 1,
+          "overshoot_frac": 0.75
+        },
+        "blink": {
+          "enabled": true,
+          "start_delay_sec": 0.04,
+          "duration_sec": 0.12,
+          "close_frac": 0.42,
+          "hold_closed_frac": 0.12,
+          "eye_scale_y_closed": 0.08
+        },
+        "sneeze": {
+          "enabled": true,
+          "nose_bob_up_px": 1.5
+        },
+        "composition": {
+          "center_x_px": 1280,
+          "center_y_px": 800,
+          "center_offset_y_px": 0,
+          "scale": 0.75,
+          "radial_scale": 1,
+          "global_rotation_deg": 0,
+          "background_color": "#2b2b2b"
+        },
+        "generator_wrangle": {
+          "inner_radius": 0.26,
+          "outer_radius": 0.513,
+          "num_orbits": 8,
+          "spoke_count": 60,
+          "phase_count": 2,
+          "min_active_orbits": 3,
+          "base_angle_deg": 0,
+          "pattern_offset_spokes": 1,
+          "anim_start_angle_deg": 0
+        },
+        "transition_wrangle": {
+          "duration_sec": 1,
+          "spins": 3,
+          "emit_frac": 0.05,
+          "alpha_ramp_duration_sec": 0.14,
+          "animate_orbit_count": true,
+          "orbit_count_start_frac": 0,
+          "orbit_count_end_frac": 1,
+          "capture_start_frac": 0.25,
+          "orbit_stagger_frac": 1,
+          "speed_mult_per_orbit": 0.85,
+          "inner_faster": true,
+          "spawn_angle_offset_deg": 0,
+          "occlusion_arc_deg": 0,
+          "hide_invisible_by_pscale": true,
+          "base_pscale": 0.74,
+          "orbital_frontier_amount": -1,
+          "orbital_frontier_width_u": 1,
+          "orbital_frontier_bias": 0.676,
+          "phase_frontier_amount": 0.655,
+          "phase_frontier_width_u": 0.57,
+          "phase_frontier_bias": 1
+        },
+        "point_style": {
+          "color": "#ffffff",
+          "alpha": 1,
+          "base_pscale_px_per_unit": 4,
+          "min_scale": 0.3,
+          "min_diameter_px": 1.1
+        },
+        "spoke_lines": {
+          "enabled": true,
+          "show_reference_halo": false,
+          "show_debug_masks": false,
+          "construction_color": "#333333",
+          "reference_color": "#666666",
+          "color": "#ffffff",
+          "echo_color": "#444444",
+          "width_px": 3,
+          "echo_marker_stroke_px": 2.2,
+          "echo_marker_scale_mult": 1.5,
+          "echo_sparse_scale_boost": 0.5,
+          "echo_spacing_offset_px": 0,
+          "phase_start_width_px": 8,
+          "phase_end_width_px": 4,
+          "echo_count": 16,
+          "echo_style": "mixed",
+          "echo_shape_seed": 0,
+          "echo_mix_shape_pct": 0.56,
+          "echo_width_mult": 0.88,
+          "echo_wave_count": 4,
+          "echo_opacity_mult": 0.5,
+          "start_radius_px": 150,
+          "content_clearance_px": 24
+        },
+        "spoke_text": {
+          "enabled": true,
+          "font_size_px": 14,
+          "radial_u": 0
+        },
+        "screensaver": {
+          "cycle_sec": 60,
+          "pulse_orbits": true,
+          "pulse_spokes": true,
+          "min_spoke_count": 24,
+          "ramp_in_sec": 2,
+          "phase_boundary_transition_sec": 0.04
+        },
+        "finale": {
+          "enabled": true,
+          "delay_after_dots_sec": 0,
+          "duration_sec": 0.75,
+          "start_angle_deg": 0,
+          "mask_angle_offset_deg": 1.5,
+          "halo_inner_radius_u": 0.255
+        },
+        "vignette": {
+          "enabled": false,
+          "shape_fade": 1,
+          "shape_fade_start": 0.3,
+          "shape_fade_end": 0.85
+        }
       }
     },
-    "guideMode": "off"
+    "guideMode": "baseline"
   },
   "pendingCsvDraftsByBucket": {}
 }

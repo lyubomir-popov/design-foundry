@@ -13,6 +13,9 @@ const publicRoot = path.resolve(__dirname, "public");
 const sourceDefaultConfigPath = path.resolve(__dirname, "public", "assets", "source-default-config.json");
 const sourceDefaultAuthoringPath = "/__authoring/source-default-config";
 const sourceDefaultRelativePath = path.relative(__dirname, sourceDefaultConfigPath).replace(/\\/g, "/");
+const operatorPresetConfigPath = path.resolve(__dirname, "public", "assets", "operator-presets.json");
+const operatorPresetAuthoringPath = "/__authoring/operator-presets";
+const operatorPresetRelativePath = path.relative(__dirname, operatorPresetConfigPath).replace(/\\/g, "/");
 const overlayCsvAuthoringPath = "/__authoring/overlay-csv";
 const documentFileAuthoringPath = "/__authoring/document-file";
 const exportMp4AuthoringPath = "/__authoring/export-mp4";
@@ -123,6 +126,7 @@ function sourceDefaultAuthoringPlugin(): Plugin {
         if (
           !requestPath ||
           (requestPath !== sourceDefaultAuthoringPath &&
+            requestPath !== operatorPresetAuthoringPath &&
             requestPath !== overlayCsvAuthoringPath &&
             requestPath !== documentFileAuthoringPath &&
             requestPath !== exportMp4AuthoringPath)
@@ -176,6 +180,57 @@ function sourceDefaultAuthoringPlugin(): Plugin {
                 res.statusCode = 400;
                 res.setHeader("Content-Type", "application/json");
                 res.end(JSON.stringify({ error: "Invalid source default snapshot payload." }));
+              }
+            })();
+          });
+          return;
+        }
+
+        if (requestPath === operatorPresetAuthoringPath && req.method === "GET") {
+          void (async () => {
+            try {
+              const contents = await fs.readFile(operatorPresetConfigPath, "utf8");
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(contents);
+            } catch (error) {
+              const code = (error as NodeJS.ErrnoException).code;
+              if (code === "ENOENT") {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: "Operator preset library not found." }));
+                return;
+              }
+
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: "Failed to read operator preset library." }));
+            }
+          })();
+          return;
+        }
+
+        if (requestPath === operatorPresetAuthoringPath && req.method === "POST") {
+          const chunks: Uint8Array[] = [];
+          req.on("data", (chunk) => {
+            chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+          });
+          req.on("end", () => {
+            void (async () => {
+              try {
+                const payload = Buffer.concat(chunks).toString("utf8") || "{}";
+                const parsed = JSON.parse(payload);
+                await fs.mkdir(path.dirname(operatorPresetConfigPath), { recursive: true });
+                await fs.writeFile(
+                  operatorPresetConfigPath,
+                  `${JSON.stringify(parsed, null, 2)}\n`,
+                  "utf8"
+                );
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ ok: true, path: operatorPresetRelativePath }));
+              } catch {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ error: "Invalid operator preset payload." }));
               }
             })();
           });
@@ -373,7 +428,14 @@ function sourceDefaultAuthoringPlugin(): Plugin {
         }
 
         res.statusCode = 405;
-        res.setHeader("Allow", requestPath === sourceDefaultAuthoringPath || requestPath === documentFileAuthoringPath ? "GET, POST" : "POST");
+        res.setHeader(
+          "Allow",
+          requestPath === sourceDefaultAuthoringPath
+            || requestPath === operatorPresetAuthoringPath
+            || requestPath === documentFileAuthoringPath
+            ? "GET, POST"
+            : "POST"
+        );
         res.end();
       });
     }
