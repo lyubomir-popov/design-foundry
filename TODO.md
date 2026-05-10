@@ -60,10 +60,9 @@ Status: Active. P1-P6 groundwork is complete, and the first operator-preset slic
 ## Immediate Next Steps
 
 - **Top priority until May 13:** polish the Ubuntu Summit format-switching demo for the lightning talk. Focus on visible quality, not new architecture.
-- Recording-path rehearsal is complete in the current dev preview: `D` opens panel-hosted Formats, format switching updates the stage live while the rail stays visible, and dismiss returns to Parameters in place.
-- Save → reload rehearsal is complete for a hash-loaded project file in the current browser path: a disposable `projects/` copy saved, reloaded, and restored the expected active format and stage size from disk.
-- Confirm the happy-path save → close → reopen flow on the actual demo machine and browser without needing the dev-browser `/__authoring/document-file` fallback.
-- Produce one browser URL plus a screenshot or short screen recording artifact suitable for the presentation slide.
+- Confirm the happy-path save → close → reopen flow on the actual demo machine and browser without depending on the dev-preview `projects/` fallback path.
+- Produce one stable browser URL plus a screenshot or short screen recording artifact suitable for the presentation slide.
+- Treat further UI cleanup as done unless a demo-blocking issue appears during the actual-machine rehearsal or capture pass.
 - **Lane R is complete.** All major interactive paths use localized updates; remaining `buildConfigEditor()` calls are all genuinely structural.
 - **Lane P is active.** The first copy-on-apply operator preset slice is landed for Halo and validated.
 - **Next:** decide whether the file-backed Halo preset path should become a shared operator-preset library surface, then extend the same copy-on-apply model to the next operator that benefits from reusable seeded behavior.

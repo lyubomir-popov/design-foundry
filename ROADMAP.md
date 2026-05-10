@@ -168,6 +168,7 @@ These are important, but they are not active execution items until explicitly pr
 - How far should the shell/operator boundary go before the Layers palette and rendered-output switching stop living inside the same Parameters rail as operator fields?
 - What is the smallest durable state model that removes the current mirrored `current` vs `per-format` persistence choreography without forcing a premature saved-file rewrite?
 - Reusable size presets should live in a global library rather than hiding behind per-document CRUD or source-default writeback.
+- If copy-on-apply operator presets expand beyond Halo, they should converge on one shared operator-preset library surface instead of growing bespoke picker UI one operator at a time.
 - Global size presets should stay coupled to their default safe area and grid seed. Those defaults are the first guess, not immutable authority, so document variants must remain free to override or replace them.
 - Variant derivation and auto-adjust should carry forward a useful first guess for grid intent, keylines, and overlay anchoring when a new format is derived from another.
 - Output recipes should belong to the future output operator surface. Output should render authored variants, not define them.

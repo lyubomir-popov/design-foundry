@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Demo rehearsal checkpoints (2026-05-10)
+
+- Rehearsed the live format-switching recording path against `video-intro-export.brand-layout-ops.json`: after startup the hash-loaded document resolved to the expected file-backed title, `D` opened panel-hosted Formats without a modal, switching `1280×720 X LI` to `1920×1080 Full HD` updated the stage `viewBox` live, and dismissing Formats returned the rail to Parameters in place.
+- Rehearsed save → reload against a disposable `projects/video-intro-export-rehearsal.brand-layout-ops.json` copy: `Ctrl+S` saved the current 1920×1080 state, a full reload restored that file from the hash route, and the saved JSON on disk carried the expected `activeTargetId` and metadata update. This clears the current dev-preview browser path while leaving the actual demo machine's OS-level save/open path as the remaining real-world check.
+- Validation: `npm run typecheck`, `npm run preview:build`, and live browser checks for panel-hosted Formats, stage `viewBox` switching, save status, reload restore, and saved-file contents.
+
 ## Selected-text inspector compaction (2026-05-09)
 
 - Removed the remaining selected-overlay duplication from the Parameters rail in `apps/overlay-preview/src/config-editor-controller.ts`, `apps/overlay-preview/src/overlay-editing-controller.ts`, and `apps/overlay-preview/src/overlay-section.ts`: the rail no longer repeats the selected layer's identity line, the readonly `Label` / `ID` metadata row is gone, and the text section now uses generic `Text` and `Paragraph Style` labels instead of echoing the sidenav selection.

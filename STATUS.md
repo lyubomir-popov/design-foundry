@@ -82,7 +82,7 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 - `D` now opens the existing Formats editor inside the right-hand panel instead of obscuring the stage with a modal, and that Formats view now truly replaces the panel body until dismissed. `D` again, `P`, or the panel dismiss control restores the ordinary Parameters view in place while keeping the stage visible for recording.
 - The Layout Grid section is now readable again at narrow inspector widths: numeric inputs use a local `2px` inline padding override, baseline sits on its own row, rows and gutters are paired in two-up rows, and Margins / Safe Area now use group headings plus short `Top/Bottom/Left/Right` labels.
 - The selected-text inspector is now materially tighter for demo use: the Parameters rail no longer repeats the selected layer's identity copy or readonly label or id metadata, and paragraph-style selection is now a compact dropdown instead of a tall stack of option cards.
-- Demo rehearsal is partially closed: the current dev preview successfully opens `video-intro-export.brand-layout-ops.json` from the hash route, the in-panel Formats flow updates the stage live for recording, and a disposable `projects/` copy survived save and reload with the expected active format restored from disk. The remaining gap is the actual demo machine's OS-level save/open path and the final captured slide artifact.
+- Demo rehearsal is partially closed: the current dev preview successfully opens `video-intro-export.brand-layout-ops.json` from the hash route, the in-panel Formats flow updates the stage live for recording, and a disposable `projects/` copy survived save and reload with the expected active format restored from disk. That clears the current browser path, but the actual demo machine's OS-level save/open path still needs to be verified before the final captured slide artifact is considered done.
 - `W` is now a simple guide toggle for demo use: it flips directly between `off` and `baseline`, where `baseline` already includes the layout or composition guides plus baseline lines.
 - `main.ts` is now a composition root around extracted controllers. The remaining work is product-shape work, not more parity recovery.
 
@@ -90,7 +90,7 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 
 Lane P is active. Lane R is complete.
 
-- Current follow-up slice: rehearse the recording path and confirm the save → close → reopen flow on the actual demo machine now that format switching no longer obscures the stage.
+- Current follow-up slice: verify the actual demo machine's save → close → reopen path, then capture the final screenshot or short recording artifact from the stable preview URL.
 - Lane M is complete: network overlay, deterministic autolayout, selection, composition seam, and named output sinks are all in place.
 - Lane N is complete: Layers-palette graph CRUD now covers add-node, connect, disconnect, shared typed-port validation, and synchronized parameter-pane focus.
 - Lane O is paused after O1-O3, with zoom and pan work deferred until there is a concrete need.
