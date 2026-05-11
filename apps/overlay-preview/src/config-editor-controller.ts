@@ -5,7 +5,7 @@
  * policy for rebuilding the split layers/parameter rails.
  */
 
-import { initRangeControls } from "baseline-foundry";
+import { initRangeControls } from "./vendor/baseline-foundry/index.js";
 
 import {
   findOverlayBackgroundIncomingEdge,

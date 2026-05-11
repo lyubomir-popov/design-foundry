@@ -4,6 +4,12 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Standalone BF snapshot for overlay preview (2026-05-11)
+
+- Moved the overlay preview off the live `file:../baseline-foundry` dependency and onto a vendored local Baseline Foundry snapshot: the preview now imports a repo-local BF `os` tier stylesheet, bundles a local Ubuntu Sans variable font, and vendors the top-navigation, panel-drawer, range-control, and resizable-aside helpers so both dev and production builds no longer require the sibling BF clone.
+- Removed the explicit sibling BF path from `apps/overlay-preview/vite.config.ts`, refreshed the lockfile, and verified the preview still builds with `node_modules/baseline-foundry` absent.
+- Validation: `npm run preview:build`, `npm uninstall baseline-foundry`, `npm install --package-lock-only`, and a live `http://127.0.0.1:4173/` smoke check with the existing preview task still serving.
+
 ## BF `os` resync for overlay preview (2026-05-11)
 
 - Switched `apps/overlay-preview/src/main.ts` from the removed `baseline-foundry/presets/panel.css` export to the supported `baseline-foundry/tiers/os.css` export so the preview matches current BF `main` instead of depending on the deprecated panel-shaped contract.

@@ -1,4 +1,4 @@
-import "baseline-foundry/tiers/os.css";
+import "./vendor/baseline-foundry/tiers/os/styles.css";
 import "./styles.css";
 
 import type {

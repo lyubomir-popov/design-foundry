@@ -16,7 +16,7 @@ This repo does not own a single standalone design-spec programme. Instead, it fo
 
 | Reference | Path | Role |
 |-----------|------|------|
-| Baseline Foundry | `../baseline-foundry/` | Shared shell, modal, navigation, and application-surface contracts used by this repo |
+| Baseline Foundry | `../baseline-foundry/` | Shared shell, modal, navigation, and application-surface contract source; the preview now vendors a local BF `os` snapshot for runtime portability |
 | Product parity reference | local `racoon-anim` clone | Behavior and content reference only, not a normative design spec |
 
 ## Notes
@@ -24,3 +24,4 @@ This repo does not own a single standalone design-spec programme. Instead, it fo
 - When a reusable shell or layout rule should become shared, move it toward `baseline-foundry` rather than treating local preview code as the long-term source of truth.
 - `racoon-anim` is a parity reference app, not the source of truth for shared architecture.
 - Local implementation should not silently override the linked design specs without recording the deviation in `TODO.md` or `ROADMAP.md`.
+- `baseline-foundry` remains the upstream contract and refresh source, but this repo's live preview no longer depends on a sibling BF clone being present on disk.

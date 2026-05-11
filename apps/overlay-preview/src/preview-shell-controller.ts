@@ -1,4 +1,8 @@
-import { initPanelDrawers, initResizableAsides, initTopNavigations } from "baseline-foundry";
+import {
+  initPanelDrawers,
+  initResizableAsides,
+  initTopNavigations
+} from "./vendor/baseline-foundry/index.js";
 import {
   createCheckboxFormGroup,
   createFormGroup,
