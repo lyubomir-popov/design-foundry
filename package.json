@@ -31,8 +31,8 @@
     "vite": "^7.1.3"
   },
   "dependencies": {
-    "jszip": "^3.10.1",
     "baseline-foundry": "file:../baseline-foundry",
+    "jszip": "^3.10.1",
     "sass": "^1.98.0",
     "three": "^0.183.2"
   }

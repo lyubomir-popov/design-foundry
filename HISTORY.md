@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## BF `os` resync for overlay preview (2026-05-11)
+
+- Switched `apps/overlay-preview/src/main.ts` from the removed `baseline-foundry/presets/panel.css` export to the supported `baseline-foundry/tiers/os.css` export so the preview matches current BF `main` instead of depending on the deprecated panel-shaped contract.
+- Refreshed the local `baseline-foundry` file dependency with `npm install baseline-foundry@file:../baseline-foundry` so the workspace package install picked up the current BF export map; that updated `package-lock.json` and restored local preview-build validation.
+- Replaced the remaining hardcoded gold literals in `apps/overlay-preview/src/styles.css` with BF resize-handle and authoring-accent tokens so the local shell override layer follows the shared BF chrome contract instead of carrying repo-local copies.
+- Validation: `npm run preview:build` after the import swap, dependency refresh, and token-alignment cleanup.
+
 ## Demo rehearsal checkpoints (2026-05-10)
 
 - Rehearsed the live format-switching recording path against `video-intro-export.brand-layout-ops.json`: after startup the hash-loaded document resolved to the expected file-backed title, `D` opened panel-hosted Formats without a modal, switching `1280×720 X LI` to `1920×1080 Full HD` updated the stage `viewBox` live, and dismissing Formats returned the rail to Parameters in place.

@@ -1,4 +1,4 @@
-import "baseline-foundry/presets/panel.css";
+import "baseline-foundry/tiers/os.css";
 import "./styles.css";
 
 import type {
