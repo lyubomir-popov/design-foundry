@@ -8,7 +8,6 @@ import { defineConfig, type Plugin } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
-const baselineFoundryRoot = path.resolve(repoRoot, "..", "baseline-foundry");
 const publicRoot = path.resolve(__dirname, "public");
 const sourceDefaultConfigPath = path.resolve(__dirname, "public", "assets", "source-default-config.json");
 const sourceDefaultAuthoringPath = "/__authoring/source-default-config";
@@ -468,7 +467,7 @@ export default defineConfig({
   },
   server: {
     fs: {
-      allow: [repoRoot, baselineFoundryRoot]
+      allow: [repoRoot]
     }
   }
 });

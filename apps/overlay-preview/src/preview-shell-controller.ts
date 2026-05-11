@@ -984,7 +984,6 @@ export function createPreviewShellController(
 
     if (isDocked) {
       appShell?.classList.remove("is-drawer-expanded");
-      appShell?.classList.toggle("has-pinned-aside", isOpen);
       overlay?.setAttribute("aria-hidden", "true");
       aside.classList.remove("is-overlay", "is-drawer", "is-medium", "is-open");
       aside.classList.toggle("is-pinned", isOpen);
@@ -995,7 +994,6 @@ export function createPreviewShellController(
       return;
     }
 
-    appShell?.classList.remove("has-pinned-aside");
     aside.classList.remove("is-collapsed", "is-pinned");
     aside.classList.add("is-overlay", "is-medium");
     aside.classList.toggle("is-open", isOpen);
