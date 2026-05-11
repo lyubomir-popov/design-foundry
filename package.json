@@ -7,8 +7,6 @@
     "packages/*"
   ],
   "scripts": {
-    "preinstall": "node scripts/sync-baseline-foundry.mjs --if-present",
-    "sync:baseline-foundry": "node scripts/sync-baseline-foundry.mjs",
     "dev": "vite --config apps/overlay-preview/vite.config.ts --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "verify:document-persistence": "tsx scripts/verify-document-persistence.ts",
@@ -34,7 +32,7 @@
   },
   "dependencies": {
     "jszip": "^3.10.1",
-    "baseline-foundry": "file:./vendor/baseline-foundry",
+    "baseline-foundry": "file:../baseline-foundry",
     "sass": "^1.98.0",
     "three": "^0.183.2"
   }
