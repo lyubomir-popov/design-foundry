@@ -8,6 +8,8 @@ import { defineConfig, type Plugin } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
+const vitePort = Number.parseInt(process.env.VITE_PORT ?? "4173", 10);
+const viteHost = process.env.VITE_HOST ?? "127.0.0.1";
 const publicRoot = path.resolve(__dirname, "public");
 const sourceDefaultConfigPath = path.resolve(__dirname, "public", "assets", "source-default-config.json");
 const sourceDefaultAuthoringPath = "/__authoring/source-default-config";
@@ -466,6 +468,9 @@ export default defineConfig({
     }
   },
   server: {
+    host: viteHost,
+    port: Number.isFinite(vitePort) ? vitePort : 4173,
+    strictPort: true,
     fs: {
       allow: [repoRoot]
     }
