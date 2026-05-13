@@ -27,6 +27,7 @@ import type {
 import type { SourceDefaultController } from "./source-default-controller.js";
 
 const GUIDE_MODES: readonly GuideMode[] = ["off", "composition", "baseline"];
+const DOCKED_VIEWPORT_MIN_WIDTH_PX = 960;
 
 type ControlPanelView = "parameters" | "formats";
 
@@ -81,6 +82,8 @@ export interface PreviewShellControllerDeps {
   initHaloRenderer(): void;
   initAuthoring(): void;
   deleteSelectedOverlayItem(): boolean;
+  undoHistory(): Promise<boolean>;
+  redoHistory(): Promise<boolean>;
   handleAuthoringEditingKeyDown(event: KeyboardEvent): boolean;
   handleAuthoringInteractionKeyDown(event: KeyboardEvent): boolean;
 }
@@ -204,6 +207,7 @@ export function createPreviewShellController(
     const dismissButton = getControlPanelDismissEl();
     const parametersView = getParametersPanelViewEl();
     const formatsView = getFormatsPanelViewEl();
+    const isDocked = isDockedViewport();
 
     controlPanel?.setAttribute("data-panel-view", controlPanelView);
     if (title) {
@@ -211,6 +215,7 @@ export function createPreviewShellController(
     }
     if (dismissButton) {
       dismissButton.textContent = controlPanelView === "formats" ? "Done" : "Close";
+      dismissButton.hidden = isDocked && controlPanelView === "parameters";
     }
     if (parametersView) {
       parametersView.hidden = controlPanelView !== "parameters";
@@ -239,6 +244,11 @@ export function createPreviewShellController(
   function dismissControlPanel(): void {
     if (controlPanelView !== "parameters") {
       setControlPanelView("parameters");
+      setDrawerOpen(true);
+      return;
+    }
+
+    if (isDockedViewport()) {
       setDrawerOpen(true);
       return;
     }
@@ -763,7 +773,7 @@ export function createPreviewShellController(
   }
 
   function isDockedViewport(): boolean {
-    return window.innerWidth >= 1200;
+    return window.innerWidth >= DOCKED_VIEWPORT_MIN_WIDTH_PX;
   }
 
   function updateDocumentUi(): void {
@@ -990,10 +1000,12 @@ export function createPreviewShellController(
       appShell?.classList.remove("is-drawer-expanded");
       appShell?.classList.toggle("has-pinned-aside", isOpen);
       overlay?.setAttribute("aria-hidden", "true");
-      aside.classList.remove("is-overlay", "is-drawer", "is-medium", "is-open");
+      aside.classList.remove("is-overlay", "is-drawer", "is-open");
+      aside.classList.add("is-medium");
       aside.classList.toggle("is-pinned", isOpen);
       aside.classList.toggle("is-collapsed", !isOpen);
       aside.setAttribute("aria-hidden", String(!isOpen));
+      applyControlPanelView();
       refreshResizableAsidesRuntime();
       queueStageResizeRefresh();
       return;
@@ -1006,6 +1018,7 @@ export function createPreviewShellController(
     aside.setAttribute("aria-hidden", String(!isOpen));
     appShell?.classList.toggle("is-drawer-expanded", isOpen);
     overlay?.setAttribute("aria-hidden", String(!isOpen));
+    applyControlPanelView();
     refreshResizableAsidesRuntime();
     queueStageResizeRefresh();
   }
@@ -1073,7 +1086,17 @@ export function createPreviewShellController(
       return;
     }
 
-    if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key === "Delete") {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && (event.key === "z" || event.key === "Z")) {
+      event.preventDefault();
+      if (event.shiftKey) {
+        void deps.redoHistory();
+      } else {
+        void deps.undoHistory();
+      }
+      return;
+    }
+
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && (event.key === "Delete" || event.key === "Backspace")) {
       if (deps.deleteSelectedOverlayItem()) {
         event.preventDefault();
         return;
@@ -1088,7 +1111,11 @@ export function createPreviewShellController(
         return;
       }
 
-      setDrawerOpen(!isControlPanelOpen());
+      if (isDockedViewport()) {
+        setDrawerOpen(true);
+      } else {
+        setDrawerOpen(!isControlPanelOpen());
+      }
       event.preventDefault();
       return;
     }
@@ -1193,6 +1220,11 @@ export function createPreviewShellController(
         collapseTopNavigation();
         if (controlPanelView !== "parameters") {
           setControlPanelView("parameters");
+          setDrawerOpen(true);
+          return;
+        }
+
+        if (isDockedViewport()) {
           setDrawerOpen(true);
           return;
         }

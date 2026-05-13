@@ -62,6 +62,7 @@ Status: Active. P1-P6 groundwork is complete, and the first operator-preset slic
 - **Top priority until May 13:** polish the Ubuntu Summit format-switching demo for the lightning talk. Focus on visible quality, not new architecture.
 - Confirm the happy-path save → close → reopen flow on the actual demo machine and browser without depending on the dev-preview `projects/` fallback path.
 - Produce one stable browser URL plus a screenshot or short screen recording artifact suitable for the presentation slide.
+- Use `projects/1080p.brand-layout-ops.json` as the current recording source unless the demo-machine rehearsal finds a blocker; it now carries the normalized light-gray background set, guides off by default, and the latest AV export defaults.
 - Treat further UI cleanup as done unless a demo-blocking issue appears during the actual-machine rehearsal or capture pass.
 - **Lane R is complete.** All major interactive paths use localized updates; remaining `buildConfigEditor()` calls are all genuinely structural.
 - **Lane P is active.** The first copy-on-apply operator preset slice is landed for Halo and validated.

@@ -92,6 +92,10 @@ import {
   type PreviewDocumentStateController
 } from "./preview-document-state-controller.js";
 import {
+  createPreviewHistoryController,
+  type PreviewHistoryController
+} from "./preview-history-controller.js";
+import {
   createProfileStateController,
   type ProfileStateController
 } from "./profile-state-controller.js";
@@ -122,6 +126,7 @@ const INITIAL_FORMAT_KEY = "generic_social";
 const OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-overlay-visible-v1";
 const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-network-overlay-visible-v1";
 const GUIDE_MODE_STORAGE_KEY = "brand-layout-ops-guide-mode-v1";
+const HISTORY_LIMIT = 100;
 
 const persistedFormat = loadOutputFormatKeys();
 const startProfileKey = persistedFormat?.profileKey ?? INITIAL_PROFILE_KEY;
@@ -197,8 +202,8 @@ const documentWorkspaceController = createDocumentWorkspaceController<OverlayPre
   parseDocument: sanitizePreviewDocument,
   getDocumentMetadata: (previewDocument) => previewDocument.document.metadata,
   buildPersistedDocument: buildCurrentDocumentPersistence,
-  applyDocument: applyPreviewDocumentToState,
-  applyNewDocumentState,
+  applyDocument: applyPreviewDocumentFromWorkspace,
+  applyNewDocumentState: applyNewDocumentStateFromWorkspace,
   onWorkspaceChange: () => {
     previewShellController?.updateDocumentUi();
   }
@@ -217,6 +222,7 @@ let configEditorController: ConfigEditorController | null = null;
 let documentFormatController: DocumentFormatController | null = null;
 let profileStateController: ProfileStateController | null = null;
 let documentStateController: PreviewDocumentStateController | null = null;
+let previewHistoryController: PreviewHistoryController | null = null;
 
 const $ = <T extends Element>(selector: string): T | null => document.querySelector<T>(selector);
 
@@ -331,8 +337,37 @@ function loadLogoIntrinsicDimensions(assetPath: string): Promise<void> {
   });
 }
 
+function resetHistoryFromCurrentDocument(markAsSaved: boolean = true): void {
+  previewHistoryController?.resetFromCurrentDocument(markAsSaved);
+}
+
+function syncHistorySavedSnapshot(): void {
+  previewHistoryController?.syncSavedSnapshot();
+}
+
+async function undoHistory(): Promise<boolean> {
+  if (!previewHistoryController) {
+    return false;
+  }
+
+  return previewHistoryController.undo();
+}
+
+async function redoHistory(): Promise<boolean> {
+  if (!previewHistoryController) {
+    return false;
+  }
+
+  return previewHistoryController.redo();
+}
+
 function markDocumentDirty(): void {
-  documentWorkspaceController.markDirty();
+  if (!previewHistoryController) {
+    documentWorkspaceController.markDirty();
+    return;
+  }
+
+  previewHistoryController.recordSnapshot();
 }
 
 function updateDocumentUi(): void {
@@ -643,9 +678,19 @@ async function applyPreviewDocumentToState(previewDocument: OverlayPreviewDocume
   networkOverlayController?.render();
 }
 
+async function applyPreviewDocumentFromWorkspace(previewDocument: OverlayPreviewDocument): Promise<void> {
+  await applyPreviewDocumentToState(previewDocument);
+  resetHistoryFromCurrentDocument(true);
+}
+
 async function applyNewDocumentState(): Promise<void> {
   await documentStateController!.applyNewDocumentState();
   networkOverlayController?.render();
+}
+
+async function applyNewDocumentStateFromWorkspace(): Promise<void> {
+  await applyNewDocumentState();
+  resetHistoryFromCurrentDocument(true);
 }
 
 function setOverlayVisible(nextVisible: boolean) {
@@ -881,6 +926,31 @@ documentStateController = createPreviewDocumentStateController({
   normalizeSelectedOperatorId
 });
 
+previewHistoryController = createPreviewHistoryController({
+  historyLimit: HISTORY_LIMIT,
+  serializeCurrentDocument: () => JSON.stringify(buildCurrentDocumentPersistence()),
+  sanitizePreviewDocument,
+  applyPreviewDocumentToState,
+  markWorkspaceDirty: () => {
+    documentWorkspaceController.markDirty();
+  },
+  resetWorkspaceDirty: () => {
+    documentWorkspaceController.resetDirty();
+  },
+  updateDocumentUi
+});
+
+resetHistoryFromCurrentDocument(true);
+
+const originalSaveCurrentDocument = documentWorkspaceController.saveCurrentDocument.bind(documentWorkspaceController);
+documentWorkspaceController.saveCurrentDocument = async (forceSaveAs?: boolean, nameOverride?: string): Promise<boolean> => {
+  const didSave = await originalSaveCurrentDocument(forceSaveAs, nameOverride);
+  if (didSave) {
+    syncHistorySavedSnapshot();
+  }
+  return didSave;
+};
+
 exportAutomationController = createExportAutomationController({
   ctx,
   getCanvasEl,
@@ -976,6 +1046,8 @@ previewShellController = createPreviewShellController({
     authoringController?.init();
   },
   deleteSelectedOverlayItem,
+  undoHistory,
+  redoHistory,
   handleAuthoringEditingKeyDown: (event) => {
     return authoringController?.handleEditingKeyDown(event) ?? false;
   },

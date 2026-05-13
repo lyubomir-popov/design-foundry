@@ -262,6 +262,11 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     )));
 
     body.append(grid);
+
+    const overlayActions = ctx.createOverlayItemActionRow({ showAdd: true, showDelete: true });
+    if (overlayActions) {
+      body.append(overlayActions);
+    }
   }
 
   if (state.selected.kind === "logo") {

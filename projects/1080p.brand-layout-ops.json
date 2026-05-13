@@ -4,11 +4,11 @@
   "metadata": {
     "name": "1080p",
     "createdAt": "2026-05-05T13:23:10.969Z",
-    "updatedAt": "2026-05-09T19:17:07.353Z"
+    "updatedAt": "2026-05-12T14:46:08.266Z"
   },
   "project": {
     "sceneFamilyKey": "halo",
-    "activeTargetId": "format-6",
+    "activeTargetId": "fullhd_1920x1080",
     "targets": [
       {
         "id": "landscape_1280x720",
@@ -169,7 +169,7 @@
     }
   },
   "state": {
-    "outputProfileKey": "tablet_2560x1600",
+    "outputProfileKey": "fullhd_1920x1080",
     "contentFormatKey": "generic_social",
     "profileFormatBuckets": {
       "landscape_1280x720": {
@@ -224,7 +224,7 @@
               "text": "Ubuntu\nSummit\n26.04",
               "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 0,
+              "offsetBaselines": 4,
               "columnSpan": 1
             },
             {
@@ -234,7 +234,7 @@
               "text": "",
               "keylineIndex": 3,
               "rowIndex": 1,
-              "offsetBaselines": 0,
+              "offsetBaselines": 2,
               "columnSpan": 2
             },
             {
@@ -242,9 +242,9 @@
               "contentFieldId": "detail_primary",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 4,
-              "offsetBaselines": 15,
+              "keylineIndex": 3,
+              "rowIndex": 1,
+              "offsetBaselines": 76,
               "columnSpan": 1
             },
             {
@@ -252,9 +252,9 @@
               "contentFieldId": "detail_secondary",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 3,
-              "rowIndex": 4,
-              "offsetBaselines": 15,
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 6,
               "columnSpan": 1
             }
           ],
@@ -271,7 +271,7 @@
           "inlineTextByFieldId": {
             "main_heading": "Ubuntu\nSummit\n26.04",
             "body_intro": "A showcase\nfor the innovative\nand the ambitious",
-            "detail_primary": "May 27-28, 2026",
+            "detail_primary": "May 27-28, 2026\nOutline",
             "detail_secondary": "Online"
           },
           "csvContent": {
@@ -330,7 +330,7 @@
               "text": "Ubuntu\nSummit\n26.04",
               "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 0,
+              "offsetBaselines": 4,
               "columnSpan": 1
             },
             {
@@ -407,7 +407,7 @@
             "marginLeftBaselines": 0,
             "marginRightBaselines": 0,
             "rowGutterBaselines": 4,
-            "columnGutterBaselines": 4,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -458,17 +458,7 @@
               "text": "",
               "keylineIndex": 4,
               "rowIndex": 1,
-              "offsetBaselines": 24,
-              "columnSpan": 1
-            },
-            {
-              "id": "detail_secondary",
-              "contentFieldId": "detail_secondary",
-              "styleKey": "paragraph",
-              "text": "",
-              "keylineIndex": 4,
-              "rowIndex": 1,
-              "offsetBaselines": 29,
+              "offsetBaselines": 18,
               "columnSpan": 1
             }
           ],
@@ -485,8 +475,7 @@
           "inlineTextByFieldId": {
             "main_heading": "Ubuntu\nSummit\n26.04",
             "body_intro": "A showcase\nfor the innovative\nand the ambitious",
-            "detail_primary": "May 27-28, 2026",
-            "detail_secondary": "Online"
+            "detail_primary": "May 27-28, 2026\nOutline"
           },
           "csvContent": {
             "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
@@ -513,7 +502,7 @@
             "marginLeftBaselines": 0,
             "marginRightBaselines": 0,
             "rowGutterBaselines": 4,
-            "columnGutterBaselines": 4,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -1300,21 +1289,21 @@
             {
               "id": "body_intro",
               "contentFieldId": "body_intro",
-              "styleKey": "title",
+              "styleKey": "paragraph",
               "text": "",
               "keylineIndex": 3,
               "rowIndex": 1,
-              "offsetBaselines": 3,
+              "offsetBaselines": 1,
               "columnSpan": 3
             },
             {
               "id": "detail_primary",
               "contentFieldId": "detail_primary",
-              "styleKey": "b_head",
+              "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 3,
+              "keylineIndex": 4,
               "rowIndex": 1,
-              "offsetBaselines": 171,
+              "offsetBaselines": 1,
               "columnSpan": 3
             },
             {
@@ -1341,7 +1330,7 @@
           "inlineTextByFieldId": {
             "main_heading": "Ubuntu\nSummit\n26.04",
             "body_intro": "A showcase\nfor the innovative\nand the ambitious",
-            "detail_primary": "May 27-28, 2026",
+            "detail_primary": "May 27-28, 2026\nOnline",
             "detail_secondary": "Online"
           },
           "csvContent": {
@@ -1466,8 +1455,8 @@
       "tablet_2560x1600": "generic_social"
     },
     "exportSettings": {
-      "exportName": "UbuntuSummit2026",
-      "frameRate": 24,
+      "exportName": "UbuntuSummit2026-AV",
+      "frameRate": 30,
       "transparentBackground": false
     },
     "exportSettingsByProfile": {
@@ -1531,10 +1520,10 @@
         "nose_bob_up_px": 1.5
       },
       "composition": {
-        "center_x_px": 1280,
-        "center_y_px": 800,
-        "center_offset_y_px": 0,
-        "scale": 0.75,
+        "center_x_px": 960,
+        "center_y_px": 469,
+        "center_offset_y_px": -71,
+        "scale": 0.42,
         "radial_scale": 1,
         "global_rotation_deg": 0,
         "background_color": "#2b2b2b"
@@ -1589,9 +1578,9 @@
         "color": "#ffffff",
         "echo_color": "#444444",
         "width_px": 3,
-        "echo_marker_stroke_px": 2.2,
-        "echo_marker_scale_mult": 1.5,
-        "echo_sparse_scale_boost": 0.5,
+        "echo_marker_stroke_px": 3,
+        "echo_marker_scale_mult": 2.5,
+        "echo_sparse_scale_boost": 1.5,
         "echo_spacing_offset_px": 0,
         "phase_start_width_px": 8,
         "phase_end_width_px": 4,
@@ -1607,8 +1596,8 @@
       },
       "spoke_text": {
         "enabled": true,
-        "font_size_px": 14,
-        "radial_u": 0
+        "font_size_px": 23,
+        "radial_u": 0.6
       },
       "screensaver": {
         "cycle_sec": 60,
@@ -1664,12 +1653,12 @@
         },
         "composition": {
           "center_x_px": 640,
-          "center_y_px": 334,
-          "center_offset_y_px": -26,
+          "center_y_px": 347,
+          "center_offset_y_px": -13,
           "scale": 0.5,
           "radial_scale": 1,
           "global_rotation_deg": 0,
-          "background_color": "#202020"
+          "background_color": "#2b2b2b"
         },
         "generator_wrangle": {
           "inner_radius": 0.26,
@@ -1800,7 +1789,7 @@
           "scale": 0.42,
           "radial_scale": 1,
           "global_rotation_deg": 0,
-          "background_color": "#202020"
+          "background_color": "#2b2b2b"
         },
         "generator_wrangle": {
           "inner_radius": 0.26,
@@ -1931,7 +1920,7 @@
           "scale": 0.48,
           "radial_scale": 1,
           "global_rotation_deg": 0,
-          "background_color": "#202020"
+          "background_color": "#2b2b2b"
         },
         "generator_wrangle": {
           "inner_radius": 0.26,
@@ -2062,7 +2051,7 @@
           "scale": 0.75,
           "radial_scale": 1,
           "global_rotation_deg": 0,
-          "background_color": "#202020"
+          "background_color": "#2b2b2b"
         },
         "generator_wrangle": {
           "inner_radius": 0.26,
@@ -2193,7 +2182,7 @@
           "scale": 1,
           "radial_scale": 1,
           "global_rotation_deg": 0,
-          "background_color": "#202020"
+          "background_color": "#2b2b2b"
         },
         "generator_wrangle": {
           "inner_radius": 0.26,
@@ -2421,7 +2410,7 @@
         }
       }
     },
-    "guideMode": "baseline"
+    "guideMode": "off"
   },
   "pendingCsvDraftsByBucket": {}
 }

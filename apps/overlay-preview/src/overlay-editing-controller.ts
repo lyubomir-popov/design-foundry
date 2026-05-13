@@ -56,6 +56,11 @@ export interface OverlayEditingController {
 export function createOverlayEditingController(deps: OverlayEditingControllerDeps): OverlayEditingController {
   const { state } = deps;
 
+  function refreshOverlayEditingUi(): void {
+    deps.buildConfigEditor();
+    void deps.renderStage();
+  }
+
   function updateSelectedTextValue(id: string, value: string): void {
     state.params = setOverlayTextValue(state.params, id, value);
     deps.markDocumentDirty();
@@ -246,9 +251,10 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
     showDelete?: boolean;
   }): HTMLElement | null {
     const showAdd = options?.showAdd ?? true;
-    const showDelete = false;
+    const showDelete = options?.showDelete ?? false;
+    const canDelete = canDeleteSelectedText();
 
-    if (!showAdd && !showDelete) {
+    if (!showAdd && !(showDelete && canDelete)) {
       return null;
     }
 
@@ -262,10 +268,24 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
       addButton.textContent = "Add Text";
       addButton.addEventListener("click", () => {
         addTextField();
-        deps.buildConfigEditor();
-        void deps.renderStage();
+        refreshOverlayEditingUi();
       });
       actions.append(addButton);
+    }
+
+    if (showDelete && canDelete) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "bf-button is-dense";
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete Text";
+      deleteButton.addEventListener("click", () => {
+        if (!deleteSelectedOverlayItem()) {
+          return;
+        }
+
+        refreshOverlayEditingUi();
+      });
+      actions.append(deleteButton);
     }
 
     return actions;

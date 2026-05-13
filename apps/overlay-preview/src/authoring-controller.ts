@@ -44,6 +44,8 @@ interface OverlayItemBounds {
   width: number;
   height: number;
   baselineYPx?: number | undefined;
+  lineCount?: number | undefined;
+  lineHeightPx?: number | undefined;
 }
 
 export interface AuthoringInteractionController {
@@ -129,7 +131,9 @@ export function createAuthoringInteractionController(
         top: (authoringTopPx / heightPx) * 100,
         width: (authoringWidthPx / widthPx) * 100,
         height: (authoringHeightPx / heightPx) * 100,
-        baselineYPx: text.anchorBaselineYPx
+        baselineYPx: text.anchorBaselineYPx,
+        lineCount: text.wrappedLines.length,
+        lineHeightPx: text.lineHeightPx
       });
     }
 
@@ -447,12 +451,23 @@ export function createAuthoringInteractionController(
         const draggedItem = items.find((item) => item.id === draggedSelectionId);
         if (draggedItem?.baselineYPx !== undefined) {
           authoringBaselineGuide.hidden = false;
-          authoringBaselineGuide.style.top = `${(draggedItem.baselineYPx / heightPx) * 100}%`;
+          const lineCount = Math.max(1, draggedItem.lineCount ?? 1);
+          const lineHeightPx = Math.max(1, draggedItem.lineHeightPx ?? 1);
+          authoringBaselineGuide.replaceChildren();
+
+          for (let lineIndex = 0; lineIndex < lineCount; lineIndex += 1) {
+            const line = document.createElement("div");
+            line.className = "is-authoring-baseline-guide";
+            line.style.top = `${((draggedItem.baselineYPx + lineIndex * lineHeightPx) / heightPx) * 100}%`;
+            authoringBaselineGuide.appendChild(line);
+          }
         } else {
           authoringBaselineGuide.hidden = true;
+          authoringBaselineGuide.replaceChildren();
         }
       } else {
         authoringBaselineGuide.hidden = true;
+        authoringBaselineGuide.replaceChildren();
       }
     }
 
@@ -773,7 +788,7 @@ export function createAuthoringInteractionController(
       }
 
       authoringBaselineGuide = document.createElement("div");
-      authoringBaselineGuide.className = "is-authoring-baseline-guide";
+      authoringBaselineGuide.className = "is-authoring-baseline-guides";
       authoringBaselineGuide.hidden = true;
 
       layer.append(authoringHoverBox, authoringSelectedBox, authoringBaselineGuide);

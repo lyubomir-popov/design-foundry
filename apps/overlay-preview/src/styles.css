@@ -32,7 +32,7 @@ body.bf-theme.is-dark {
   --vf-color-border-low-contrast: #3a3a3a;
   --bf-app-aside-width-min: 18rem;
   --bf-app-aside-width-narrow: 18rem;
-  --bf-app-aside-width: 32rem;
+  --bf-app-aside-width: 30rem;
   --bf-app-aside-width-max: 38rem;
   --bf-app-aside-width-wide: min(100vw, 38rem);
   background: #202020;
@@ -277,6 +277,10 @@ body.bf-theme.is-dark {
   display: none !important;
 }
 
+.bf-application.has-pinned-aside [data-control-panel][data-panel-view="parameters"] [data-control-panel-dismiss] {
+  display: none;
+}
+
 [data-control-panel] :where(input[type='text'], input[type='number'], input[type='search'], input[type='password'], input[type='email'], input[type='url'], textarea) {
   padding-inline: 2px;
 }
@@ -485,9 +489,14 @@ button.is-network-overlay-node {
   display: block;
 }
 
+.is-authoring-baseline-guides {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
 .is-authoring-baseline-guide {
-  background: rgba(255, 79, 79, 0.9);
-  box-shadow: 0 0 0 1px rgba(255, 79, 79, 0.3);
+  background: rgba(255, 79, 79, 0.5);
   height: 1px;
   left: 0;
   position: absolute;
