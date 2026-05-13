@@ -122,6 +122,7 @@ const INITIAL_FORMAT_KEY = "generic_social";
 const OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-overlay-visible-v1";
 const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-network-overlay-visible-v1";
 const GUIDE_MODE_STORAGE_KEY = "brand-layout-ops-guide-mode-v1";
+const HISTORY_LIMIT = 100;
 
 const persistedFormat = loadOutputFormatKeys();
 const startProfileKey = persistedFormat?.profileKey ?? INITIAL_PROFILE_KEY;
@@ -179,6 +180,13 @@ const state: PreviewState = {
   playbackTimeSec: 0
 };
 
+const historyState = {
+  undoStack: [] as string[],
+  redoStack: [] as string[],
+  savedSnapshot: null as string | null,
+  isApplying: false
+};
+
 const backgroundGraphController = createBackgroundGraphController({ state });
 
 const previewDocumentBridge = {
@@ -197,8 +205,8 @@ const documentWorkspaceController = createDocumentWorkspaceController<OverlayPre
   parseDocument: sanitizePreviewDocument,
   getDocumentMetadata: (previewDocument) => previewDocument.document.metadata,
   buildPersistedDocument: buildCurrentDocumentPersistence,
-  applyDocument: applyPreviewDocumentToState,
-  applyNewDocumentState,
+  applyDocument: applyPreviewDocumentFromWorkspace,
+  applyNewDocumentState: applyNewDocumentStateFromWorkspace,
   onWorkspaceChange: () => {
     previewShellController?.updateDocumentUi();
   }
@@ -331,8 +339,135 @@ function loadLogoIntrinsicDimensions(assetPath: string): Promise<void> {
   });
 }
 
-function markDocumentDirty(): void {
+function serializeCurrentDocumentForHistory(): string {
+  return JSON.stringify(buildCurrentDocumentPersistence());
+}
+
+function syncWorkspaceDirtyWithHistory(serializedSnapshot: string): void {
+  if (historyState.savedSnapshot !== null && serializedSnapshot === historyState.savedSnapshot) {
+    documentWorkspaceController.resetDirty();
+    return;
+  }
+
   documentWorkspaceController.markDirty();
+}
+
+function resetHistoryFromCurrentDocument(markAsSaved: boolean = true): void {
+  if (!documentStateController) {
+    return;
+  }
+
+  const serializedSnapshot = serializeCurrentDocumentForHistory();
+  historyState.undoStack = [serializedSnapshot];
+  historyState.redoStack = [];
+  if (markAsSaved) {
+    historyState.savedSnapshot = serializedSnapshot;
+  }
+  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+}
+
+function syncHistorySavedSnapshot(): void {
+  if (!documentStateController) {
+    return;
+  }
+
+  const serializedSnapshot = serializeCurrentDocumentForHistory();
+  if (historyState.undoStack.length === 0) {
+    historyState.undoStack = [serializedSnapshot];
+  } else {
+    historyState.undoStack[historyState.undoStack.length - 1] = serializedSnapshot;
+  }
+  historyState.savedSnapshot = serializedSnapshot;
+  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+}
+
+function recordHistorySnapshot(): void {
+  if (historyState.isApplying || !documentStateController) {
+    documentWorkspaceController.markDirty();
+    return;
+  }
+
+  const serializedSnapshot = serializeCurrentDocumentForHistory();
+  const currentSnapshot = historyState.undoStack[historyState.undoStack.length - 1];
+  if (currentSnapshot !== serializedSnapshot) {
+    historyState.undoStack.push(serializedSnapshot);
+    if (historyState.undoStack.length > HISTORY_LIMIT) {
+      historyState.undoStack.shift();
+    }
+    historyState.redoStack = [];
+  }
+  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+}
+
+async function applyHistorySnapshot(serializedSnapshot: string): Promise<boolean> {
+  let rawDocument: unknown;
+  try {
+    rawDocument = JSON.parse(serializedSnapshot) as unknown;
+  } catch {
+    return false;
+  }
+
+  const previewDocument = sanitizePreviewDocument(rawDocument);
+  if (!previewDocument) {
+    return false;
+  }
+
+  historyState.isApplying = true;
+  try {
+    await applyPreviewDocumentToState(previewDocument);
+  } finally {
+    historyState.isApplying = false;
+  }
+
+  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+  previewShellController?.updateDocumentUi();
+  return true;
+}
+
+async function undoHistory(): Promise<boolean> {
+  if (historyState.undoStack.length <= 1) {
+    return false;
+  }
+
+  const currentSnapshot = historyState.undoStack.pop();
+  const previousSnapshot = historyState.undoStack[historyState.undoStack.length - 1];
+  if (!currentSnapshot || !previousSnapshot) {
+    if (currentSnapshot) {
+      historyState.undoStack.push(currentSnapshot);
+    }
+    return false;
+  }
+
+  historyState.redoStack.push(currentSnapshot);
+  const didApply = await applyHistorySnapshot(previousSnapshot);
+  if (!didApply) {
+    historyState.redoStack.pop();
+    historyState.undoStack.push(currentSnapshot);
+    return false;
+  }
+
+  return true;
+}
+
+async function redoHistory(): Promise<boolean> {
+  const nextSnapshot = historyState.redoStack.pop();
+  if (!nextSnapshot) {
+    return false;
+  }
+
+  historyState.undoStack.push(nextSnapshot);
+  const didApply = await applyHistorySnapshot(nextSnapshot);
+  if (!didApply) {
+    historyState.undoStack.pop();
+    historyState.redoStack.push(nextSnapshot);
+    return false;
+  }
+
+  return true;
+}
+
+function markDocumentDirty(): void {
+  recordHistorySnapshot();
 }
 
 function updateDocumentUi(): void {
@@ -643,9 +778,19 @@ async function applyPreviewDocumentToState(previewDocument: OverlayPreviewDocume
   networkOverlayController?.render();
 }
 
+async function applyPreviewDocumentFromWorkspace(previewDocument: OverlayPreviewDocument): Promise<void> {
+  await applyPreviewDocumentToState(previewDocument);
+  resetHistoryFromCurrentDocument(true);
+}
+
 async function applyNewDocumentState(): Promise<void> {
   await documentStateController!.applyNewDocumentState();
   networkOverlayController?.render();
+}
+
+async function applyNewDocumentStateFromWorkspace(): Promise<void> {
+  await applyNewDocumentState();
+  resetHistoryFromCurrentDocument(true);
 }
 
 function setOverlayVisible(nextVisible: boolean) {
@@ -881,6 +1026,17 @@ documentStateController = createPreviewDocumentStateController({
   normalizeSelectedOperatorId
 });
 
+resetHistoryFromCurrentDocument(true);
+
+const originalSaveCurrentDocument = documentWorkspaceController.saveCurrentDocument.bind(documentWorkspaceController);
+documentWorkspaceController.saveCurrentDocument = async (forceSaveAs?: boolean, nameOverride?: string): Promise<boolean> => {
+  const didSave = await originalSaveCurrentDocument(forceSaveAs, nameOverride);
+  if (didSave) {
+    syncHistorySavedSnapshot();
+  }
+  return didSave;
+};
+
 exportAutomationController = createExportAutomationController({
   ctx,
   getCanvasEl,
@@ -976,6 +1132,8 @@ previewShellController = createPreviewShellController({
     authoringController?.init();
   },
   deleteSelectedOverlayItem,
+  undoHistory,
+  redoHistory,
   handleAuthoringEditingKeyDown: (event) => {
     return authoringController?.handleEditingKeyDown(event) ?? false;
   },

@@ -72,6 +72,8 @@ Do not rewrite higher-priority docs to match lower-priority implementation drift
 2. Read `AGENT-INBOX.md` and triage durable facts into `TODO.md`, `ROADMAP.md`, `STATUS.md`, `HISTORY.md`, or `docs/specs.md`.
 3. Empty both files back to their header templates.
 
+If an INBOX item includes bug screenshots or image attachments, follow this fixed order: inspect the referenced images first, implement the fix, present the fix for user confirmation, and only then delete the referenced images.
+
 This lets the user drop thoughts asynchronously without derailing agent work.
 
 ### What goes where

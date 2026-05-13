@@ -246,9 +246,10 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
     showDelete?: boolean;
   }): HTMLElement | null {
     const showAdd = options?.showAdd ?? true;
-    const showDelete = false;
+    const showDelete = options?.showDelete ?? false;
+    const canDelete = canDeleteSelectedText();
 
-    if (!showAdd && !showDelete) {
+    if (!showAdd && !(showDelete && canDelete)) {
       return null;
     }
 
@@ -266,6 +267,22 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
         void deps.renderStage();
       });
       actions.append(addButton);
+    }
+
+    if (showDelete && canDelete) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "bf-button is-dense";
+      deleteButton.type = "button";
+      deleteButton.textContent = "Delete Text";
+      deleteButton.addEventListener("click", () => {
+        if (!deleteSelectedOverlayItem()) {
+          return;
+        }
+
+        deps.buildConfigEditor();
+        void deps.renderStage();
+      });
+      actions.append(deleteButton);
     }
 
     return actions;

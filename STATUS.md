@@ -31,6 +31,7 @@ Useful focused checks: `npm run demo:overlay-layout`, `npm run demo:copy-to-poin
 
 ## Current state
 
+- The desktop preview shell is back on the fixed BF Parameters rail at normal editor widths: the dock breakpoint now catches the integrated-browser desktop case, the pinned rail stays open from the top-nav `Parameters` control, the drawer-only `Close` affordance is hidden in pinned Parameters mode, and the BF resize handle is active again. BF already ships the pinned resizable-aside primitive, so this remains a local preview-shell wiring and width-token fix rather than a missing upstream layout contract.
 - Stage 1 parity is closed for the current rebuild scope. Document workflow, overlay editing, guides, source-default writeback, and the current export path are all working.
 - The working artifact is a local `.brand-layout-ops.json` file. Browser-local presets are gone from the live workflow.
 - `project.sceneFamilyGraphs` is now a sparse `Partial<Record<OverlaySceneFamilyKey, OverlayBackgroundGraph>>`. New documents only contain the active family; other families are created on demand when the user switches. Legacy files with all four families still load fine. `project.backgroundGraph` is a derived live active-family projection used by the preview runtime and is no longer written into new saved files. Legacy `sceneFamilyConfigs` remains load/apply compatibility only.

@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Desktop Parameters rail restoration (2026-05-12)
+
+- Restored the overlay preview's desktop Parameters rail behavior in `apps/overlay-preview/src/preview-shell-controller.ts` by lowering the dock breakpoint to match normal integrated-browser desktop widths, keeping the BF `is-medium` aside size class when pinned, and preventing the top-nav `Parameters` control from collapsing the rail in docked mode.
+- Restored the earlier narrower default rail width in `apps/overlay-preview/src/styles.css` while keeping BF's resizable-aside contract live, and hid the drawer-only `Close` affordance when the pinned desktop rail is showing ordinary Parameters content.
+- Confirmed the fix stays on the upstream BF contract: the vendored BF `os` shell already includes pinned resizable-aside support, so no new upstream BF layout request was needed for this slice.
+- Validation: `npm run typecheck`, clean editor diagnostics for the touched files, and live preview checks at `http://127.0.0.1:4173/` confirming reload settles into `has-pinned-aside` + `bf-aside is-medium is-pinned`, the top-nav `Parameters` control no longer collapses the desktop rail, the desktop `Close` control is hidden in Parameters mode, and the BF resize handle reports as active again.
+
 ## Standalone BF snapshot for overlay preview (2026-05-11)
 
 - Moved the overlay preview off the live `file:../baseline-foundry` dependency and onto a vendored local Baseline Foundry snapshot: the preview now imports a repo-local BF `os` tier stylesheet, bundles a local Ubuntu Sans variable font, and vendors the top-navigation, panel-drawer, range-control, and resizable-aside helpers so both dev and production builds no longer require the sibling BF clone.
