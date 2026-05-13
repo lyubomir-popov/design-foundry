@@ -2,13 +2,13 @@
   "kind": "brand-layout-ops.document",
   "version": 1,
   "metadata": {
-    "name": "1080p",
+    "name": "1080p v2",
     "createdAt": "2026-05-05T13:23:10.969Z",
-    "updatedAt": "2026-05-12T14:46:08.266Z"
+    "updatedAt": "2026-05-13T08:28:23.141Z"
   },
   "project": {
     "sceneFamilyKey": "halo",
-    "activeTargetId": "fullhd_1920x1080",
+    "activeTargetId": "story_1080x1920",
     "targets": [
       {
         "id": "landscape_1280x720",
@@ -169,7 +169,7 @@
     }
   },
   "state": {
-    "outputProfileKey": "fullhd_1920x1080",
+    "outputProfileKey": "story_1080x1920",
     "contentFormatKey": "generic_social",
     "profileFormatBuckets": {
       "landscape_1280x720": {
@@ -230,11 +230,11 @@
             {
               "id": "body_intro",
               "contentFieldId": "body_intro",
-              "styleKey": "b_head",
+              "styleKey": "title",
               "text": "",
               "keylineIndex": 3,
               "rowIndex": 1,
-              "offsetBaselines": 2,
+              "offsetBaselines": 4,
               "columnSpan": 2
             },
             {
@@ -245,16 +245,6 @@
               "keylineIndex": 3,
               "rowIndex": 1,
               "offsetBaselines": 76,
-              "columnSpan": 1
-            },
-            {
-              "id": "detail_secondary",
-              "contentFieldId": "detail_secondary",
-              "styleKey": "paragraph",
-              "text": "",
-              "keylineIndex": 4,
-              "rowIndex": 1,
-              "offsetBaselines": 6,
               "columnSpan": 1
             }
           ],
@@ -271,8 +261,7 @@
           "inlineTextByFieldId": {
             "main_heading": "Ubuntu\nSummit\n26.04",
             "body_intro": "A showcase\nfor the innovative\nand the ambitious",
-            "detail_primary": "May 27-28, 2026\nOutline",
-            "detail_secondary": "Online"
+            "detail_primary": "May 27-28, 2026\nOutline"
           },
           "csvContent": {
             "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
@@ -824,7 +813,7 @@
             "marginLeftBaselines": 6,
             "marginRightBaselines": 6,
             "rowGutterBaselines": 2,
-            "columnGutterBaselines": 2,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -875,17 +864,7 @@
               "text": "",
               "keylineIndex": 2,
               "rowIndex": 1,
-              "offsetBaselines": 157,
-              "columnSpan": 1
-            },
-            {
-              "id": "detail_secondary",
-              "contentFieldId": "detail_secondary",
-              "styleKey": "paragraph",
-              "text": "",
-              "keylineIndex": 2,
-              "rowIndex": 1,
-              "offsetBaselines": 162,
+              "offsetBaselines": 158,
               "columnSpan": 1
             }
           ],
@@ -902,8 +881,7 @@
           "inlineTextByFieldId": {
             "main_heading": "Ubuntu\nSummit\n26.04",
             "body_intro": "A showcase\nfor the innovative\nand the ambitious",
-            "detail_primary": "May 27-28, 2026",
-            "detail_secondary": "Online"
+            "detail_primary": "May 27-28, 2026\nOnline"
           },
           "csvContent": {
             "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
@@ -930,7 +908,7 @@
             "marginLeftBaselines": 6,
             "marginRightBaselines": 6,
             "rowGutterBaselines": 2,
-            "columnGutterBaselines": 2,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -1252,7 +1230,7 @@
             "marginLeftBaselines": 0,
             "marginRightBaselines": 0,
             "rowGutterBaselines": 4,
-            "columnGutterBaselines": 4,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -1289,11 +1267,11 @@
             {
               "id": "body_intro",
               "contentFieldId": "body_intro",
-              "styleKey": "paragraph",
+              "styleKey": "title",
               "text": "",
               "keylineIndex": 3,
               "rowIndex": 1,
-              "offsetBaselines": 1,
+              "offsetBaselines": 3,
               "columnSpan": 3
             },
             {
@@ -1301,9 +1279,9 @@
               "contentFieldId": "detail_primary",
               "styleKey": "paragraph",
               "text": "",
-              "keylineIndex": 4,
+              "keylineIndex": 3,
               "rowIndex": 1,
-              "offsetBaselines": 1,
+              "offsetBaselines": 82,
               "columnSpan": 3
             },
             {
@@ -1358,7 +1336,7 @@
             "marginLeftBaselines": 0,
             "marginRightBaselines": 0,
             "rowGutterBaselines": 4,
-            "columnGutterBaselines": 4,
+            "columnGutterBaselines": 0,
             "fitWithinSafeArea": true
           },
           "textStyles": [
@@ -1455,7 +1433,7 @@
       "tablet_2560x1600": "generic_social"
     },
     "exportSettings": {
-      "exportName": "UbuntuSummit2026-AV",
+      "exportName": "UbuntuSummit2026",
       "frameRate": 30,
       "transparentBackground": false
     },
@@ -1520,10 +1498,10 @@
         "nose_bob_up_px": 1.5
       },
       "composition": {
-        "center_x_px": 960,
-        "center_y_px": 469,
-        "center_offset_y_px": -71,
-        "scale": 0.42,
+        "center_x_px": 540,
+        "center_y_px": 804,
+        "center_offset_y_px": -156,
+        "scale": 0.75,
         "radial_scale": 1,
         "global_rotation_deg": 0,
         "background_color": "#2b2b2b"
@@ -1578,9 +1556,9 @@
         "color": "#ffffff",
         "echo_color": "#444444",
         "width_px": 3,
-        "echo_marker_stroke_px": 3,
+        "echo_marker_stroke_px": 3.5,
         "echo_marker_scale_mult": 2.5,
-        "echo_sparse_scale_boost": 1.5,
+        "echo_sparse_scale_boost": 0.5,
         "echo_spacing_offset_px": 0,
         "phase_start_width_px": 8,
         "phase_end_width_px": 4,
@@ -1596,7 +1574,7 @@
       },
       "spoke_text": {
         "enabled": true,
-        "font_size_px": 23,
+        "font_size_px": 14,
         "radial_u": 0.6
       },
       "screensaver": {
@@ -1618,8 +1596,8 @@
       "vignette": {
         "enabled": false,
         "shape_fade": 1,
-        "shape_fade_start": 0.3,
-        "shape_fade_end": 0.85
+        "shape_fade_start": 0.23,
+        "shape_fade_end": 0.79
       }
     },
     "haloConfigByProfile": {
@@ -1915,8 +1893,8 @@
         },
         "composition": {
           "center_x_px": 540,
-          "center_y_px": 714,
-          "center_offset_y_px": 39,
+          "center_y_px": 675,
+          "center_offset_y_px": 0,
           "scale": 0.48,
           "radial_scale": 1,
           "global_rotation_deg": 0,
@@ -2410,7 +2388,7 @@
         }
       }
     },
-    "guideMode": "off"
+    "guideMode": "baseline"
   },
   "pendingCsvDraftsByBucket": {}
 }

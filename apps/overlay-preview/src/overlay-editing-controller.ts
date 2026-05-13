@@ -56,6 +56,11 @@ export interface OverlayEditingController {
 export function createOverlayEditingController(deps: OverlayEditingControllerDeps): OverlayEditingController {
   const { state } = deps;
 
+  function refreshOverlayEditingUi(): void {
+    deps.buildConfigEditor();
+    void deps.renderStage();
+  }
+
   function updateSelectedTextValue(id: string, value: string): void {
     state.params = setOverlayTextValue(state.params, id, value);
     deps.markDocumentDirty();
@@ -263,8 +268,7 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
       addButton.textContent = "Add Text";
       addButton.addEventListener("click", () => {
         addTextField();
-        deps.buildConfigEditor();
-        void deps.renderStage();
+        refreshOverlayEditingUi();
       });
       actions.append(addButton);
     }
@@ -279,8 +283,7 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
           return;
         }
 
-        deps.buildConfigEditor();
-        void deps.renderStage();
+        refreshOverlayEditingUi();
       });
       actions.append(deleteButton);
     }

@@ -92,6 +92,10 @@ import {
   type PreviewDocumentStateController
 } from "./preview-document-state-controller.js";
 import {
+  createPreviewHistoryController,
+  type PreviewHistoryController
+} from "./preview-history-controller.js";
+import {
   createProfileStateController,
   type ProfileStateController
 } from "./profile-state-controller.js";
@@ -180,13 +184,6 @@ const state: PreviewState = {
   playbackTimeSec: 0
 };
 
-const historyState = {
-  undoStack: [] as string[],
-  redoStack: [] as string[],
-  savedSnapshot: null as string | null,
-  isApplying: false
-};
-
 const backgroundGraphController = createBackgroundGraphController({ state });
 
 const previewDocumentBridge = {
@@ -225,6 +222,7 @@ let configEditorController: ConfigEditorController | null = null;
 let documentFormatController: DocumentFormatController | null = null;
 let profileStateController: ProfileStateController | null = null;
 let documentStateController: PreviewDocumentStateController | null = null;
+let previewHistoryController: PreviewHistoryController | null = null;
 
 const $ = <T extends Element>(selector: string): T | null => document.querySelector<T>(selector);
 
@@ -339,135 +337,37 @@ function loadLogoIntrinsicDimensions(assetPath: string): Promise<void> {
   });
 }
 
-function serializeCurrentDocumentForHistory(): string {
-  return JSON.stringify(buildCurrentDocumentPersistence());
-}
-
-function syncWorkspaceDirtyWithHistory(serializedSnapshot: string): void {
-  if (historyState.savedSnapshot !== null && serializedSnapshot === historyState.savedSnapshot) {
-    documentWorkspaceController.resetDirty();
-    return;
-  }
-
-  documentWorkspaceController.markDirty();
-}
-
 function resetHistoryFromCurrentDocument(markAsSaved: boolean = true): void {
-  if (!documentStateController) {
-    return;
-  }
-
-  const serializedSnapshot = serializeCurrentDocumentForHistory();
-  historyState.undoStack = [serializedSnapshot];
-  historyState.redoStack = [];
-  if (markAsSaved) {
-    historyState.savedSnapshot = serializedSnapshot;
-  }
-  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+  previewHistoryController?.resetFromCurrentDocument(markAsSaved);
 }
 
 function syncHistorySavedSnapshot(): void {
-  if (!documentStateController) {
-    return;
-  }
-
-  const serializedSnapshot = serializeCurrentDocumentForHistory();
-  if (historyState.undoStack.length === 0) {
-    historyState.undoStack = [serializedSnapshot];
-  } else {
-    historyState.undoStack[historyState.undoStack.length - 1] = serializedSnapshot;
-  }
-  historyState.savedSnapshot = serializedSnapshot;
-  syncWorkspaceDirtyWithHistory(serializedSnapshot);
+  previewHistoryController?.syncSavedSnapshot();
 }
 
-function recordHistorySnapshot(): void {
-  if (historyState.isApplying || !documentStateController) {
+async function undoHistory(): Promise<boolean> {
+  if (!previewHistoryController) {
+    return false;
+  }
+
+  return previewHistoryController.undo();
+}
+
+async function redoHistory(): Promise<boolean> {
+  if (!previewHistoryController) {
+    return false;
+  }
+
+  return previewHistoryController.redo();
+}
+
+function markDocumentDirty(): void {
+  if (!previewHistoryController) {
     documentWorkspaceController.markDirty();
     return;
   }
 
-  const serializedSnapshot = serializeCurrentDocumentForHistory();
-  const currentSnapshot = historyState.undoStack[historyState.undoStack.length - 1];
-  if (currentSnapshot !== serializedSnapshot) {
-    historyState.undoStack.push(serializedSnapshot);
-    if (historyState.undoStack.length > HISTORY_LIMIT) {
-      historyState.undoStack.shift();
-    }
-    historyState.redoStack = [];
-  }
-  syncWorkspaceDirtyWithHistory(serializedSnapshot);
-}
-
-async function applyHistorySnapshot(serializedSnapshot: string): Promise<boolean> {
-  let rawDocument: unknown;
-  try {
-    rawDocument = JSON.parse(serializedSnapshot) as unknown;
-  } catch {
-    return false;
-  }
-
-  const previewDocument = sanitizePreviewDocument(rawDocument);
-  if (!previewDocument) {
-    return false;
-  }
-
-  historyState.isApplying = true;
-  try {
-    await applyPreviewDocumentToState(previewDocument);
-  } finally {
-    historyState.isApplying = false;
-  }
-
-  syncWorkspaceDirtyWithHistory(serializedSnapshot);
-  previewShellController?.updateDocumentUi();
-  return true;
-}
-
-async function undoHistory(): Promise<boolean> {
-  if (historyState.undoStack.length <= 1) {
-    return false;
-  }
-
-  const currentSnapshot = historyState.undoStack.pop();
-  const previousSnapshot = historyState.undoStack[historyState.undoStack.length - 1];
-  if (!currentSnapshot || !previousSnapshot) {
-    if (currentSnapshot) {
-      historyState.undoStack.push(currentSnapshot);
-    }
-    return false;
-  }
-
-  historyState.redoStack.push(currentSnapshot);
-  const didApply = await applyHistorySnapshot(previousSnapshot);
-  if (!didApply) {
-    historyState.redoStack.pop();
-    historyState.undoStack.push(currentSnapshot);
-    return false;
-  }
-
-  return true;
-}
-
-async function redoHistory(): Promise<boolean> {
-  const nextSnapshot = historyState.redoStack.pop();
-  if (!nextSnapshot) {
-    return false;
-  }
-
-  historyState.undoStack.push(nextSnapshot);
-  const didApply = await applyHistorySnapshot(nextSnapshot);
-  if (!didApply) {
-    historyState.undoStack.pop();
-    historyState.redoStack.push(nextSnapshot);
-    return false;
-  }
-
-  return true;
-}
-
-function markDocumentDirty(): void {
-  recordHistorySnapshot();
+  previewHistoryController.recordSnapshot();
 }
 
 function updateDocumentUi(): void {
@@ -1024,6 +924,20 @@ documentStateController = createPreviewDocumentStateController({
   normalizeSelection,
   normalizeSelectedBackgroundNodeId,
   normalizeSelectedOperatorId
+});
+
+previewHistoryController = createPreviewHistoryController({
+  historyLimit: HISTORY_LIMIT,
+  serializeCurrentDocument: () => JSON.stringify(buildCurrentDocumentPersistence()),
+  sanitizePreviewDocument,
+  applyPreviewDocumentToState,
+  markWorkspaceDirty: () => {
+    documentWorkspaceController.markDirty();
+  },
+  resetWorkspaceDirty: () => {
+    documentWorkspaceController.resetDirty();
+  },
+  updateDocumentUi
 });
 
 resetHistoryFromCurrentDocument(true);
