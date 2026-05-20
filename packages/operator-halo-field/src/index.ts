@@ -8,6 +8,32 @@
 import type { OperatorParameterSchema } from "@brand-layout-ops/core-types";
 import { getOutputProfileMetrics } from "@brand-layout-ops/core-types";
 
+export {
+  BACKGROUND_SPOKE_FADE_SEGMENTS,
+  BACKGROUND_SPOKE_WIDTH_PX,
+  ECHO_PLUS_SIZE_PX as HALO_ECHO_PLUS_SIZE_PX,
+  ECHO_TEXT_BASE_FONT_SIZE_PX as HALO_ECHO_TEXT_BASE_FONT_SIZE_PX,
+  TEXT_LABEL_MARGIN_PX as HALO_TEXT_LABEL_MARGIN_PX,
+  TEXT_LABEL_FONT_FAMILY as HALO_TEXT_LABEL_FONT_FAMILY,
+  MASCOT_REFERENCE_HALO_OPACITY,
+  MASCOT_EYE_SPECS,
+  MASCOT_NOSE_PATH_D,
+  getGeometryScale,
+  getRadialFadeAlpha,
+  getRevealLocalAlpha,
+  getSpokeRevealAlpha,
+  getFoldSeamAlpha,
+  getWorldRayCircleSegment,
+  getThickSpokeWidthPx,
+  getEchoMarkerGeometry,
+  getSharedContentStartRadius,
+  getContentBandMetrics,
+  getTextLabelFontSizePx,
+  type HaloRevealState,
+  type EchoMarkerGeometry,
+  type ContentBandMetrics,
+} from "./halo-geometry-helpers.js";
+
 // ─── Math helpers (ported from config-schema.js) ──────────────────────
 export const TAU = Math.PI * 2;
 export const COMPOSITION_SIZE_PX = 600;

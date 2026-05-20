@@ -4,7 +4,21 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
-## Demo authoring polish + history-controller extraction (2026-05-13)
+## SVG export backend + save pipeline hardening (2026-05-20)
+
+- Added a dedicated SVG export backend in `apps/overlay-preview/src/svg-document-serializer.ts` that walks the same geometry as the Three.js renderer and outputs a standalone SVG document. Covers background spokes, intro/post-finale dots, thin/thick spokes with echo markers, release labels, mascot overlay, and authored text/logo overlay.
+- Extracted shared pure-math geometry helpers into `packages/operator-halo-field/src/halo-geometry-helpers.ts` so both the Three.js renderer and the SVG serializer share the same radial-fade, reveal-alpha, spoke-reveal, fold-seam, ray-circle-segment, thick-spoke-width, echo-marker-geometry, content-band-metrics, and text-label-font-size functions.
+- Added `print_a4_2480x3508` and `print_a3_3508x4961` to `OUTPUT_PROFILE_ORDER` and `OUTPUT_PROFILES` in `packages/core-types/src/index.ts`.
+- Wired `Export SVG` menu item and `exportSvgDocument()` in the preview shell, export controller, and app context.
+- Fixed XML-invalid `font-family` attribute: replaced CSS-style double-quoted `"Ubuntu Sans"` with XML-safe single-quoted `'Ubuntu Sans'` inside the SVG `font-family` attribute.
+- Fixed nested `<svg>` wrapper: authored overlay markup is now unwrapped from its outer `<svg>` tags into `<g class="authored-overlay">` before embedding.
+- Inlined mascot SVG assets: mascot face and halo are now fetched as raw SVG text, stripped of their outer `<svg>` wrapper, and embedded as inline markup with viewBox-to-pixel transforms instead of `<image href="data:...">` elements.
+- Replaced 16-segment-per-spoke background spoke rendering with single `<line>` per spoke using `<linearGradient>` (8 stops) for smooth radial fade, producing cleaner Illustrator-friendly output.
+- Fixed the 0 KB save bug: moved `buildPersistedDocument()` + `JSON.stringify()` inside a dedicated try/catch so serialization errors after `showSaveFilePicker` no longer leave empty files on disk.
+- Added empty-content guard in `writeDocumentFileText`: refuses to write empty or whitespace-only content.
+- Added writable-stream abort on error: `FileSystemWritableFileStream` is now aborted if write or verification fails after `createWritable` succeeds.
+- Replaced `void` with `.catch()` on Ctrl+S / Ctrl+Shift+S keyboard shortcuts so save failures are logged to console instead of silently swallowed.
+- Validation: `npx tsc --noEmit` clean, dev server running, SVG export verified in browser.
 
 - Extended the drag-only authoring guides in `apps/overlay-preview/src/authoring-controller.ts` and `apps/overlay-preview/src/styles.css` so selected text blocks show one soft full-width red baseline line per wrapped row only while they are actively being dragged.
 - Restored non-heading text deletion from both the selected-text Parameters action row and the keyboard path in `apps/overlay-preview/src/overlay-editing-controller.ts`, `apps/overlay-preview/src/overlay-section.ts`, and `apps/overlay-preview/src/preview-shell-controller.ts`, with `Delete` and `Backspace` both routed through the same delete action.

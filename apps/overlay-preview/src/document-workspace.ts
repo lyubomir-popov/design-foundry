@@ -701,12 +701,18 @@ export function createDocumentWorkspaceController<TDocument>(
       nextDocumentName = promptedName;
     }
 
-    const persistedDocument = options.buildPersistedDocument({
-      name: nextDocumentName,
-      createdAt: workspace.createdAt || savedAt,
-      updatedAt: savedAt
-    });
-    const serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
+    let serializedDocument: string;
+    try {
+      const persistedDocument = options.buildPersistedDocument({
+        name: nextDocumentName,
+        createdAt: workspace.createdAt || savedAt,
+        updatedAt: savedAt
+      });
+      serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
+    } catch (error) {
+      setStatus(`Document serialization failed: ${getErrorMessage(error)}`, "error");
+      return false;
+    }
 
     try {
       if (fileHandle) {

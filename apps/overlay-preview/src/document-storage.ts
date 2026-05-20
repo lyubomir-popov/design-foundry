@@ -393,21 +393,32 @@ export async function writeDocumentFileText(
   handle: FileSystemFileHandle,
   text: string
 ): Promise<void> {
+  if (!text || text.trim().length === 0) {
+    throw new Error("Refusing to write empty document content to file.");
+  }
+
   const hasPermission = await ensureDocumentFileHandlePermission(handle, "readwrite", true);
   if (!hasPermission) {
     throw new Error("Document write permission was denied.");
   }
 
+  let writable: FileSystemWritableFileStream | null = null;
+
   try {
-    const writable = await handle.createWritable();
+    writable = await handle.createWritable();
     await writable.write(new Blob([text], { type: "application/json" }));
     await writable.close();
+    writable = null;
 
     const writtenFile = await handle.getFile();
     if (await writtenFile.text() === text) {
       return;
     }
   } catch (error) {
+    if (writable) {
+      try { await writable.abort(); } catch { /* best-effort cleanup */ }
+    }
+
     if (await writeDocumentFileTextToAuthoringServer(handle.name, text)) {
       return;
     }

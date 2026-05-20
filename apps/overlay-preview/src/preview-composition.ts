@@ -132,7 +132,7 @@ export function getPreviewOutputSinks(): PreviewOutputSink[] {
       id: "svg-document",
       label: "SVG",
       category: "vector",
-      implemented: false,
+      implemented: true,
       active: false
     },
     {

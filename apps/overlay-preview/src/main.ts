@@ -870,6 +870,9 @@ const ctx: PreviewAppContext = {
   exportComposedFramePng: async () => {
     await exportAutomationController?.exportComposedFramePng();
   },
+  exportSvgDocument: async () => {
+    await exportAutomationController?.exportSvgDocument();
+  },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();
   },
@@ -1032,6 +1035,9 @@ previewShellController = createPreviewShellController({
   removeActiveDocumentFormat,
   exportComposedFramePng: async () => {
     await exportAutomationController?.exportComposedFramePng();
+  },
+  exportSvgDocument: async () => {
+    await exportAutomationController?.exportSvgDocument();
   },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();

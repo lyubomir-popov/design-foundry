@@ -77,6 +77,7 @@ export interface PreviewShellControllerDeps {
   addDocumentFormat(): boolean;
   removeActiveDocumentFormat(): boolean;
   exportComposedFramePng(): Promise<void>;
+  exportSvgDocument(): Promise<void>;
   exportPngSequence(): Promise<void>;
   exportMp4(): Promise<void>;
   initHaloRenderer(): void;
@@ -899,6 +900,13 @@ export function createPreviewShellController(
         }
       },
       {
+        label: "Export SVG",
+        onClick: () => deps.exportSvgDocument(),
+        onError: (error: unknown) => {
+          console.error("[file-menu] Export SVG failed:", error);
+        }
+      },
+      {
         label: "Export PNG Sequence...",
         onClick: () => deps.exportPngSequence(),
         onError: (error: unknown) => {
@@ -1066,11 +1074,15 @@ export function createPreviewShellController(
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.key === "S")) {
       event.preventDefault();
       if (event.shiftKey) {
-        void deps.documentWorkspace.saveCurrentDocument(true);
+        deps.documentWorkspace.saveCurrentDocument(true).catch((error: unknown) => {
+          console.error("[keyboard] Save As failed:", error);
+        });
         return;
       }
 
-      void deps.documentWorkspace.saveCurrentDocument(false);
+      deps.documentWorkspace.saveCurrentDocument(false).catch((error: unknown) => {
+        console.error("[keyboard] Save failed:", error);
+      });
       return;
     }
 

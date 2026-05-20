@@ -51,7 +51,9 @@ export const OUTPUT_PROFILE_ORDER: readonly string[] = [
   "instagram_1080x1350",
   "story_1080x1920",
   "screen_3840x2160",
-  "tablet_2560x1600"
+  "tablet_2560x1600",
+  "print_a4_2480x3508",
+  "print_a3_3508x4961"
 ] as const;
 
 export const OUTPUT_PROFILES: Readonly<Record<string, OutputProfile>> = {
@@ -113,6 +115,26 @@ export const OUTPUT_PROFILES: Readonly<Record<string, OutputProfile>> = {
     defaultFrameRate: 24,
     kind: "tablet",
     platforms: "Tablet",
+    safeArea: { top: 0, right: 0, bottom: 0, left: 0 }
+  },
+  print_a4_2480x3508: {
+    key: "print_a4_2480x3508",
+    label: "A4 300 dpi",
+    widthPx: 2480,
+    heightPx: 3508,
+    defaultFrameRate: 1,
+    kind: "print",
+    platforms: "Print A4",
+    safeArea: { top: 0, right: 0, bottom: 0, left: 0 }
+  },
+  print_a3_3508x4961: {
+    key: "print_a3_3508x4961",
+    label: "A3 300 dpi",
+    widthPx: 3508,
+    heightPx: 4961,
+    defaultFrameRate: 1,
+    kind: "print",
+    platforms: "Print A3",
     safeArea: { top: 0, right: 0, bottom: 0, left: 0 }
   }
 };

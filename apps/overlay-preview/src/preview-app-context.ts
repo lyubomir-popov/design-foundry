@@ -260,6 +260,8 @@ export interface PreviewAppContext {
 
   /** Export the current frame as a composed PNG. */
   exportComposedFramePng(): Promise<void>;
+  /** Export the current frame as a full SVG document. */
+  exportSvgDocument(): Promise<void>;
   /** Export a PNG sequence with a frame-range modal. */
   exportPngSequence(): Promise<void>;
   /** Export an MP4 through the dev-server authoring pipeline. */
