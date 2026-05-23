@@ -10,9 +10,9 @@ import {
   DEFAULT_OVERLAY_FORMAT_OVERRIDES,
   normalizeOverlayParamsForEditing,
   type OverlayLayoutOperatorParams
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import { cloneOverlayParams } from "./sample-document.js";
-import type { PreviewState } from "./preview-app-context.js";
+import { DEFAULT_CONTENT_FORMAT_KEY, type PreviewState } from "./preview-app-context.js";
 
 // ——— Constants ———
 
@@ -55,14 +55,14 @@ export function createCsvDraftController(deps: CsvDraftControllerDeps): CsvDraft
 
   function getCsvDraftBucketKey(
     formatId: string = getActiveDocumentFormatId(),
-    formatKey: string = state.contentFormatKey
+    formatKey: string = DEFAULT_CONTENT_FORMAT_KEY
   ): string {
     return `${formatId}::${formatKey}`;
   }
 
   function getStagedCsvDraft(
     formatId: string = getActiveDocumentFormatId(),
-    formatKey: string = state.contentFormatKey
+    formatKey: string = DEFAULT_CONTENT_FORMAT_KEY
   ): string | null {
     const bucketKey = getCsvDraftBucketKey(formatId, formatKey);
     return Object.prototype.hasOwnProperty.call(state.pendingCsvDraftsByBucket, bucketKey)
@@ -73,7 +73,7 @@ export function createCsvDraftController(deps: CsvDraftControllerDeps): CsvDraft
   function setStagedCsvDraft(
     draft: string | null,
     formatId: string = getActiveDocumentFormatId(),
-    formatKey: string = state.contentFormatKey
+    formatKey: string = DEFAULT_CONTENT_FORMAT_KEY
   ): void {
     const bucketKey = getCsvDraftBucketKey(formatId, formatKey);
     if (draft === null) {
@@ -116,18 +116,17 @@ export function createCsvDraftController(deps: CsvDraftControllerDeps): CsvDraft
     const formatIds = new Set<string>([
       getActiveDocumentFormatId(),
       ...state.documentProject.targets.map((target) => target.id),
-      ...Object.keys(state.documentFormatBuckets),
-      ...Object.keys(state.contentFormatKeyByDocumentFormatId)
+      ...Object.keys(state.documentFormatBuckets)
     ]);
     return Array.from(formatIds).filter((formatId) => {
       const documentFormatBucket = state.documentFormatBuckets[formatId];
       return Boolean(documentFormatBucket?.[formatKey])
-        || (formatId === getActiveDocumentFormatId() && state.contentFormatKey === formatKey);
+        || (formatId === getActiveDocumentFormatId() && DEFAULT_CONTENT_FORMAT_KEY === formatKey);
     });
   }
 
   function commitCsvDraftToDocumentFormat(formatId: string, formatKey: string, draft: string): void {
-    const isActiveBucket = formatId === getActiveDocumentFormatId() && formatKey === state.contentFormatKey;
+    const isActiveBucket = formatId === getActiveDocumentFormatId() && formatKey === DEFAULT_CONTENT_FORMAT_KEY;
     const baseParams = isActiveBucket
       ? state.params
       : deps.getOrCreateDocumentFormatParams(formatId, formatKey);

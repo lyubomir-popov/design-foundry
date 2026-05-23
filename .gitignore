@@ -2,5 +2,6 @@ node_modules/
 dist/
 coverage/
 output/
+tmp/
 *.tsbuildinfo
 .vscode/

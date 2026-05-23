@@ -14,7 +14,7 @@ import {
   normalizeOverlaySceneFamilyConfigs,
   OVERLAY_SCENE_FAMILY_ORDER,
   type OverlaySceneFamilyKey
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import type { UbuntuSummitAnimationSceneDescriptor } from "@brand-layout-ops/operator-ubuntu-summit-animation";
 import type {
   OverlayPreviewDocument,

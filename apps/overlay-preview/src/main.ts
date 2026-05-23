@@ -14,7 +14,7 @@ import {
   createOverlayDocumentProjectFromSnapshot,
   normalizeOverlayParamsForEditing,
   resolveOverlayTextValue
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import type {
   OverlayBackgroundEdge,
   OverlayBackgroundNode,
@@ -23,7 +23,11 @@ import type {
   OverlayDocumentProject,
   OverlayLayoutOperatorParams,
   OverlaySceneFamilyKey
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
+import {
+  OVERLAY_BACKGROUND_HALO_OPERATOR_KEY,
+  getOverlaySceneFamilyKeyForBackgroundOperator
+} from "@brand-layout-ops/document-model";
 import { getHaloConfigForProfile } from "@brand-layout-ops/operator-halo-field";
 import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
 import type { ParameterSectionDefinition } from "@brand-layout-ops/parameter-ui";
@@ -32,8 +36,6 @@ import type { SceneFamilyPreviewMode } from "./scene-family-preview.js";
 import {
   cloneOverlayParams,
   createDefaultExportSettings,
-  loadOutputFormatKeys,
-  saveOutputFormatKey,
   type ExportSettings
 } from "./sample-document.js";
 import { type PersistedOverlayPreviewDocument } from "./preview-document.js";
@@ -49,6 +51,7 @@ import type {
   Selection
 } from "./preview-app-context.js";
 import {
+  DEFAULT_CONTENT_FORMAT_KEY,
   OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,
   UNTITLED_DOCUMENT_NAME
 } from "./preview-app-context.js";
@@ -122,16 +125,13 @@ import { buildScatterSection } from "./scatter-section.js";
 type ConfigSectionDefinition = ParameterSectionDefinition;
 
 const INITIAL_PROFILE_KEY = "instagram_1080x1350";
-const INITIAL_FORMAT_KEY = "generic_social";
 const OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-overlay-visible-v1";
 const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-network-overlay-visible-v1";
 const GUIDE_MODE_STORAGE_KEY = "brand-layout-ops-guide-mode-v1";
 const HISTORY_LIMIT = 100;
 
-const persistedFormat = loadOutputFormatKeys();
-const startProfileKey = persistedFormat?.profileKey ?? INITIAL_PROFILE_KEY;
-const startFormatKey = persistedFormat?.formatKey ?? INITIAL_FORMAT_KEY;
-const INITIAL_PARAMS = createDefaultOverlayParams(startProfileKey, startFormatKey);
+const startProfileKey = INITIAL_PROFILE_KEY;
+const INITIAL_PARAMS = createDefaultOverlayParams(startProfileKey, DEFAULT_CONTENT_FORMAT_KEY);
 
 function normalizeGuideMode(rawGuideMode: unknown): GuideMode {
   return rawGuideMode === "off" || rawGuideMode === "baseline"
@@ -141,7 +141,7 @@ function normalizeGuideMode(rawGuideMode: unknown): GuideMode {
 
 const INITIAL_SOURCE_DEFAULTS = createBuiltInOverlaySourceDefaultSnapshot<ExportSettings, HaloFieldConfig, GuideMode>({
   outputProfileKey: INITIAL_PROFILE_KEY,
-  contentFormatKey: INITIAL_FORMAT_KEY,
+  contentFormatKey: DEFAULT_CONTENT_FORMAT_KEY,
   guideMode: "composition",
   createExportSettings: createDefaultExportSettings,
   createHaloConfig: getHaloConfigForProfile
@@ -158,14 +158,10 @@ const state: PreviewState = {
   networkOverlayVisible: localStorage.getItem(NETWORK_OVERLAY_VISIBLE_STORAGE_KEY) === "1",
   pendingCsvDraftsByBucket: {},
   outputProfileKey: startProfileKey,
-  contentFormatKey: startFormatKey,
   documentFormatBuckets: {
     [INITIAL_DOCUMENT_FORMAT_ID]: {
-      [startFormatKey]: cloneOverlayParams(INITIAL_PARAMS)
+      [DEFAULT_CONTENT_FORMAT_KEY]: cloneOverlayParams(INITIAL_PARAMS)
     }
-  },
-  contentFormatKeyByDocumentFormatId: {
-    [INITIAL_DOCUMENT_FORMAT_ID]: startFormatKey
   },
   exportSettings: createDefaultExportSettings(startProfileKey),
   exportSettingsByDocumentFormatId: {
@@ -302,8 +298,7 @@ profileStateController = createProfileStateController({
   normalizeSelection,
   resizeRenderer,
   renderStage,
-  syncDocumentProjectToCurrentOutputProfile,
-  saveOutputFormatKey
+  syncDocumentProjectToCurrentOutputProfile
 });
 
 syncHaloConfigForActiveDocumentFormat();
@@ -423,10 +418,6 @@ function normalizeSelectedOperatorId(
   preferredOperatorId: string | null = state.selectedOperatorId
 ): SelectedOperatorId {
   return backgroundGraphController.normalizeSelectedOperatorId(preferredOperatorId);
-}
-
-function getAvailableBackgroundOperatorKeys(): OverlayBackgroundOperatorKey[] {
-  return backgroundGraphController.getAvailableBackgroundOperatorKeys();
 }
 
 function setSelectedOperator(operatorId: string | null): boolean {
@@ -657,10 +648,6 @@ function switchOutputProfile(profileKey: string, options?: import("./preview-app
   networkOverlayController?.render();
 }
 
-function switchContentFormat(formatKey: string) {
-  profileStateController!.switchContentFormat(formatKey);
-}
-
 function buildCurrentDocumentPayload(overrides?: { name?: string; createdAt?: string; updatedAt?: string }): OverlayPreviewDocument {
   return documentStateController!.buildCurrentDocumentPayload(overrides);
 }
@@ -828,7 +815,6 @@ const ctx: PreviewAppContext = {
   getSelectedTextField,
   getSelectedOverlaySectionTitle,
   createOverlayItemActionRow,
-  switchContentFormat,
   setStagedCsvDraft,
   getStagedCsvDraft,
   hasStagedCsvDraft,
@@ -845,6 +831,12 @@ const ctx: PreviewAppContext = {
   },
   setSourceDefaultStatus(message, severity) {
     sourceDefaultController?.setSourceDefaultStatus(message, severity as "neutral" | "success" | "error");
+  },
+  getUserPresetDefinitions(operatorKey) {
+    return operatorPresetController?.getUserPresetDefinitions(operatorKey) ?? [];
+  },
+  saveCurrentPreset(operatorKey, label, config, description) {
+    return operatorPresetController!.saveCurrentPreset(operatorKey, label, config, description);
   },
   getUserHaloPresetDefinitions() {
     return operatorPresetController?.getUserHaloPresetDefinitions() ?? [];
@@ -1059,6 +1051,21 @@ previewShellController = createPreviewShellController({
   },
   handleAuthoringInteractionKeyDown: (event) => {
     return authoringController?.handleInteractionKeyDown(event) ?? false;
+  },
+  getAddNodeMenuEntries: () => {
+    return backgroundGraphController.getAvailableBackgroundOperatorKeys().map((key) => ({
+      key,
+      label: key === OVERLAY_BACKGROUND_HALO_OPERATOR_KEY
+        ? "Halo Field"
+        : getSceneFamilyLabel(getOverlaySceneFamilyKeyForBackgroundOperator(key))
+    }));
+  },
+  addBackgroundNode: (operatorKey) => {
+    const nodeId = addBackgroundNode(operatorKey as OverlayBackgroundOperatorKey);
+    if (nodeId) {
+      backgroundGraphController.setSelectedBackgroundNode(nodeId);
+      buildConfigEditor();
+    }
   }
 });
 
@@ -1079,8 +1086,6 @@ configEditorController = createConfigEditorController({
   getSelectedOperatorId,
   getSelectedOperatorGroup,
   getSceneFamilyLabel,
-  getAvailableBackgroundOperatorKeys,
-  addBackgroundNode,
   connectBackgroundEdge,
   disconnectBackgroundInput,
   setSelectedOperator,

@@ -16,7 +16,7 @@ import {
   normalizeOverlayTextFieldOffsetBaselines,
   setOverlayTextValue,
   type OverlayLayoutOperatorParams
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import type {
   PreviewState,

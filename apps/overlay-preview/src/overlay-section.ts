@@ -3,7 +3,7 @@
  */
 import {
   getOverlayStyleDisplayLabel
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import {
   buildAccordionSectionEl,
   createCheckboxFormGroup,

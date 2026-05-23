@@ -9,7 +9,7 @@ import {
   type OverlayBackgroundEdge,
   type OverlayBackgroundNode,
   type OverlaySceneFamilyKey
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import {
   OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,

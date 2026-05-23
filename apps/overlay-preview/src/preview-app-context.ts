@@ -12,6 +12,7 @@
 
 import type {
   LogoPlacementSpec,
+  OperatorPresetDefinition,
   TextFieldPlacementSpec,
   TextStyleSpec
 } from "@brand-layout-ops/core-types";
@@ -22,7 +23,7 @@ import type {
   OverlayLayoutOperatorParams,
   OverlaySceneFamilyKey,
   OverlaySourceDefaultSnapshot
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import type { HaloFieldConfig, HaloFieldPresetDefinition } from "@brand-layout-ops/operator-halo-field";
 import type { ExportSettings } from "./sample-document.js";
 import type { OverlayPreviewDocument as OverlayPreviewDocumentModel } from "./preview-document.js";
@@ -49,7 +50,13 @@ export interface SwitchOutputProfileOptions {
 }
 
 export type DocumentFormatBuckets = Record<string, Record<string, OverlayLayoutOperatorParams>>;
-export type ContentFormatKeyByDocumentFormatId = Record<string, string>;
+
+/**
+ * The sole content-format key. Content-format as a user-facing concept is
+ * retired (see ROADMAP.md). All bucket lookups use this constant instead of
+ * routing through a dynamic `contentFormatKey` field.
+ */
+export const DEFAULT_CONTENT_FORMAT_KEY = "generic_social";
 
 export type SourceDefaultSnapshot = OverlaySourceDefaultSnapshot<ExportSettings, HaloFieldConfig, GuideMode>;
 
@@ -69,9 +76,7 @@ export interface PreviewState {
   networkOverlayVisible: boolean;
   pendingCsvDraftsByBucket: Record<string, string>;
   outputProfileKey: string;
-  contentFormatKey: string;
   documentFormatBuckets: DocumentFormatBuckets;
-  contentFormatKeyByDocumentFormatId: ContentFormatKeyByDocumentFormatId;
   exportSettings: ExportSettings;
   exportSettingsByDocumentFormatId: Record<string, ExportSettings>;
   haloConfig: HaloFieldConfig;
@@ -179,8 +184,6 @@ export interface PreviewAppContext {
 
   // — Content format —
 
-  /** Switch to a different content format key. */
-  switchContentFormat(key: string): void;
   /** Stage a CSV draft for the current profile/format bucket. */
   setStagedCsvDraft(draft: string | null): void;
   /** Get the staged CSV draft for the current format, or null. */
@@ -209,6 +212,13 @@ export interface PreviewAppContext {
   writeCurrentAsSourceDefault(): Promise<SourceDefaultWriteResult>;
   /** Show a status message in the source-default area. */
   setSourceDefaultStatus(message: string, severity?: string): void;
+  /** Get user-saved preset definitions for any operator. */
+  getUserPresetDefinitions(operatorKey: string): readonly OperatorPresetDefinition[];
+  /** Save a preset for any operator. */
+  saveCurrentPreset(operatorKey: string, label: string, config: Record<string, unknown>, description?: string): Promise<{
+    preset: OperatorPresetDefinition;
+    message: string;
+  }>;
   /** Get the current user-saved Halo preset definitions. */
   getUserHaloPresetDefinitions(): readonly HaloFieldPresetDefinition[];
   /** Save the current Halo settings as a reusable user preset. */

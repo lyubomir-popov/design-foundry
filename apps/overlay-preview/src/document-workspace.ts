@@ -709,13 +709,16 @@ export function createDocumentWorkspaceController<TDocument>(
         updatedAt: savedAt
       });
       serializedDocument = `${JSON.stringify(persistedDocument, null, 2)}\n`;
+      console.log("[document-workspace] Serialized document OK, length:", serializedDocument.length);
     } catch (error) {
+      console.error("[document-workspace] Serialization failed:", error);
       setStatus(`Document serialization failed: ${getErrorMessage(error)}`, "error");
       return false;
     }
 
     try {
       if (fileHandle) {
+        console.log("[document-workspace] Writing via FSAPI handle:", fileHandle.name);
         await writeDocumentFileText(fileHandle, serializedDocument);
         fileName = fileHandle.name;
         void writeDocumentFileTextByName(fileName, serializedDocument);
@@ -728,6 +731,7 @@ export function createDocumentWorkspaceController<TDocument>(
         }
       }
     } catch (error) {
+      console.error("[document-workspace] Save write failed:", error);
       setStatus(`Document save failed: ${getErrorMessage(error)}`, "error");
       return false;
     }

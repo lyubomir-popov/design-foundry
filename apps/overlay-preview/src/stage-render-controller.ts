@@ -16,7 +16,7 @@ import {
   createOverlayLayoutOperator,
   OVERLAY_LAYOUT_OPERATOR_KEY,
   type OverlayLayoutOperatorParams
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import {
   buildUbuntuSummitAnimationSceneDescriptor,
   type UbuntuSummitAnimationSceneDescriptor,

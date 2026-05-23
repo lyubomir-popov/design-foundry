@@ -17,13 +17,11 @@ import {
   OVERLAY_BACKGROUND_FUZZY_SEED_NODE_ID,
   OVERLAY_BACKGROUND_HALO_OPERATOR_KEY,
   OVERLAY_BACKGROUND_PHYLLOTAXIS_OPERATOR_KEY,
-  OVERLAY_SCENE_FAMILY_ORDER,
   validateOverlayBackgroundEdge,
   type OverlayBackgroundEdge,
   type OverlayBackgroundNode,
-  type OverlayBackgroundOperatorKey,
   type OverlaySceneFamilyKey
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import {
   createParameterSectionRegistry,
   setupAccordion,
@@ -44,8 +42,6 @@ export interface ConfigEditorControllerDeps {
   getSelectedOperatorId(): string;
   getSelectedOperatorGroup(): string;
   getSceneFamilyLabel(key: OverlaySceneFamilyKey): string;
-  getAvailableBackgroundOperatorKeys(): OverlayBackgroundOperatorKey[];
-  addBackgroundNode(operatorKey: OverlayBackgroundOperatorKey): string | null;
   connectBackgroundEdge(edge: OverlayBackgroundEdge): boolean;
   disconnectBackgroundInput(nodeId: string, portKey: string): boolean;
   setSelectedOperator(operatorId: string | null): boolean;
@@ -122,14 +118,6 @@ export function createConfigEditorController(deps: ConfigEditorControllerDeps): 
     }
 
     return deps.getSceneFamilyLabel(getOverlaySceneFamilyKeyForBackgroundOperator(node.operatorKey));
-  }
-
-  function getBackgroundOperatorLabel(operatorKey: OverlayBackgroundOperatorKey): string {
-    if (operatorKey === OVERLAY_BACKGROUND_HALO_OPERATOR_KEY) {
-      return "Halo Field";
-    }
-
-    return deps.getSceneFamilyLabel(getOverlaySceneFamilyKeyForBackgroundOperator(operatorKey));
   }
 
   function getBackgroundNodeStatus(node: OverlayBackgroundNode): string {

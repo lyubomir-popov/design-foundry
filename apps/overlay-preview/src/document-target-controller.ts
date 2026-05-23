@@ -18,7 +18,7 @@ import {
   getOverlayFormatPresetKeyForProfile,
   getOverlayFormatSeedSummary,
   type OverlayDocumentFormat
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import type { PreviewState } from "./preview-app-context.js";
 
@@ -234,7 +234,6 @@ export function createDocumentFormatController(
 
   function pruneDocumentTargetRuntimeState(targetId: string): void {
     delete state.documentFormatBuckets[targetId];
-    delete state.contentFormatKeyByDocumentFormatId[targetId];
     delete state.exportSettingsByDocumentFormatId[targetId];
     delete state.haloConfigByDocumentFormatId[targetId];
   }

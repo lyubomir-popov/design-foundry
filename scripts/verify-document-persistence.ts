@@ -14,7 +14,7 @@ import {
   type OverlayDocumentFormat,
   type OverlayDocumentProject,
   type OverlaySourceDefaultSnapshot
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import {
   applySourceDefaultSnapshotToState,
@@ -145,14 +145,10 @@ function assertBridgeActivatesProjectFormat(project: OverlayDocumentProject): vo
     overlayVisible: true,
     pendingCsvDraftsByBucket: {},
     outputProfileKey: DEFAULT_OUTPUT_PROFILE_KEY,
-    contentFormatKey,
     documentFormatBuckets: {
       [defaultFormatId]: {
         [contentFormatKey]: createDefaultOverlayParams(DEFAULT_OUTPUT_PROFILE_KEY, contentFormatKey)
       }
-    },
-    contentFormatKeyByDocumentFormatId: {
-      [defaultFormatId]: contentFormatKey
     },
     exportSettings: createDefaultExportSettings(DEFAULT_OUTPUT_PROFILE_KEY),
     exportSettingsByDocumentFormatId: {
@@ -197,14 +193,10 @@ function assertSnapshotPersistsActiveFormatRuntimeState(project: OverlayDocument
     overlayVisible: true,
     pendingCsvDraftsByBucket: {},
     outputProfileKey: customProfileKey,
-    contentFormatKey,
     documentFormatBuckets: {
       [defaultFormatId]: {
         [contentFormatKey]: createDefaultOverlayParams(DEFAULT_OUTPUT_PROFILE_KEY, contentFormatKey)
       }
-    },
-    contentFormatKeyByDocumentFormatId: {
-      [defaultFormatId]: contentFormatKey
     },
     exportSettings: createDefaultExportSettings(customProfileKey),
     exportSettingsByDocumentFormatId: {
@@ -226,7 +218,6 @@ function assertSnapshotPersistsActiveFormatRuntimeState(project: OverlayDocument
       state.documentFormatBuckets[customFormatId] = {
         [contentFormatKey]: createDefaultOverlayParams(customProfileKey, contentFormatKey)
       };
-      state.contentFormatKeyByDocumentFormatId[customFormatId] = contentFormatKey;
       state.exportSettingsByDocumentFormatId[customFormatId] = createDefaultExportSettings(customProfileKey);
       state.haloConfigByDocumentFormatId[customFormatId] = createHaloConfig(customProfileKey);
     },

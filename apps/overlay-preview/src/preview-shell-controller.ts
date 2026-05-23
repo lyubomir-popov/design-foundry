@@ -13,7 +13,7 @@ import {
   getOverlayFormatPresetDefinition,
   getOverlayFormatSeedSummary,
   getOverlayFormatSafeAreaFrame
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import {
   renderDocumentWorkspaceUi,
@@ -45,7 +45,6 @@ type MenuItemSpec =
 
 interface ShellDialogRefs {
   documentDialog: HTMLDialogElement | null;
-  formatsDialog: HTMLDialogElement | null;
   presetLibraryDialog: HTMLDialogElement | null;
   exportSettingsDialog: HTMLDialogElement | null;
   exportNameInput: HTMLInputElement | null;
@@ -87,6 +86,8 @@ export interface PreviewShellControllerDeps {
   redoHistory(): Promise<boolean>;
   handleAuthoringEditingKeyDown(event: KeyboardEvent): boolean;
   handleAuthoringInteractionKeyDown(event: KeyboardEvent): boolean;
+  getAddNodeMenuEntries(): Array<{ key: string; label: string }>;
+  addBackgroundNode(operatorKey: string): void;
 }
 
 export interface PreviewShellController {
@@ -107,10 +108,10 @@ export function createPreviewShellController(
   let hasBoundResize = false;
   let isInitialized = false;
   let controlPanelView: ControlPanelView = "parameters";
+  let addNodePopup: HTMLElement | null = null;
 
   const shellDialogs: ShellDialogRefs = {
     documentDialog: null,
-    formatsDialog: null,
     presetLibraryDialog: null,
     exportSettingsDialog: null,
     exportNameInput: null,
@@ -439,31 +440,6 @@ export function createPreviewShellController(
     deps.buildFormatOptions();
   }
 
-  function ensureFormatsDialog(): void {
-    if (shellDialogs.formatsDialog) {
-      return;
-    }
-
-    const { dialog, body, footer } = createShellModal("formats-modal", "Formats");
-    const stack = document.createElement("div");
-    stack.className = "bf-stack is-compact-stack";
-
-    const optionsContainer = document.createElement("div");
-    optionsContainer.className = "bf-grid-scope";
-    optionsContainer.setAttribute("data-format-options", "");
-    stack.append(optionsContainer);
-
-    body.append(stack);
-
-    const closeButton = createFooterButton("Done", "primary");
-    closeButton.addEventListener("click", () => dialog.close());
-
-    footer.append(closeButton);
-
-    document.body.append(dialog);
-    shellDialogs.formatsDialog = dialog;
-  }
-
   function syncPresetLibraryDialog(): void {
     const dialog = shellDialogs.presetLibraryDialog;
     if (!dialog) {
@@ -747,10 +723,6 @@ export function createPreviewShellController(
     showDialog(shellDialogs.documentDialog!);
   }
 
-  function openFormatsDialog(): void {
-    openFormatsPanel();
-  }
-
   function openPresetLibraryDialog(): void {
     ensurePresetLibraryDialog();
     syncPresetLibraryDialog();
@@ -887,7 +859,7 @@ export function createPreviewShellController(
         }
       },
       { kind: "separator" },
-      { label: "Formats...", shortcut: "D", onClick: () => openFormatsDialog() },
+      { label: "Formats...", shortcut: "D", onClick: () => openFormatsPanel() },
       { label: "Preset Library...", onClick: () => openPresetLibraryDialog() },
       { label: "Source Defaults...", onClick: () => openSourceDefaultDialog() },
       { kind: "separator" },
@@ -1040,7 +1012,101 @@ export function createPreviewShellController(
     setGuideMode(deps.state.guideMode === "baseline" ? "off" : "baseline");
   }
 
+  function dismissAddNodePopup(): void {
+    if (addNodePopup) {
+      addNodePopup.remove();
+      addNodePopup = null;
+    }
+  }
+
+  function showAddNodePopup(): void {
+    dismissAddNodePopup();
+
+    const entries = deps.getAddNodeMenuEntries();
+    if (entries.length === 0) {
+      return;
+    }
+
+    const popup = document.createElement("div");
+    popup.className = "bf-add-node-popup";
+    popup.setAttribute("role", "menu");
+    popup.setAttribute("aria-label", "Add Node");
+
+    for (const entry of entries) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "bf-add-node-popup-item";
+      item.setAttribute("role", "menuitem");
+      item.textContent = entry.label;
+      item.addEventListener("click", () => {
+        dismissAddNodePopup();
+        deps.addBackgroundNode(entry.key);
+      });
+      popup.append(item);
+    }
+
+    document.body.append(popup);
+    addNodePopup = popup;
+
+    const firstItem = popup.querySelector<HTMLButtonElement>(".bf-add-node-popup-item");
+    firstItem?.focus();
+
+    const handlePopupKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        dismissAddNodePopup();
+        return;
+      }
+
+      if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey)) {
+        event.preventDefault();
+        const items = popup.querySelectorAll<HTMLButtonElement>(".bf-add-node-popup-item");
+        const focused = document.activeElement;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i] === focused) {
+            items[(i + 1) % items.length].focus();
+            return;
+          }
+        }
+        items[0]?.focus();
+        return;
+      }
+
+      if (event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey)) {
+        event.preventDefault();
+        const items = popup.querySelectorAll<HTMLButtonElement>(".bf-add-node-popup-item");
+        const focused = document.activeElement;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i] === focused) {
+            items[(i - 1 + items.length) % items.length].focus();
+            return;
+          }
+        }
+        items[items.length - 1]?.focus();
+        return;
+      }
+    };
+
+    popup.addEventListener("keydown", handlePopupKeyDown);
+
+    const handleOutsideClick = (event: MouseEvent): void => {
+      if (!popup.contains(event.target as Node)) {
+        dismissAddNodePopup();
+        document.removeEventListener("mousedown", handleOutsideClick);
+      }
+    };
+
+    requestAnimationFrame(() => {
+      document.addEventListener("mousedown", handleOutsideClick);
+    });
+  }
+
   function handleKeyDown(event: KeyboardEvent): void {
+    if (addNodePopup) {
+      return;
+    }
+
     if (deps.handleAuthoringEditingKeyDown(event)) {
       return;
     }
@@ -1098,6 +1164,12 @@ export function createPreviewShellController(
       return;
     }
 
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key === "Tab") {
+      event.preventDefault();
+      showAddNodePopup();
+      return;
+    }
+
     if ((event.ctrlKey || event.metaKey) && !event.altKey && (event.key === "z" || event.key === "Z")) {
       event.preventDefault();
       if (event.shiftKey) {
@@ -1140,7 +1212,7 @@ export function createPreviewShellController(
         return;
       }
 
-      openFormatsDialog();
+      openFormatsPanel();
       event.preventDefault();
       return;
     }

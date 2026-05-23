@@ -411,10 +411,13 @@ export async function writeDocumentFileText(
     writable = null;
 
     const writtenFile = await handle.getFile();
-    if (await writtenFile.text() === text) {
+    const writtenText = await writtenFile.text();
+    if (writtenText === text) {
       return;
     }
+    console.warn("[document-storage] FSAPI write verification mismatch, written length:", writtenText.length, "expected:", text.length);
   } catch (error) {
+    console.error("[document-storage] FSAPI write failed:", error);
     if (writable) {
       try { await writable.abort(); } catch { /* best-effort cleanup */ }
     }
@@ -457,6 +460,7 @@ async function readDocumentFileTextFromAuthoringServer(fileName: string): Promis
 
 async function writeDocumentFileTextToAuthoringServer(fileName: string, text: string): Promise<boolean> {
   try {
+    console.log("[document-storage] Authoring server POST:", fileName, "content length:", text.length);
     const response = await fetch(DOCUMENT_FILE_AUTHORING_PATH, {
       method: "POST",
       headers: {
@@ -469,8 +473,11 @@ async function writeDocumentFileTextToAuthoringServer(fileName: string, text: st
     });
 
     const payload = await response.json().catch(() => ({})) as { ok?: unknown };
-    return response.ok && payload.ok === true;
-  } catch {
+    const success = response.ok && payload.ok === true;
+    console.log("[document-storage] Authoring server response:", response.status, "ok:", success, payload);
+    return success;
+  } catch (error) {
+    console.error("[document-storage] Authoring server POST failed:", error);
     return false;
   }
 }

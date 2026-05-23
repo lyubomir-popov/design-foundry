@@ -1,6 +1,6 @@
 import type { OperatorGraph } from "@brand-layout-ops/core-types";
 import { OperatorRegistry, evaluateGraph } from "@brand-layout-ops/graph-runtime";
-import { createOverlayLayoutOperator, OVERLAY_LAYOUT_OPERATOR_KEY } from "@brand-layout-ops/operator-overlay-layout";
+import { createOverlayLayoutOperator, OVERLAY_LAYOUT_OPERATOR_KEY } from "@brand-layout-ops/document-model";
 
 const registry = new OperatorRegistry();
 registry.register(createOverlayLayoutOperator());

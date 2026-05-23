@@ -59,10 +59,10 @@ These are not roadmap stages; they are current code-shape risks worth watching w
 
 | Signal | Severity | Detail |
 |--------|----------|--------|
-| `main.ts` at ~1014 lines | Medium | The app is now mostly controllerized, but the composition root still carries DOM query helpers, overlay-visibility glue, and final bootstrap wiring. Keep extracting only where the seam becomes genuinely reusable or clarifying. |
-| `scene-family-preview.ts` at ~818 lines | Medium | Graph orchestration is now on the shared runtime, which is correct. Further splitting should happen only if preview-operator wrappers or draw adapters become reusable, not as churn. |
-| Parameters rail rebuilds | High | `config-editor-controller.ts` still tears down and rebuilds the full rail for several ordinary edit paths even though `schema-renderer.ts` already has an incremental sync path. If this is not corrected, UI complexity will continue to grow faster than the shell can explain it. |
-| Profile-scoped state mirroring | Medium | The preview still mirrors current export settings, halo config, and document buckets into per-format stores via explicit multi-step persistence calls. The pattern works today but remains fragile if more format behavior is layered onto it without consolidation. |
+| `main.ts` at ~1129 lines | Medium | The app is mostly controllerized, but the composition root still carries DOM query helpers, overlay-visibility glue, and final bootstrap wiring. Keep extracting only where the seam becomes genuinely reusable or clarifying. |
+| `operator-halo-field/src/index.ts` at ~1467 lines | Medium | Contains both operator logic and extracted geometry helpers. Reaches into preview-level profile concepts via `getOutputProfileMetrics`. |
+| `preview-shell-controller.ts` at ~1157 lines | Medium | Carries DOM query helpers and shell bootstrap wiring. The dead Formats dialog code was removed in the May 2026 audit. |
+| ~~`operator-overlay-layout` scope mismatch~~ | Resolved | Renamed to `packages/document-model` (`@brand-layout-ops/document-model`) in the May 2026 audit. |
 
 ## Operator-surface north star
 
@@ -181,16 +181,18 @@ These are important, but they are not active execution items until explicitly pr
 Content-format as a user-facing concept is dead. The document authoring model replaces it:
 
 - Each document **is** its own content variant. Instead of switching formats within one document, you save separate documents or rely on CSV row selection for per-row content.
-- The remaining `contentFormatKey` plumbing in the profile bucket system is legacy internal state. It can be simplified or removed in a future cleanup pass, but it does not need a replacement UI surface.
+- The `contentFormatKey` runtime routing was consolidated in the May 2026 audit: `PreviewState` no longer carries `contentFormatKey` or `contentFormatKeyByDocumentFormatId`, `switchContentFormat()` is removed, and all bucket lookups use the hardcoded `DEFAULT_CONTENT_FORMAT_KEY` constant. The persistence shape still writes `contentFormatKey` for backward compatibility.
 - The Houdini north star reinforces this: a `.hip` file does not have "content modes" — it has authored state, operator graphs, and outputs. So should this product.
 
 ## Roadmap
 
-### Stage 0. Kernel extraction
+### Stage 0. Kernel extraction ✓
 
 Goal:
 
 - establish the shared graph and kernel packages
+
+Status: **Complete.**
 
 Deliverables:
 
@@ -201,11 +203,13 @@ Deliverables:
 - layout engine
 - rebuild plan and handoff docs
 
-### Stage 1. Parity rebuild
+### Stage 1. Parity rebuild ✓
 
 Goal:
 
 - reproduce the current app's working overlay and scene behavior in this repo
+
+Status: **Complete.** All parity milestones (Phases 1–6) closed.
 
 Deliverables:
 
@@ -219,9 +223,11 @@ Success criteria:
 
 - the new repo can match current overlay placement and editing behavior closely enough to replace the current architecture for ongoing work
 
-### Stage 1.5. Format-variant authoring refinement
+### Stage 1.5. Format-variant authoring refinement ✓
 
-This is the current bridge between closed parity work and broader operatorized scene building.
+This was the bridge between closed parity work and broader operatorized scene building.
+
+Status: **Complete.** Stable format ids, preset-backed seeding, copy-on-apply operator presets (all four background operators), panel-hosted Formats, Tab-key Add Node menu, and Layers navigator cleanup all landed. Remaining design questions (shared operator-preset library surface, same-size authored variants) deferred to Stage 3 or later when concrete needs emerge.
 
 Goal:
 
@@ -258,11 +264,13 @@ Success criteria:
 - one campaign document can mix structured layout with procedural motion without bespoke glue code, and can swap one scene family for another without rewriting the layout or export path
 - operator outputs can be passed forward as first-order graph payloads rather than being collapsed into preview-only state
 
-### Stage 3. Local document model maturation
+### Stage 3. Local document model maturation (partially landed)
 
 Goal:
 
 - finish hardening the authored layout state and format-variant model as real local documents instead of leaving important behavior in runtime compatibility bridges
+
+Status: **Substantially complete.** Open/save/save-as, recent documents, document-owned scene-family graphs, per-format variant persistence, and SVG export are all shipped. Remaining: cleaner separation of authored vs imported content, same-size authored variants, and the larger saved-file schema simplification.
 
 Deliverables:
 

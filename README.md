@@ -52,7 +52,7 @@ If the task is parity-related, inspect these comparison sources next:
 - Reference motion and halo-field rendering in `racoon-anim`: `src/app/rendering.js`, `halo-field.js`
 - Reference content and assets in `racoon-anim`: `assets/content.csv`, `content-speaker-highlight.csv`, `UbuntuTagLogo.svg`, `racoon-mascot-face.svg`, `racoon-mascot-halo.svg`
 - Current preview implementation: `apps/overlay-preview/src/main.ts`, `apps/overlay-preview/src/document-workspace.ts`, `apps/overlay-preview/src/preview-document.ts`, `apps/overlay-preview/src/preview-document-bridge.ts`, `apps/overlay-preview/src/sample-document.ts`, `apps/overlay-preview/src/sample-motion.ts`
-- Current layout and motion kernels: `packages/operator-overlay-layout/src/index.ts`, `packages/layout-engine/src/index.ts`, `packages/operator-orbits/src/index.ts`, `packages/operator-spokes/src/index.ts`
+- Current layout and motion kernels: `packages/document-model/src/index.ts`, `packages/layout-engine/src/index.ts`, `packages/operator-orbits/src/index.ts`, `packages/operator-spokes/src/index.ts`
 
 ## Local Preview
 
@@ -96,7 +96,7 @@ npm run demo:spokes
 - `@brand-layout-ops/layout-grid`: baseline-grid and column-grid resolution
 - `@brand-layout-ops/layout-text`: wrapping and placement math using a provided measurer
 - `@brand-layout-ops/layout-engine`: scene-level layout composition for branded overlay content
-- `@brand-layout-ops/operator-overlay-layout`: graph-facing overlay composition operator plus shared overlay defaults and document-schema primitives, including document-owned scene-family graphs and background-chain persistence
+- `@brand-layout-ops/document-model`: document schema, overlay composition operator, shared overlay defaults, format presets, and document-owned scene-family graphs with background-chain persistence
 - `@brand-layout-ops/operator-copy-to-points`: Houdini-style point instancing with propagated attributes for later Three.js and SVG backends
 - `@brand-layout-ops/operator-orbits`: coarse orbit-ring point-field generator for motion-side rebuild work
 - `@brand-layout-ops/operator-phyllotaxis`: golden-angle point-field generation matching the current Houdini phyllotaxis HDA logic
@@ -112,12 +112,13 @@ Current implementation state intentionally lives in `STATUS.md` and `TODO.md`, n
 
 ## Later additions
 
-- field generator operators
 - SVG instancing operators
 - Canvas/WebGL/Three preview adapters
-- SVG export backend
 - PDF/EPS print backend
 - CMYK intent and mapping pipeline
+- compositor layer stack
+
+Already shipped: SVG export backend, field generator operators (phyllotaxis, scatter, fuzzy-boids).
 
 See `docs/architecture.md` and `docs/future-backends.md`.
 

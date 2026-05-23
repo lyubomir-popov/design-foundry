@@ -7,7 +7,7 @@ import type {
 import { snapBaselineToGrid } from "@brand-layout-ops/layout-grid";
 import type { DragAxisLock } from "@brand-layout-ops/overlay-interaction";
 import { moveLogo, moveTextField } from "@brand-layout-ops/overlay-interaction";
-import { getOverlayFieldDisplayLabel } from "@brand-layout-ops/operator-overlay-layout";
+import { getOverlayFieldDisplayLabel } from "@brand-layout-ops/document-model";
 import type { PreviewAppContext, Selection } from "./preview-app-context.js";
 
 type DragMode = "move" | "resize";

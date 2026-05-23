@@ -579,6 +579,18 @@ export interface OperatorParameterSchema {
   fields: OperatorParameterFieldSchema[];
 }
 
+/**
+ * A reusable operator preset — a named, partial config override
+ * that can be applied as a copy-on-apply seed to an operator's
+ * current document-local state.
+ */
+export interface OperatorPresetDefinition {
+  key: string;
+  label: string;
+  description: string;
+  config: Record<string, unknown>;
+}
+
 export interface OperatorDefinition<TParams = unknown> {
   key: string;
   version: string;

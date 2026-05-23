@@ -13,9 +13,9 @@ This means a future project can import a live Three.js background without coupli
 
 ## Vector export
 
-SVG should be a dedicated backend that consumes resolved placements, text runs, and vector shapes.
+SVG export is shipped as a dedicated backend (`svg-document-serializer.ts`) that walks the same geometry as the Three.js renderer and outputs a standalone SVG document. Background spokes use per-spoke `<linearGradient>` for smooth radial fade. Mascot assets are inlined as raw SVG markup for Illustrator compatibility.
 
-Do not make the browser editor SVG-first just to get export.
+Print profiles `print_a4_2480x3508` and `print_a3_3508x4961` are available as built-in document formats.
 
 ## Print and CMYK
 

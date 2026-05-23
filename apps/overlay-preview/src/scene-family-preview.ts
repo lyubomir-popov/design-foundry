@@ -8,13 +8,13 @@ import type {
   OverlayPhyllotaxisConfig,
   OverlayScatterConfig,
   OverlaySceneFamilyKey
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import {
   OVERLAY_BACKGROUND_FUZZY_BOIDS_OPERATOR_KEY,
   OVERLAY_BACKGROUND_HALO_OPERATOR_KEY,
   OVERLAY_BACKGROUND_PHYLLOTAXIS_OPERATOR_KEY,
   OVERLAY_BACKGROUND_SCATTER_OPERATOR_KEY
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import {
   resolveScatterPointField,
   type ScatterDistributionMode,

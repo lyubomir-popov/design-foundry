@@ -1,5 +1,5 @@
 {
-  "name": "@brand-layout-ops/operator-overlay-layout",
+  "name": "@brand-layout-ops/document-model",
   "version": "0.1.0",
   "type": "module",
   "exports": {

@@ -14,7 +14,7 @@ import {
   type ProfileContentFormatMap,
   type ProfileFormatBuckets,
   type SanitizeOverlayDocumentFileOptions
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import {
   createDefaultExportSettings,

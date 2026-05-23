@@ -596,6 +596,42 @@ button.is-network-overlay-node {
   min-block-size: 0;
 }
 
+/* Tab-key "Add Node" popup (Houdini-style) */
+
+.bf-add-node-popup {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  min-inline-size: 12rem;
+  padding-block: 0.25rem;
+  background: var(--bf-color-background-default);
+  border: var(--bf-border-width) solid var(--bf-color-border-low-contrast);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.28);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+}
+
+.bf-add-node-popup-item {
+  all: unset;
+  display: block;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  font: inherit;
+  font-size: var(--bf-font-size-body, 0.875rem);
+  color: var(--bf-color-text-default);
+  cursor: pointer;
+  text-align: start;
+}
+
+.bf-add-node-popup-item:hover,
+.bf-add-node-popup-item:focus-visible {
+  background: var(--bf-color-border-low-contrast);
+  outline: none;
+}
+
 .is-inspector-rail + .is-inspector-rail {
   border-top: 1px solid var(--bf-color-rule);
   margin-top: 1rem;

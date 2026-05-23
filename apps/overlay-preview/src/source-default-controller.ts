@@ -6,7 +6,7 @@ import {
   sanitizeOverlayDocumentFile,
   type OverlayDocumentProject,
   type OverlaySourceDefaultSnapshot
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
 import {
   applySourceDefaultSnapshotToState,

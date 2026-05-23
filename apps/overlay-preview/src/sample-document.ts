@@ -2,7 +2,7 @@ import {
   DEFAULT_OUTPUT_PROFILE_KEY,
   getOutputProfile
 } from "@brand-layout-ops/core-types";
-import type { OverlayLayoutOperatorParams } from "@brand-layout-ops/operator-overlay-layout";
+import type { OverlayLayoutOperatorParams } from "@brand-layout-ops/document-model";
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
@@ -12,13 +12,6 @@ export function cloneOverlayParams(params: OverlayLayoutOperatorParams): Overlay
   return cloneJson(params);
 }
 
-export function saveOutputFormatKey(_profileKey: string, _formatKey: string): void {
-  // No-op: output format localStorage persistence removed.
-}
-
-export function loadOutputFormatKeys(): { profileKey: string; formatKey: string } | null {
-  return null;
-}
 
 // ---------------------------------------------------------------------------
 // Export settings

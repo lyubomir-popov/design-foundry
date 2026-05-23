@@ -23,11 +23,11 @@ Reference source repo:
 
 ## Active Execution Queue
 
-Lane P is active. Lane R is complete.
+Lane S is next. Lanes P and R are complete.
 
 ### Demo Priority — May 13 lightning talk
 
-Status: Active. The top short-term priority is now a polished format-switching demo artifact for the Ubuntu Summit 26.04 identity. Demo polish and reliability take precedence over new preset or architecture lanes until the slide-ready URL and capture artifact are confirmed.
+Status: **Closed.** Demo rehearsal completed. Artifacts captured. Remaining post-demo items triaged below.
 
 ### Lane O — Stage shell ergonomics
 
@@ -48,33 +48,57 @@ Status: Complete and archived in `HISTORY.md`. Lane R closed after the rebuild a
 
 ### Lane P — Format variants and preset groundwork
 
-Goal: Stop treating saved sizes as if they were only export targets. The live workflow is already closer to authored per-format variants, so the next pass should make the shell, controller behavior, and terminology match that reality without breaking the current document format.
+Status: **Complete.** P1-P7 all landed. Tab-key Add Node menu shipped. Dead config-editor add/family controls removed. Archived in `HISTORY.md`.
 
-Status: Active. P1-P6 groundwork is complete, and the first operator-preset slice is landed: Halo now has copy-on-apply preset browsing in Parameters plus a file-backed save path for user presets. Applying a preset reseeds Halo behavior from a known-good preset while preserving the current document's composition adjustments, and later local tweaks persist through ordinary file save.
+### Lane S — Operatorized scene building (Stage 2)
+
+Goal: Make procedural scene composition reusable rather than app-specific. Typed point/field handoff between operators, compositing/layer-stack operator family, swappable scene-family operators.
+
+Status: Not started.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| P6 | Complete | Model decision: keep one document as the campaign container, keep fast radio-button switching between authored format variants, and keep export/output recipes separate from those variants. Same-size authored duplicates stay deferred until a concrete workflow need appears. |
-| P7 | In Progress | Operator reuse is now copy-on-apply for Halo. The Parameters panel can browse built-in Halo presets, browse saved Halo presets from a file-backed library, apply either as a document-local seed, reset Halo behavior to the current format seed, and save the current Halo settings as a reusable preset. Next: decide whether to lift this into a shared operator-preset library surface and which operator follows Halo. |
+| S1 | Pending | Typed `PointField` graph payload — make point/field data a first-order graph output so generators can feed downstream operators without preview-only glue. |
+| S2 | Pending | Point/field generator operator — standalone operator that produces a `PointField` from configurable parameters. |
+| S3 | Pending | SVG instancing operator — consumes a `PointField` and stamps SVG instances at each point. |
+| S4 | Pending | Compositing/layer-stack operator — ordered composition of background, image, text, and media layers. |
+| S5 | Pending | Background and layout composition in one graph — unify overlay layout and background operators into a single document graph. |
+
+### Lane T — Document model cleanup (Stage 3 remaining)
+
+Goal: Finish hardening authored layout state and format-variant model. Cleaner separation of authored vs imported content, same-size authored variants, saved-file schema simplification.
+
+Status: Not started. Deferred until after Lane S groundwork.
 
 ## Immediate Next Steps
 
-- **Top priority until May 13:** polish the Ubuntu Summit format-switching demo for the lightning talk. Focus on visible quality, not new architecture.
-- Confirm the happy-path save → close → reopen flow on the actual demo machine and browser without depending on the dev-preview `projects/` fallback path.
-- Produce one stable browser URL plus a screenshot or short screen recording artifact suitable for the presentation slide.
-- Use `projects/1080p.brand-layout-ops.json` as the current recording source unless the demo-machine rehearsal finds a blocker; it now carries the normalized light-gray background set, guides off by default, and the latest AV export defaults.
-- Keep `projects/1080p.brand-layout-ops-v2.json` as the retained story-format alternate while demo rehearsal settles; only collapse back to one file if one variant clearly becomes obsolete.
-- Treat further UI cleanup as done unless a demo-blocking issue appears during the actual-machine rehearsal or capture pass.
-- **Lane R is complete.** All major interactive paths use localized updates; remaining `buildConfigEditor()` calls are all genuinely structural.
-- **Lane P is active.** The first copy-on-apply operator preset slice is landed for Halo and validated.
-- **Next:** decide whether the file-backed Halo preset path should become a shared operator-preset library surface, then extend the same copy-on-apply model to the next operator that benefits from reusable seeded behavior.
-- Keep the Parameters rail readable while fixes land; do not add new control-surface complexity ahead of the stabilization pass.
-- Keep the current breathing and pulsing look stable while simplifying halo controls; do not reopen fine-tuning work unless a concrete regression appears.
-- Do not treat cross-document reuse as a document-model problem alone; reusable background-animation and foreground-layout carryover should land as template or preset behavior.
+- **Lane S is next.** Start with S1: typed `PointField` graph payload.
+- The first concrete deliverable is making `PointField` (or equivalent typed point/field data) a first-order graph output type in `core-types` and `graph-runtime`, so background operators can produce and consume point fields through the graph instead of preview-only glue.
+- Tab-key Add Node menu is shipped and working. The config editor no longer carries dead add/family controls.
+- Keep the current breathing and pulsing look stable; do not reopen fine-tuning work unless a concrete regression appears.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
-- Use the current format-id keyed runtime to pressure-test same-size variants, derivation rules, and active-format restore behavior before changing the disk shape.
-- Treat format work as authoring behavior first. Variant switching, derivation, and persistence come before more shell polish or export-recipe work.
 - Keep future export work focused on output-operator or preset modeling. The shell parity plumbing for composed PNG, PNG sequence, and dev-only MP4 export is already in place.
+
+## May 2026 Audit — Housekeeping
+
+- [x] Archive `HISTORY.md` entries before May 2026 into `docs/archive/2026-early.md`
+- [x] Add `tmp/` to `.gitignore` and remove tracked debugging artifacts
+- [x] Update README.md "Later additions" — SVG export and field generators already shipped
+- [x] Update `docs/future-backends.md` — SVG export shipped
+- [x] Update `ROADMAP.md` — mark Stages 0+1 complete, annotate Stage 1.5+3, fix drift signals table
+- [x] Triage stale May 13 demo priority section
+- [x] Remove stale `projects/` files: HTML snapshots, duplicates, zero-byte artifacts
+- [x] Delete stale docs: `audit-document-persistence-2026-05-01.md`, `report-document-persistence-2026-05-05.md`
+- [x] Remove dead Formats dialog residue in `preview-shell-controller.ts`
+- [x] Fix `verify-ui-regressions.ts` fixture mismatch (uses `video-intro-export.json` vs docs reference `video-intro-export.brand-layout-ops.json`)
+- [x] Remove dead `saveOutputFormatKey` persistence stub in `sample-document.ts`
+
+## May 2026 Audit — Architectural
+
+- [x] Consider renaming `operator-overlay-layout` to reflect its actual document-model scope
+- [x] Consolidate `contentFormatKey` bridge into the document-variants model (ROADMAP says retired, code still treats as first-class)
+- [x] Add unit tests for kernel packages: `graph-runtime`, `layout-grid`, `layout-text`
+- [x] Update `docs/architecture.md` to describe the actual app seams, controller structure, and document model
 
 ## Operational Constraints
 

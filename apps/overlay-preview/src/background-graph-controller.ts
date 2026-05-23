@@ -21,7 +21,7 @@ import {
   type OverlayBackgroundOperatorKey,
   type OverlaySceneFamilyKey,
   validateOverlayBackgroundEdge
-} from "@brand-layout-ops/operator-overlay-layout";
+} from "@brand-layout-ops/document-model";
 
 import {
   OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,
