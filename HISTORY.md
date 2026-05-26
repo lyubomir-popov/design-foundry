@@ -4,6 +4,14 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane S3 — SVG instancing operator (2026-05-26)
+
+- Added new package `@design-foundry/operator-svg-instancing` that consumes `PointField` and emits `InstanceSet` with SVG prototypes.
+- Implemented per-point prototype and asset-path mapping with defaults, plus prototype-id consistency checks that reject conflicting asset assignment.
+- Added `resolveSvgInstancing()` utility and `svgInstancingOperator` (`operator.svg-instancing`) for graph-native point-field to instance-set handoff.
+- Added unit tests covering default one-prototype stamping, per-point override mapping, and conflict failure behavior.
+- Validation: `npm run typecheck` and `npm test`.
+
 ## Lane S2 — standalone point-field generator operator (2026-05-26)
 
 - Added new package `@design-foundry/operator-point-field` with deterministic seed-based `PointField` generation in two modes: `grid` and `ring`.

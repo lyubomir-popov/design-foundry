@@ -90,7 +90,7 @@ Status: Not started.
 |------|--------|---------|
 | S1 | Complete | Typed `PointField` graph payload is now enforced in `graph-runtime`: edge input collection validates source/target port existence, enforces port-kind compatibility, and validates `point-field` payload shape at runtime. New tests cover invalid point-field payloads and port-kind mismatch failures. |
 | S2 | Complete | Added standalone `@design-foundry/operator-point-field` package with deterministic seed-based `grid` and `ring` generator modes, optional centroid/origin offsets, parameter schema, and unit tests. Exposes `pointFieldOperator` with a `point-field` output for graph-native handoff. |
-| S3 | Pending | SVG instancing operator — consumes a `PointField` and stamps SVG instances at each point. |
+| S3 | Complete | Added `@design-foundry/operator-svg-instancing` package. Consumes `point-field`, resolves per-point SVG prototype mapping, emits `instance-set`, and validates prototype-id to asset consistency. Includes unit tests for default mapping, per-point overrides, and conflict failures. |
 | S4 | Pending | Compositing/layer-stack operator — ordered composition of background, image, text, and media layers. |
 | S5 | Pending | Background and layout composition in one graph — unify overlay layout and background operators into a single document graph. |
 
@@ -102,8 +102,8 @@ Status: Not started. Deferred until after Lane S groundwork.
 
 ## Immediate Next Steps
 
-- **Lane S is active.** S1 and S2 are complete; continue with S3: SVG instancing operator that consumes `pointField` directly.
-- The next concrete deliverable is a reusable instancing operator package with typed point-field input and SVG instance-set output, plus parity checks against existing copy-to-points behavior where applicable.
+- **Lane S is active.** S1-S3 are complete; continue with S4: compositing/layer-stack operator.
+- The next concrete deliverable is a reusable composition operator with typed layer inputs and deterministic ordered output that can become the shared seam between background and overlay graph work.
 - Tab-key Add Node menu is shipped and working. The config editor no longer carries dead add/family controls.
 - Keep the current breathing and pulsing look stable; do not reopen fine-tuning work unless a concrete regression appears.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.

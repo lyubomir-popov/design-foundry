@@ -1,0 +1,8 @@
+{
+  "name": "@design-foundry/operator-svg-instancing",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
