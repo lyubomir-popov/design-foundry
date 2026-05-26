@@ -12,8 +12,19 @@ function makeEdge(from: string, fromPort: string, to: string, toPort: string): G
   return { fromNodeId: from, fromPortKey: fromPort, toNodeId: to, toPortKey: toPort };
 }
 
-function makeOperator(key: string, run: OperatorDefinition["run"]): OperatorDefinition {
-  return { key, version: "1", inputs: [], outputs: [], run };
+function makeOperator(
+  key: string,
+  run: OperatorDefinition["run"],
+  inputKeys: string[] = [],
+  outputKeys: string[] = []
+): OperatorDefinition {
+  return {
+    key,
+    version: "1",
+    inputs: inputKeys.map((portKey) => ({ key: portKey, kind: "test" })),
+    outputs: outputKeys.map((portKey) => ({ key: portKey, kind: "test" })),
+    run
+  };
 }
 
 // --- OperatorRegistry ---
@@ -94,8 +105,22 @@ describe("topologicallySortGraph", () => {
 describe("evaluateGraph", () => {
   it("passes inputs from upstream to downstream", async () => {
     const registry = new OperatorRegistry();
-    registry.register(makeOperator("source", ({ params }: { params: unknown }) => ({ value: (params as { v: number }).v })));
-    registry.register(makeOperator("double", ({ inputs }: { inputs: Record<string, unknown> }) => ({ value: (inputs.value as number) * 2 })));
+    registry.register(
+      makeOperator(
+        "source",
+        ({ params }: { params: unknown }) => ({ value: (params as { v: number }).v }),
+        [],
+        ["value"]
+      )
+    );
+    registry.register(
+      makeOperator(
+        "double",
+        ({ inputs }: { inputs: Record<string, unknown> }) => ({ value: (inputs.value as number) * 2 }),
+        ["value"],
+        ["value"]
+      )
+    );
 
     const graph: OperatorGraph = {
       nodes: [makeNode("src", "source", { v: 5 }), makeNode("dbl", "double")],
@@ -120,10 +145,24 @@ describe("evaluateGraph", () => {
 describe("evaluateGraphSync", () => {
   it("evaluates a sync graph", () => {
     const registry = new OperatorRegistry();
-    registry.register(makeOperator("const", ({ params }: { params: unknown }) => ({ out: (params as { n: number }).n })));
-    registry.register(makeOperator("sum", ({ inputs }: { inputs: Record<string, unknown> }) => ({
-      out: (inputs.a as number) + (inputs.b as number)
-    })));
+    registry.register(
+      makeOperator(
+        "const",
+        ({ params }: { params: unknown }) => ({ out: (params as { n: number }).n }),
+        [],
+        ["out"]
+      )
+    );
+    registry.register(
+      makeOperator(
+        "sum",
+        ({ inputs }: { inputs: Record<string, unknown> }) => ({
+          out: (inputs.a as number) + (inputs.b as number)
+        }),
+        ["a", "b"],
+        ["out"]
+      )
+    );
 
     const graph: OperatorGraph = {
       nodes: [makeNode("x", "const", { n: 3 }), makeNode("y", "const", { n: 7 }), makeNode("z", "sum")],
@@ -140,5 +179,55 @@ describe("evaluateGraphSync", () => {
 
     const graph: OperatorGraph = { nodes: [makeNode("a", "bad")], edges: [] };
     expect(() => evaluateGraphSync(graph, registry)).toThrow(/Promise/);
+  });
+
+  it("throws on point-field input with invalid payload shape", () => {
+    const registry = new OperatorRegistry();
+    registry.register({
+      key: "bad-source",
+      version: "1",
+      inputs: [],
+      outputs: [{ key: "pointField", kind: "point-field" }],
+      run: () => ({ pointField: { notPoints: true } })
+    });
+    registry.register({
+      key: "consumer",
+      version: "1",
+      inputs: [{ key: "pointField", kind: "point-field" }],
+      outputs: [{ key: "ok", kind: "number" }],
+      run: ({ inputs }) => ({ ok: Number(Boolean(inputs.pointField)) })
+    });
+
+    const graph: OperatorGraph = {
+      nodes: [makeNode("source", "bad-source"), makeNode("sink", "consumer")],
+      edges: [makeEdge("source", "pointField", "sink", "pointField")]
+    };
+
+    expect(() => evaluateGraphSync(graph, registry)).toThrow(/expects point-field payload/i);
+  });
+
+  it("throws on incompatible port kinds across an edge", () => {
+    const registry = new OperatorRegistry();
+    registry.register({
+      key: "number-source",
+      version: "1",
+      inputs: [],
+      outputs: [{ key: "value", kind: "number" }],
+      run: () => ({ value: 5 })
+    });
+    registry.register({
+      key: "point-field-consumer",
+      version: "1",
+      inputs: [{ key: "pointField", kind: "point-field" }],
+      outputs: [{ key: "ok", kind: "number" }],
+      run: () => ({ ok: 1 })
+    });
+
+    const graph: OperatorGraph = {
+      nodes: [makeNode("source", "number-source"), makeNode("sink", "point-field-consumer")],
+      edges: [makeEdge("source", "value", "sink", "pointField")]
+    };
+
+    expect(() => evaluateGraphSync(graph, registry)).toThrow(/Port kind mismatch/i);
   });
 });

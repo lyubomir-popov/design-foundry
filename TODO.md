@@ -88,7 +88,7 @@ Status: Not started.
 
 | Step | Status | Summary |
 |------|--------|---------|
-| S1 | Pending | Typed `PointField` graph payload — make point/field data a first-order graph output so generators can feed downstream operators without preview-only glue. |
+| S1 | Complete | Typed `PointField` graph payload is now enforced in `graph-runtime`: edge input collection validates source/target port existence, enforces port-kind compatibility, and validates `point-field` payload shape at runtime. New tests cover invalid point-field payloads and port-kind mismatch failures. |
 | S2 | Pending | Point/field generator operator — standalone operator that produces a `PointField` from configurable parameters. |
 | S3 | Pending | SVG instancing operator — consumes a `PointField` and stamps SVG instances at each point. |
 | S4 | Pending | Compositing/layer-stack operator — ordered composition of background, image, text, and media layers. |
@@ -102,8 +102,8 @@ Status: Not started. Deferred until after Lane S groundwork.
 
 ## Immediate Next Steps
 
-- **Lane S is next.** Start with S1: typed `PointField` graph payload.
-- The first concrete deliverable is making `PointField` (or equivalent typed point/field data) a first-order graph output type in `core-types` and `graph-runtime`, so background operators can produce and consume point fields through the graph instead of preview-only glue.
+- **Lane S is active.** S1 is complete; continue with S2: standalone point/field generator operator as the next graph-native building block.
+- The next concrete deliverable is introducing the dedicated S2 generator operator and wiring at least one graph path that consumes its `pointField` output through typed ports end-to-end.
 - Tab-key Add Node menu is shipped and working. The config editor no longer carries dead add/family controls.
 - Keep the current breathing and pulsing look stable; do not reopen fine-tuning work unless a concrete regression appears.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.

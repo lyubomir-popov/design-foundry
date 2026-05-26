@@ -4,6 +4,13 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane S1 — PointField graph payload contract (2026-05-26)
+
+- Promoted `point-field` from convention to enforced graph-runtime contract in `packages/graph-runtime/src/index.ts`: incoming edges now validate source/target port existence, reject incompatible port kinds, and verify runtime payload shape for `point-field` inputs.
+- Added regression tests in `packages/graph-runtime/src/index.test.ts` for invalid `point-field` payload shape and explicit cross-edge port-kind mismatch failures.
+- Updated existing graph-runtime tests to declare explicit test input/output ports so the new validation path is exercised by default.
+- Validation: `npm run typecheck` and `npm test` (58 tests passing).
+
 ## Kernel build K1–K7 complete (2026-06-01)
 
 Built the foundational kernel architecture from the ground up, 7 new packages with 58 verification tests:
