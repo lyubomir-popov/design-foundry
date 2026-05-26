@@ -4,6 +4,14 @@ Items moved here from `TODO.md` to keep the active backlog lean.
 
 ## Short-term
 
+## Lane S2 — standalone point-field generator operator (2026-05-26)
+
+- Added new package `@design-foundry/operator-point-field` with deterministic seed-based `PointField` generation in two modes: `grid` and `ring`.
+- Exposed `resolvePointField()` utility plus `pointFieldOperator` (`operator.point-field`) with one optional `centroid` input and typed `point-field` output for graph-native handoff.
+- Added parameter schema for mode selection and mode-specific shape controls (grid columns/width/height, ring radius), with jitter and seed controls shared across modes.
+- Added unit tests covering deterministic generation, point-count correctness, and centroid/origin offset composition.
+- Validation: `npm run typecheck` and `npm test` (61 tests passing).
+
 ## Lane S1 — PointField graph payload contract (2026-05-26)
 
 - Promoted `point-field` from convention to enforced graph-runtime contract in `packages/graph-runtime/src/index.ts`: incoming edges now validate source/target port existence, reject incompatible port kinds, and verify runtime payload shape for `point-field` inputs.

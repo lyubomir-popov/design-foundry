@@ -100,6 +100,7 @@ npm run demo:spokes
 - `@design-foundry/operator-copy-to-points`: Houdini-style point instancing with propagated attributes for later Three.js and SVG backends
 - `@design-foundry/operator-orbits`: coarse orbit-ring point-field generator for motion-side rebuild work
 - `@design-foundry/operator-phyllotaxis`: golden-angle point-field generation matching the current Houdini phyllotaxis HDA logic
+- `@design-foundry/operator-point-field`: standalone deterministic point-field generator operator (`grid` and `ring` modes)
 - `@design-foundry/operator-scatter`: scatter-point generation inside ellipse, rect, rounded-rect, or polygon-style SVG path boundaries
 - `@design-foundry/operator-spokes`: coarse spoke-band point-field generator for motion-side rebuild work
 - `@design-foundry/operator-ubuntu-summit-animation`: coarse scene-family operator boundary for the full non-reusable Ubuntu Summit parity port, including mascot and full animation timeline state

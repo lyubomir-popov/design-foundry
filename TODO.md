@@ -89,7 +89,7 @@ Status: Not started.
 | Step | Status | Summary |
 |------|--------|---------|
 | S1 | Complete | Typed `PointField` graph payload is now enforced in `graph-runtime`: edge input collection validates source/target port existence, enforces port-kind compatibility, and validates `point-field` payload shape at runtime. New tests cover invalid point-field payloads and port-kind mismatch failures. |
-| S2 | Pending | Point/field generator operator — standalone operator that produces a `PointField` from configurable parameters. |
+| S2 | Complete | Added standalone `@design-foundry/operator-point-field` package with deterministic seed-based `grid` and `ring` generator modes, optional centroid/origin offsets, parameter schema, and unit tests. Exposes `pointFieldOperator` with a `point-field` output for graph-native handoff. |
 | S3 | Pending | SVG instancing operator — consumes a `PointField` and stamps SVG instances at each point. |
 | S4 | Pending | Compositing/layer-stack operator — ordered composition of background, image, text, and media layers. |
 | S5 | Pending | Background and layout composition in one graph — unify overlay layout and background operators into a single document graph. |
@@ -102,8 +102,8 @@ Status: Not started. Deferred until after Lane S groundwork.
 
 ## Immediate Next Steps
 
-- **Lane S is active.** S1 is complete; continue with S2: standalone point/field generator operator as the next graph-native building block.
-- The next concrete deliverable is introducing the dedicated S2 generator operator and wiring at least one graph path that consumes its `pointField` output through typed ports end-to-end.
+- **Lane S is active.** S1 and S2 are complete; continue with S3: SVG instancing operator that consumes `pointField` directly.
+- The next concrete deliverable is a reusable instancing operator package with typed point-field input and SVG instance-set output, plus parity checks against existing copy-to-points behavior where applicable.
 - Tab-key Add Node menu is shipped and working. The config editor no longer carries dead add/family controls.
 - Keep the current breathing and pulsing look stable; do not reopen fine-tuning work unless a concrete regression appears.
 - Keep persisted preview-document snapshots compatibility-keyed by output profile until a deliberate migration is scoped.
