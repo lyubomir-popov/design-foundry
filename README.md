@@ -114,10 +114,7 @@ Current implementation state intentionally lives in `STATUS.md` and `TODO.md`, n
 
 ## Later additions
 
-- field generator operators
-- SVG instancing operators
 - Canvas/WebGL/Three preview adapters
-- SVG export backend
 - PDF/EPS print backend
 - CMYK intent and mapping pipeline
 

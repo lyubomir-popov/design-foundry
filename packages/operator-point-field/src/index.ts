@@ -1,5 +1,4 @@
 import type {
-  ColorRgba,
   OperatorDefinition,
   OperatorParameterSchema,
   PointField,
@@ -22,7 +21,7 @@ export interface PointFieldGeneratorParams {
   origin?: Partial<Vector3>;
 }
 
-const DEFAULT_POINT_COLOR: ColorRgba = { r: 255, g: 255, b: 255, a: 1 };
+const DEFAULT_POINT_COLOR = { r: 255, g: 255, b: 255, a: 1 };
 
 function toNumber(value: unknown, fallback: number): number {
   const parsed = Number(value);

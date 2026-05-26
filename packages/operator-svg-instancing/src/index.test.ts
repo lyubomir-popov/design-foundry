@@ -59,6 +59,17 @@ describe("operator-svg-instancing", () => {
     expect(instanceSet.prototypes.map((prototype) => prototype.id).sort()).toEqual(["circle", "square"]);
   });
 
+  it("returns empty instances and prototypes for an empty point field", () => {
+    const emptyField: PointField = { points: [], detail: {} };
+    const instanceSet = resolveSvgInstancing(emptyField, {
+      defaultSvgAssetPath: "./assets/mark.svg"
+    });
+
+    expect(instanceSet.prototypes).toHaveLength(0);
+    expect(instanceSet.instances).toHaveLength(0);
+    expect(instanceSet.detail.instance_count).toBe(0);
+  });
+
   it("throws when a prototype id maps to different svg assets", () => {
     const field: PointField = {
       points: [

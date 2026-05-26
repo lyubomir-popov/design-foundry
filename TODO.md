@@ -84,7 +84,7 @@ Status: **Complete.** P1-P7 all landed. Tab-key Add Node menu shipped. Dead conf
 
 Goal: Make procedural scene composition reusable rather than app-specific. Typed point/field handoff between operators, compositing/layer-stack operator family, swappable scene-family operators.
 
-Status: Not started.
+Status: S1–S3 complete. S4 next.
 
 | Step | Status | Summary |
 |------|--------|---------|
