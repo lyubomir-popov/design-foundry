@@ -1,8 +1,12 @@
 {
-  "name": "@brand-layout-ops/operator-halo-field",
+  "name": "@design-foundry/operator-halo-field",
   "version": "0.1.0",
   "type": "module",
+  "dependencies": {
+    "@design-foundry/operator-kernel": "*"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./kernel": "./src/kernel-adapter.ts"
   }
 }

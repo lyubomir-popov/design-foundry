@@ -1,5 +1,54 @@
 # Product Roadmap
 
+> **Post-pivot (2026-05-23):** read [`PIVOT.md`](./PIVOT.md) first. This roadmap now describes TWO tiers running on different clocks: a kernel architecture (forward-looking, mostly unbuilt) and the existing product surface (active, shipping). Both are described below. The "Phase 0" section is the kernel sequence; everything from "Product shape" onward describes the existing product surface, which continues as the first real kernel consumer.
+
+## Phase 0 — Kernel pivot (2026-05-23 → ongoing)
+
+The repo has been reframed from "operator-graph product kernel for branded layouts" to a Houdini-in-spirit kernel monorepo. The full architecture, tech-stack, package layout, cross-repo plan, and parked open questions live in [`PIVOT.md`](./PIVOT.md). This section is the high-level sequence; PIVOT.md is the source of truth.
+
+### Kernel build sequence
+
+The work order below is the recommended path. Each step can be done in isolation against typed stubs; nothing requires the overlay-preview app to be migrated first.
+
+1. **Render IR** — flat display-list intermediate representation (Skia/Flutter pattern). New package `@design-foundry/render-ir`. Pure types + a SVG renderer adapter to validate the shape.
+2. **Text-shape WASM seam** — harfbuzzjs wrapper as `@design-foundry/text-shape`. Returns glyph runs + metrics consumable by render-ir.
+3. **Operator interface formalization** — the typed operator contract: input ports, output ports, parameters, pure-function evaluator, incremental invalidation key. Lifts the existing ad-hoc operator shapes in `packages/operator-*` into one shared contract.
+4. **First renderer adapter** — Canvas2D adapter that consumes render-ir. SVG renderer already exists implicitly in the overlay-preview app; the Canvas2D adapter is new and validates that the IR can drive multiple backends.
+5. **PDF backend** — pdf-lib wrapper consuming render-ir, sRGB vector output only. CMYK deferred via a `Paint` type extension parked in `PIVOT.md`.
+6. **Operator port from overlay-preview** — only after 1–5 land, migrate one overlay-preview operator (probably `operator-halo-field`) onto the formalized operator interface as proof. The rest follow incrementally.
+7. **pnpm workspace promotion** — switch workspace topology to pnpm at `H:\WSL_dev_projects\` (option A in PIVOT.md). Cross-repo links become `workspace:*`. Currently using npm workspaces inside this repo only.
+8. **WebGL canvas tier** — opt-in renderer for high-throughput scenes (replaces the current Three.js path in overlay-preview).
+
+### Adjacent repos affected
+
+- **`a4-generator`**: future consumer of `@design-foundry/document-schema`, `@design-foundry/layout-grid/core`, `@design-foundry/render-ir`, `@design-foundry/text-shape`. No work in this repo blocks the consumer wiring.
+- **`baseline-foundry`**: stays a peer. Open question parked: does it eventually become `@design-foundry/shell` or stay a sibling repo?
+- **`canonical-spacing-spec`**: stays a sibling spec repo. No structural change. Continues to feed multiple consumers as the canonical source for spacing / grid / type-scale specs. GitHub ownership may move to the user's organization account at some point (admin-only change).
+- **`diagram-generator`**: stays a sibling repo. Continues to iterate its `packages/layout-engine/` (Figma-grade autolayout, parity-tested vs Python) in place. Eventually that engine relocates here as `@design-foundry/operator-autolayout` once (a) its refactor stabilizes and (b) the operator-kernel contract (K4 below) is ready. **No-double-work guarantee:** design-foundry will not build a parallel autolayout — the existing code physically moves at port time, wrapped in a thin adapter. See PIVOT.md §5 for the full statement.
+
+### What stays unchanged for now
+
+- The overlay-preview app under `apps/overlay-preview/` continues to ship and evolve on its current pipeline.
+- All existing product-surface lanes (P, R, Q, etc. — see TODO.md and the product-surface roadmap below) proceed without blocking on kernel work.
+- File format (`*.df.json`) and persisted identifiers (`df.document`, `df.operator-presets`) are now decoupled from package names so future renames are cheap.
+- The existing operator packages (`packages/operator-*`) keep working under their current ad-hoc interfaces; the kernel-formalized operator interface will be additive, not a forced rewrite.
+
+### Kernel hardening (from adversarial review, 2026-05-25)
+
+These emerged from adversarial review and are not blocking current kernel or product work, but should be addressed before or during Stage 1.6 integration:
+
+- **Glyph outline rendering.** ShapedRun carries glyph IDs and advances but renderers use text-string fallback. Needs a font-outline extraction step to draw per-glyph paths. Blocked on deciding whether glyph outlines travel through render-ir or stay renderer-local.
+- **Operator versioning semantics.** Define semver contract for operator versions: what constitutes major/minor/patch, how saved documents migrate across operator version bumps.
+- **Async operator design.** Current `evaluate()` is sync-only (by design for purity). Future operators (image loading, external APIs) will need async. Design the contract extension before the first async operator ships. Pivot's state-as-port pattern covers simulation; async I/O is a separate concern.
+- **Graph evaluation error recovery.** Define fail-fast vs collect-errors vs skip-failed modes for graph evaluation when individual operators throw.
+- **Cross-renderer consistency spec.** Document background rendering, opacity compositing, and arc path semantics as cross-renderer guarantees with regression tests.
+
+---
+
+## Product surface — Phase 1+ (existing roadmap, unchanged)
+
+Everything from here down describes the existing overlay-preview product. It is the first real kernel consumer but is NOT blocked on kernel work. Continue executing this roadmap as before.
+
 ## Product shape
 
 This product is a browser-native operator graph for branded editorial and motion output.
@@ -84,7 +133,7 @@ This implies a gradual shift, not a rewrite: section builders move out of the co
 
 ## Document/project model — Adobe-style variants over a Houdini core
 
-The working unit in this product is a **document-project hybrid**: one `.brand-layout-ops.json` file that carries authored layout state, operator graphs, content bindings, and format-variant definitions together. The user-facing workflow should feel closer to InDesign alternate layouts, while the internal graph and execution model still borrows heavily from Houdini.
+The working unit in this product is a **document-project hybrid**: one `.df.json` file that carries authored layout state, operator graphs, content bindings, and format-variant definitions together. The user-facing workflow should feel closer to InDesign alternate layouts, while the internal graph and execution model still borrows heavily from Houdini.
 
 ### Format variants
 
@@ -92,9 +141,9 @@ A single document can define multiple format variants. Each variant starts from 
 
 This is not a pure Houdini ROP model. It is closer to Adobe alternate layouts with a Houdini-style execution layer underneath:
 
-| Houdini concept | brand-layout-ops equivalent |
+| Houdini concept | design-foundry equivalent |
 |-----------------|---------------------------|
-| `.hip` file | `.brand-layout-ops.json` document |
+| `.hip` file | `.df.json` document |
 | SOPs (geometry operators) | `sceneFamilyGraphs` — per-family operator graphs |
 | Display flag / current ROP | `backgroundGraph` — runtime projection of the active family |
 | Global preset menu | Shared document-size preset library |

@@ -7,17 +7,15 @@
 import type { PreviewAppContext } from "./preview-app-context.js";
 import type { FuzzyBoidsPreviewConfig } from "./scene-family-preview.js";
 import {
-  FUZZY_BOIDS_PRESET_DEFINITIONS,
   OVERLAY_BACKGROUND_FUZZY_BOIDS_OPERATOR_KEY,
   OVERLAY_FUZZY_BOIDS_CONFIG_SCHEMA,
   createDefaultOverlayFuzzyBoidsConfig
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import {
   buildAccordionSectionEl,
   renderSchemaPanel,
   setupAccordion
-} from "@brand-layout-ops/parameter-ui";
-import { buildOperatorPresetPicker } from "./operator-preset-picker.js";
+} from "@design-foundry/parameter-ui";
 
 export function buildFuzzyBoidsSection(ctx: PreviewAppContext): HTMLElement {
   const { state } = ctx;
@@ -52,20 +50,6 @@ export function buildFuzzyBoidsSection(ctx: PreviewAppContext): HTMLElement {
     void ctx.renderStage();
   }
 
-  const presetPicker = buildOperatorPresetPicker(ctx, {
-    operatorKey: "fuzzy_boids",
-    operatorLabel: "Fuzzy Boids",
-    builtInPresets: FUZZY_BOIDS_PRESET_DEFINITIONS,
-    getCurrentConfig: () => JSON.parse(JSON.stringify(bc)) as Record<string, unknown>,
-    applyPresetConfig(config) {
-      update(config as Partial<FuzzyBoidsPreviewConfig>);
-    },
-    resetToSeed() {
-      const seed = createDefaultOverlayFuzzyBoidsConfig(state.outputProfileKey);
-      update(seed as Partial<FuzzyBoidsPreviewConfig>);
-    }
-  });
-
   const result = renderSchemaPanel(
     OVERLAY_FUZZY_BOIDS_CONFIG_SCHEMA,
     bc as unknown as Record<string, unknown>,
@@ -85,7 +69,7 @@ export function buildFuzzyBoidsSection(ctx: PreviewAppContext): HTMLElement {
   }
 
   nestedAccordion.append(nestedList);
-  body.append(presetPicker, nestedAccordion);
+  body.append(nestedAccordion);
   setupAccordion(nestedAccordion);
 
   return root;

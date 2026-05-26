@@ -1,5 +1,5 @@
 {
-  "kind": "brand-layout-ops.operator-presets",
+  "kind": "df.operator-presets",
   "version": 1,
   "operators": {
     "halo": [

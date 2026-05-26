@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode, OperatorDefinition, OperatorGraph } from "@brand-layout-ops/core-types";
+import type { GraphEdge, GraphNode, OperatorDefinition, OperatorGraph } from "@design-foundry/core-types";
 
 export class OperatorRegistry {
   private readonly definitions = new Map<string, OperatorDefinition>();

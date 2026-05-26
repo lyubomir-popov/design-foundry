@@ -1,8 +1,9 @@
 {
-  "name": "@brand-layout-ops/graph-runtime",
+  "name": "@design-foundry/graph-runtime",
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./edge-validation": "./src/edge-validation.ts"
   }
 }

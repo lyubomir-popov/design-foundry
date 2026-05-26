@@ -1,7 +1,7 @@
 import {
   OUTPUT_PROFILES,
   getOutputProfile
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   cloneOverlayBackgroundGraph,
   cloneOverlayDocumentProject,
@@ -14,8 +14,8 @@ import {
   normalizeOverlaySceneFamilyConfigs,
   OVERLAY_SCENE_FAMILY_ORDER,
   type OverlaySceneFamilyKey
-} from "@brand-layout-ops/document-model";
-import type { UbuntuSummitAnimationSceneDescriptor } from "@brand-layout-ops/operator-ubuntu-summit-animation";
+} from "@design-foundry/operator-overlay-layout";
+import type { UbuntuSummitAnimationSceneDescriptor } from "@design-foundry/operator-ubuntu-summit-animation";
 import type {
   OverlayPreviewDocument,
   PreviewAppContext
@@ -28,13 +28,6 @@ import {
   getPreviewOutputSinks,
   type PreviewCompositionLayerId
 } from "./preview-composition.js";
-import {
-  serializeHaloSvgDocument,
-  serializeSceneFamilySvgDocument,
-  loadSvgMarkup,
-  type SvgDocumentOptions,
-} from "./svg-document-serializer.js";
-import { buildSceneFamilyPreviewState } from "./scene-family-preview.js";
 
 interface ExportOptions {
   startFrame: number;
@@ -89,7 +82,6 @@ interface CreateExportAutomationControllerOptions {
 
 export interface ExportAutomationController {
   exportComposedFramePng(): Promise<void>;
-  exportSvgDocument(): Promise<void>;
   exportPngSequence(): Promise<void>;
   exportMp4(): Promise<void>;
   getAutomationState(): Record<string, unknown>;
@@ -513,92 +505,6 @@ export function createExportAutomationController(
     triggerBlobDownload(blob, `${baseName}.png`);
   }
 
-  async function exportSvgDocument(): Promise<void> {
-    const { widthPx, heightPx } = ctx.state.params.frame;
-    const transparentBackground = ctx.state.exportSettings.transparentBackground;
-    const isHaloScene = ctx.state.documentProject.sceneFamilyKey === "halo";
-
-    ctx.setSourceDefaultStatus("Generating SVG document...");
-
-    try {
-      // Render current frame to ensure state is up to date
-      await ctx.renderStage("export");
-
-      // Serialize the overlay layer (text, logo, safe-area)
-      const overlayMarkup = await serializeExportSvgMarkup(transparentBackground);
-
-      const svgOptions: SvgDocumentOptions = {
-        widthPx,
-        heightPx,
-        transparentBackground,
-        overlayMarkup
-      };
-
-      let svgDocument: string;
-
-      if (isHaloScene) {
-        // Load mascot SVG assets as raw markup for inline embedding
-        const [mascotFaceSvgMarkup, mascotHaloSvgMarkup] = await Promise.all([
-          loadSvgMarkup("/assets/racoon-mascot-face.svg"),
-          loadSvgMarkup("/assets/racoon-mascot-halo.svg")
-        ]);
-
-        svgOptions.mascotFaceSvgMarkup = mascotFaceSvgMarkup;
-        svgOptions.mascotHaloSvgMarkup = mascotHaloSvgMarkup;
-
-        const sceneDescriptor = options.getSceneDescriptor();
-        svgDocument = serializeHaloSvgDocument({ sceneDescriptor }, svgOptions);
-      } else {
-        const previewState = buildSceneFamilyPreviewState({
-          backgroundGraph: ctx.state.documentProject.backgroundGraph,
-          widthPx,
-          heightPx,
-          playbackTimeSec: ctx.state.playbackTimeSec,
-          haloConfig: ctx.state.haloConfig,
-          mode: "export"
-        });
-        if (!previewState) {
-          ctx.setSourceDefaultStatus("SVG export: no scene preview state available.", "error");
-          return;
-        }
-
-        const bgColor = ctx.state.haloConfig.composition.background_color || "#202020";
-        svgDocument = serializeSceneFamilySvgDocument(
-          {
-            previewState,
-            backgroundColor: bgColor
-          },
-          svgOptions
-        );
-      }
-
-      const blob = new Blob([svgDocument], { type: "image/svg+xml;charset=utf-8" });
-      const baseName = `${ctx.state.exportSettings.exportName ?? "export"}_${getDimensionsFolderName()}`;
-
-      if ("showDirectoryPicker" in window) {
-        try {
-          const dirHandle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker({ mode: "readwrite" });
-          const dimDir = await dirHandle.getDirectoryHandle(getDimensionsFolderName(), { create: true });
-          const fileName = `${baseName}.svg`;
-          const fileHandle = await dimDir.getFileHandle(fileName, { create: true });
-          const writable = await fileHandle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          ctx.setSourceDefaultStatus(`Exported ${dirHandle.name}/${getDimensionsFolderName()}/${fileName}`, "success");
-          return;
-        } catch {
-          // User cancelled directory picker — fall through to blob download
-        }
-      }
-
-      triggerBlobDownload(blob, `${baseName}.svg`);
-      ctx.setSourceDefaultStatus("SVG document exported.", "success");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "SVG export failed.";
-      ctx.setSourceDefaultStatus(`SVG export failed: ${message}`, "error");
-    }
-  }
-
   async function exportPngSequence(): Promise<void> {
     const exportOptions = await promptForExportOptions("png-sequence");
     if (!exportOptions) {
@@ -1013,7 +919,6 @@ export function createExportAutomationController(
 
   return {
     exportComposedFramePng,
-    exportSvgDocument,
     exportPngSequence,
     exportMp4,
     getAutomationState,

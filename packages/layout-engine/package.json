@@ -1,5 +1,5 @@
 {
-  "name": "@brand-layout-ops/layout-engine",
+  "name": "@design-foundry/layout-engine",
   "version": "0.1.0",
   "type": "module",
   "exports": {

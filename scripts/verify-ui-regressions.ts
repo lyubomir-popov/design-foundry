@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, "..");
-const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-network-overlay-visible-v1";
-const DEFAULT_ROUTE = "/#document=video-intro-export.brand-layout-ops.json";
+const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "df-network-overlay-visible-v1";
+const DEFAULT_ROUTE = "/#document=video-intro-export.json";
 
 function getArg(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -203,9 +203,9 @@ async function addBackgroundNode(
   page: import("playwright").Page,
   operatorLabel: string
 ): Promise<void> {
-  await page.keyboard.press("Tab");
-  const popup = page.locator(".bf-add-node-popup");
-  await popup.getByRole("menuitem", { name: operatorLabel, exact: true }).click();
+  const layersPanel = page.locator("[data-layers-editor]");
+  await layersPanel.getByRole("combobox", { name: "Add", exact: true }).selectOption({ label: operatorLabel });
+  await layersPanel.getByRole("button", { name: "Add", exact: true }).click();
 }
 
 async function countLayersTextRows(page: import("playwright").Page): Promise<number> {

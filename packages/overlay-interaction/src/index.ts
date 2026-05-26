@@ -1,5 +1,5 @@
-import type { LayoutGridMetrics, LogoPlacementSpec, TextFieldPlacementSpec } from "@brand-layout-ops/core-types";
-import { getKeylineXPx, snapBaselineToGrid, snapXPxToKeyline } from "@brand-layout-ops/layout-grid";
+import type { LayoutGridMetrics, LogoPlacementSpec, TextFieldPlacementSpec } from "@design-foundry/core-types";
+import { getKeylineXPx, snapBaselineToGrid, snapXPxToKeyline } from "@design-foundry/layout-grid";
 
 export type DragAxisLock = "free" | "x" | "y";
 

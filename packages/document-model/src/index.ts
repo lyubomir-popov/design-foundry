@@ -10,12 +10,12 @@ import {
   type SafeAreaInsets,
   type TextFieldPlacementSpec,
   type TextStyleSpec
-} from "@brand-layout-ops/core-types";
-import { getLinkedLogoDimensionsPx, resolveLayerScene } from "@brand-layout-ops/layout-engine";
+} from "@design-foundry/core-types";
+import { getLinkedLogoDimensionsPx, resolveLayerScene } from "@design-foundry/layout-engine";
 import {
   createApproximateTextMeasurer,
   type ApproximateTextMeasureOptions
-} from "@brand-layout-ops/layout-text";
+} from "@design-foundry/layout-text";
 import { resolveOverlayTextFields } from "./csv-resolution.js";
 import {
   buildOverlayVariableItemLabel,

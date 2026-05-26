@@ -5,8 +5,8 @@
  * All numeric constants match the reference defaults for landscape_1280x720.
  */
 
-import type { OperatorParameterSchema } from "@brand-layout-ops/core-types";
-import { getOutputProfileMetrics } from "@brand-layout-ops/core-types";
+import type { OperatorParameterSchema } from "@design-foundry/core-types";
+import { getOutputProfileMetrics } from "@design-foundry/core-types";
 
 export {
   BACKGROUND_SPOKE_FADE_SEGMENTS,

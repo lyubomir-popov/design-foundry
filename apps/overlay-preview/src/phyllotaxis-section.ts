@@ -9,16 +9,14 @@ import {
   buildAccordionSectionEl,
   renderSchemaPanel,
   setupAccordion
-} from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/parameter-ui";
 import { 
   OVERLAY_BACKGROUND_PHYLLOTAXIS_OPERATOR_KEY,
   OVERLAY_PHYLLOTAXIS_CONFIG_SCHEMA,
-  PHYLLOTAXIS_PRESET_DEFINITIONS,
   createDefaultOverlayPhyllotaxisConfig
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import type { PreviewAppContext } from "./preview-app-context.js";
 import type { PhyllotaxisPreviewConfig } from "./scene-family-preview.js";
-import { buildOperatorPresetPicker } from "./operator-preset-picker.js";
 
 export function buildPhyllotaxisSection(ctx: PreviewAppContext): HTMLElement {
   const { root, body } = buildAccordionSectionEl("Phyllotaxis");
@@ -52,20 +50,6 @@ export function buildPhyllotaxisSection(ctx: PreviewAppContext): HTMLElement {
     void ctx.renderStage();
   }
 
-  const presetPicker = buildOperatorPresetPicker(ctx, {
-    operatorKey: "phyllotaxis",
-    operatorLabel: "Phyllotaxis",
-    builtInPresets: PHYLLOTAXIS_PRESET_DEFINITIONS,
-    getCurrentConfig: () => JSON.parse(JSON.stringify(pc)) as Record<string, unknown>,
-    applyPresetConfig(config) {
-      update(config as Partial<PhyllotaxisPreviewConfig>);
-    },
-    resetToSeed() {
-      const seed = createDefaultOverlayPhyllotaxisConfig(ctx.state.outputProfileKey);
-      update(seed as Partial<PhyllotaxisPreviewConfig>);
-    }
-  });
-
   const result = renderSchemaPanel(
     OVERLAY_PHYLLOTAXIS_CONFIG_SCHEMA,
     pc as unknown as Record<string, unknown>,
@@ -85,7 +69,7 @@ export function buildPhyllotaxisSection(ctx: PreviewAppContext): HTMLElement {
   }
 
   nestedAccordion.append(nestedList);
-  body.append(presetPicker, nestedAccordion);
+  body.append(nestedAccordion);
   setupAccordion(nestedAccordion);
 
   return root;

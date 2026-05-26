@@ -5,7 +5,7 @@ import type {
   PointField,
   PointRecord,
   Vector3
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 
 export const SCATTER_OPERATOR_KEY = "operator.scatter";
 

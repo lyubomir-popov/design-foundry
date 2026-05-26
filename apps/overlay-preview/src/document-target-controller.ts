@@ -12,13 +12,13 @@ import {
   findBuiltInOutputProfileKeyByDimensions,
   getOutputProfile,
   type FrameSize
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   getOverlayFormatPresetDefinition,
   getOverlayFormatPresetKeyForProfile,
   getOverlayFormatSeedSummary,
   type OverlayDocumentFormat
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 
 import type { PreviewState } from "./preview-app-context.js";
 
@@ -234,6 +234,7 @@ export function createDocumentFormatController(
 
   function pruneDocumentTargetRuntimeState(targetId: string): void {
     delete state.documentFormatBuckets[targetId];
+    delete state.contentFormatKeyByDocumentFormatId[targetId];
     delete state.exportSettingsByDocumentFormatId[targetId];
     delete state.haloConfigByDocumentFormatId[targetId];
   }
@@ -504,12 +505,12 @@ export function createDocumentFormatController(
 
     const help = document.createElement("p");
     help.className = "bf-form-help bf-u-no-margin--bottom";
-    help.textContent = "Choose the active format, add preset or custom dimensions, or remove formats you no longer need. Preset adds keep the preset safe-area and grid seed while carrying the current format as a first guess; custom sizes derive directly from the current format. Use Preset Library for the global seed definitions, then save the file to persist document-owned overrides.";
+    help.textContent = "Choose the active format, add preset or custom dimensions, or remove formats you no longer need. Preset adds keep the preset safe-area and grid seed while carrying the current format as a first guess; custom sizes derive directly from the current format. Use Preset Library for the global seed definitions, then save the file to persist document-owned overrides. Refreshing an untitled document resets it to the source-default format set.";
     container.append(help);
 
     const status = document.createElement("p");
     status.className = "bf-form-help bf-u-no-margin--bottom";
-    status.textContent = statusMessage || `${state.documentProject.targets.length} saved format${state.documentProject.targets.length === 1 ? "" : "s"}.`;
+    status.textContent = statusMessage || `${state.documentProject.targets.length} format${state.documentProject.targets.length === 1 ? "" : "s"} in the current document.`;
     status.style.color = statusTone === "success"
       ? "#9ad47d"
       : statusTone === "error"

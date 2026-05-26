@@ -1,5 +1,5 @@
-import type { PointField, Vector3 } from "@brand-layout-ops/core-types";
-import type { FuzzyBoidsParams } from "@brand-layout-ops/operator-fuzzy-boids";
+import type { PointField, Vector3 } from "@design-foundry/core-types";
+import type { FuzzyBoidsParams } from "@design-foundry/operator-fuzzy-boids";
 
 export interface WorkerBoidsPreviewSnapshot {
   boidCount: number;

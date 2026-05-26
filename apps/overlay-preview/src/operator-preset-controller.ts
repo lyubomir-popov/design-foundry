@@ -2,20 +2,21 @@ import type {
   HaloFieldConfig,
   HaloFieldConfigOverride,
   HaloFieldPresetDefinition
-} from "@brand-layout-ops/operator-halo-field";
-import type { OperatorPresetDefinition } from "@brand-layout-ops/core-types";
+} from "@design-foundry/operator-halo-field";
 
 import type { PreviewState } from "./preview-app-context.js";
 
 const OPERATOR_PRESET_ASSET_PATH = "/assets/operator-presets.json";
 const OPERATOR_PRESET_AUTHORING_ENDPOINT = "/__authoring/operator-presets";
-const OPERATOR_PRESET_DOCUMENT_KIND = "brand-layout-ops.operator-presets";
+const OPERATOR_PRESET_DOCUMENT_KIND = "df.operator-presets";
 const OPERATOR_PRESET_DOCUMENT_VERSION = 1;
 
 interface PersistedOperatorPresetDocument {
   kind: string;
   version: number;
-  operators?: Record<string, unknown>;
+  operators?: {
+    halo?: unknown;
+  };
 }
 
 type PersistedOperatorPresetOperators = NonNullable<PersistedOperatorPresetDocument["operators"]>;
@@ -50,25 +51,6 @@ function sanitizeHaloPresetDefinition(rawPreset: unknown): HaloFieldPresetDefini
     description,
     config
   };
-}
-
-function sanitizePresetDefinition(rawPreset: unknown): OperatorPresetDefinition | null {
-  if (!isRecord(rawPreset)) {
-    return null;
-  }
-
-  const key = String(rawPreset.key ?? "").trim();
-  const label = String(rawPreset.label ?? "").trim();
-  if (key.length === 0 || label.length === 0) {
-    return null;
-  }
-
-  const description = String(rawPreset.description ?? "").trim();
-  const config = isRecord(rawPreset.config)
-    ? JSON.parse(JSON.stringify(rawPreset.config)) as Record<string, unknown>
-    : {};
-
-  return { key, label, description, config };
 }
 
 function sanitizeOperatorPresetDocument(rawDocument: unknown): PersistedOperatorPresetDocument {
@@ -114,8 +96,6 @@ export interface OperatorPresetControllerOptions {
 
 export interface OperatorPresetController {
   readOperatorPresetLibrary(): Promise<void>;
-  getUserPresetDefinitions(operatorKey: string): readonly OperatorPresetDefinition[];
-  saveCurrentPreset(operatorKey: string, label: string, config: Record<string, unknown>, description?: string): Promise<{ preset: OperatorPresetDefinition; message: string }>;
   getUserHaloPresetDefinitions(): readonly HaloFieldPresetDefinition[];
   saveCurrentHaloPreset(label: string, description?: string): Promise<{ preset: HaloFieldPresetDefinition; message: string }>;
 }
@@ -125,36 +105,20 @@ export function createOperatorPresetController(
 ): OperatorPresetController {
   const { state } = options;
 
-  /** Per-operator user preset arrays keyed by operator slug (e.g. "halo", "fuzzy_boids"). */
-  const userPresetsByOperator = new Map<string, OperatorPresetDefinition[]>();
-
-  function getOrCreatePresetList(operatorKey: string): OperatorPresetDefinition[] {
-    let list = userPresetsByOperator.get(operatorKey);
-    if (!list) {
-      list = [];
-      userPresetsByOperator.set(operatorKey, list);
-    }
-    return list;
-  }
-
-  function buildOperatorsPayload(): Record<string, unknown> {
-    const operators: Record<string, unknown> = {};
-    for (const [operatorKey, presets] of userPresetsByOperator) {
-      operators[operatorKey] = presets.map((preset) => ({
-        key: preset.key,
-        label: preset.label,
-        description: preset.description,
-        config: JSON.parse(JSON.stringify(preset.config))
-      }));
-    }
-    return operators;
-  }
+  let userHaloPresetDefinitions: HaloFieldPresetDefinition[] = [];
 
   async function writeOperatorPresetLibrary(): Promise<void> {
     const payload = {
       kind: OPERATOR_PRESET_DOCUMENT_KIND,
       version: OPERATOR_PRESET_DOCUMENT_VERSION,
-      operators: buildOperatorsPayload()
+      operators: {
+        halo: userHaloPresetDefinitions.map((preset) => ({
+          key: preset.key,
+          label: preset.label,
+          description: preset.description,
+          config: cloneHaloConfigOverride(preset.config)
+        }))
+      }
     };
 
     const response = await fetch(OPERATOR_PRESET_AUTHORING_ENDPOINT, {
@@ -176,43 +140,30 @@ export function createOperatorPresetController(
         cache: "no-store"
       });
       if (!response.ok) {
-        userPresetsByOperator.clear();
+        userHaloPresetDefinitions = [];
         return;
       }
 
       const rawDocument = sanitizeOperatorPresetDocument(await response.json());
-      userPresetsByOperator.clear();
-
-      if (rawDocument.operators) {
-        for (const [operatorKey, rawPresets] of Object.entries(rawDocument.operators)) {
-          if (!Array.isArray(rawPresets)) {
-            continue;
-          }
-          const sanitized = rawPresets
-            .map((rawPreset) => sanitizePresetDefinition(rawPreset))
-            .filter((preset): preset is OperatorPresetDefinition => preset !== null);
-          if (sanitized.length > 0) {
-            userPresetsByOperator.set(operatorKey, sanitized);
-          }
-        }
-      }
+      const rawHaloPresets = Array.isArray(rawDocument.operators?.halo)
+        ? rawDocument.operators?.halo
+        : [];
+      userHaloPresetDefinitions = rawHaloPresets
+        .map((rawPreset) => sanitizeHaloPresetDefinition(rawPreset))
+        .filter((preset): preset is HaloFieldPresetDefinition => preset !== null);
     } catch {
-      userPresetsByOperator.clear();
+      userHaloPresetDefinitions = [];
     }
   }
 
-  // --- Generic methods ---
-
-  function getUserPresetDefinitions(operatorKey: string): readonly OperatorPresetDefinition[] {
-    return userPresetsByOperator.get(operatorKey) ?? [];
+  function getUserHaloPresetDefinitions(): readonly HaloFieldPresetDefinition[] {
+    return userHaloPresetDefinitions;
   }
 
-  async function saveCurrentPreset(
-    operatorKey: string,
+  async function saveCurrentHaloPreset(
     label: string,
-    config: Record<string, unknown>,
     description = ""
-  ): Promise<{ preset: OperatorPresetDefinition; message: string }> {
+  ): Promise<{ preset: HaloFieldPresetDefinition; message: string }> {
     const trimmedLabel = label.trim();
     if (trimmedLabel.length === 0) {
       throw new Error("Preset name is required.");
@@ -220,21 +171,20 @@ export function createOperatorPresetController(
 
     const trimmedDescription = description.trim();
     const presetKey = `user-${slugifyPresetLabel(trimmedLabel)}`;
-    const preset: OperatorPresetDefinition = {
+    const preset: HaloFieldPresetDefinition = {
       key: presetKey,
       label: trimmedLabel,
       description: trimmedDescription.length > 0
         ? trimmedDescription
-        : `Saved from the current ${operatorKey} settings in ${state.documentProject.targets.find((target) => target.id === state.documentProject.activeTargetId)?.label ?? "this document"}.`,
-      config: JSON.parse(JSON.stringify(config))
+        : `Saved from the current Halo settings in ${state.documentProject.targets.find((target) => target.id === state.documentProject.activeTargetId)?.label ?? "this document"}.`,
+      config: buildCurrentHaloPresetConfig(state.haloConfig)
     };
 
-    const list = getOrCreatePresetList(operatorKey);
-    const existingIndex = list.findIndex((entry) => entry.key === presetKey);
+    const existingIndex = userHaloPresetDefinitions.findIndex((entry) => entry.key === presetKey);
     if (existingIndex >= 0) {
-      list[existingIndex] = preset;
+      userHaloPresetDefinitions = userHaloPresetDefinitions.map((entry, index) => index === existingIndex ? preset : entry);
     } else {
-      list.push(preset);
+      userHaloPresetDefinitions = [...userHaloPresetDefinitions, preset];
     }
 
     await writeOperatorPresetLibrary();
@@ -242,33 +192,13 @@ export function createOperatorPresetController(
     return {
       preset,
       message: existingIndex >= 0
-        ? `Updated ${operatorKey} preset "${trimmedLabel}".`
-        : `Saved ${operatorKey} preset "${trimmedLabel}".`
-    };
-  }
-
-  // --- Halo convenience wrappers ---
-
-  function getUserHaloPresetDefinitions(): readonly HaloFieldPresetDefinition[] {
-    return getUserPresetDefinitions("halo") as readonly HaloFieldPresetDefinition[];
-  }
-
-  async function saveCurrentHaloPreset(
-    label: string,
-    description = ""
-  ): Promise<{ preset: HaloFieldPresetDefinition; message: string }> {
-    const config = buildCurrentHaloPresetConfig(state.haloConfig);
-    const result = await saveCurrentPreset("halo", label, config as Record<string, unknown>, description);
-    return {
-      preset: result.preset as HaloFieldPresetDefinition,
-      message: result.message
+        ? `Updated Halo preset ${trimmedLabel}.`
+        : `Saved Halo preset ${trimmedLabel}.`
     };
   }
 
   return {
     readOperatorPresetLibrary,
-    getUserPresetDefinitions,
-    saveCurrentPreset,
     getUserHaloPresetDefinitions,
     saveCurrentHaloPreset
   };

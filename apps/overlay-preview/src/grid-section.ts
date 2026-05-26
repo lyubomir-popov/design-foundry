@@ -13,7 +13,7 @@ import {
   createFormGroup,
   createNumberInput,
   wrapCol
-} from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/parameter-ui";
 
 export function buildGridSection(ctx: PreviewAppContext): HTMLElement {
   const { state } = ctx;

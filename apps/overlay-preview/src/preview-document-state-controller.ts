@@ -1,4 +1,4 @@
-import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
+import type { HaloFieldConfig } from "@design-foundry/operator-halo-field";
 
 import {
   applyOverlayPreviewDocumentState,

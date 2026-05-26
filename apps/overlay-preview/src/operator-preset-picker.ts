@@ -7,8 +7,10 @@
  * keeping the current document's local tweaks.
  */
 
-import type { OperatorPresetDefinition } from "@brand-layout-ops/core-types";
+import type { OperatorPresetDefinition } from "@design-foundry/core-types";
 import type { PreviewAppContext } from "./preview-app-context.js";
+
+const HALO_OPERATOR_KEY = "halo_field";
 
 export interface OperatorPresetPickerOptions {
   /** The operator key used for persistence (e.g. "fuzzy_boids", "scatter"). */
@@ -108,8 +110,15 @@ export function buildOperatorPresetPicker(
       : "";
   }
 
+  function getSavedPresets(): readonly OperatorPresetDefinition[] {
+    if (operatorKey !== HALO_OPERATOR_KEY) {
+      return [];
+    }
+    return ctx.getUserHaloPresetDefinitions();
+  }
+
   function findPresetDefinition(presetKey: string): OperatorPresetDefinition | null {
-    const savedPresets = ctx.getUserPresetDefinitions(operatorKey);
+    const savedPresets = getSavedPresets();
     return [...builtInPresets, ...savedPresets].find((entry) => entry.key === presetKey) ?? null;
   }
 
@@ -134,7 +143,7 @@ export function buildOperatorPresetPicker(
       presetSelect.append(builtInGroup);
     }
 
-    const savedPresets = ctx.getUserPresetDefinitions(operatorKey);
+    const savedPresets = getSavedPresets();
     if (savedPresets.length > 0) {
       const savedGroup = document.createElement("optgroup");
       savedGroup.label = "Saved";
@@ -221,7 +230,15 @@ export function buildOperatorPresetPicker(
 
       try {
         const config = getCurrentConfig();
-        const result = await ctx.saveCurrentPreset(operatorKey, presetName, config);
+        if (operatorKey !== HALO_OPERATOR_KEY) {
+          throw new Error(`${operatorLabel} preset save is not wired yet.`);
+        }
+
+        if (Object.keys(config).length === 0) {
+          throw new Error("Cannot save an empty preset config.");
+        }
+
+        const result = await ctx.saveCurrentHaloPreset(presetName);
         presetSaveNameInput.value = "";
         presetSaveNameInput.disabled = false;
         populatePresetOptions(result.preset.key);

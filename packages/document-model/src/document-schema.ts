@@ -8,7 +8,7 @@ import {
   type FrameSize,
   type TextFieldPlacementSpec,
   type TextStyleSpec
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   cloneOverlayBackgroundGraph,
   createDefaultOverlayBackgroundGraph,
@@ -78,7 +78,7 @@ export interface OverlaySourceDefaultSnapshot<
   guideMode: TGuideMode;
 }
 
-export const OVERLAY_DOCUMENT_FILE_KIND = "brand-layout-ops.document";
+export const OVERLAY_DOCUMENT_FILE_KIND = "df.document";
 export const OVERLAY_DOCUMENT_FILE_VERSION = 1;
 
 export interface OverlayDocumentMetadata {

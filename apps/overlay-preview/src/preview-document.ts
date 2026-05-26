@@ -1,7 +1,7 @@
 import {
   DEFAULT_OUTPUT_PROFILE_KEY,
   OVERLAY_CONTENT_FORMAT_ORDER
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   createDefaultOverlayParams,
   createOverlayDocumentFile,
@@ -14,7 +14,7 @@ import {
   type ProfileContentFormatMap,
   type ProfileFormatBuckets,
   type SanitizeOverlayDocumentFileOptions
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 
 import {
   createDefaultExportSettings,
@@ -44,7 +44,7 @@ export interface CreateOverlayPreviewDocumentOptions<THaloConfig extends object,
   pendingCsvDraftsByBucket: Record<string, string>;
 }
 
-const LEGACY_OVERLAY_PREVIEW_DOCUMENT_KIND = "brand-layout-ops-document";
+const LEGACY_OVERLAY_PREVIEW_DOCUMENT_KIND = "design-foundry-document";
 const LEGACY_OVERLAY_PREVIEW_DOCUMENT_VERSION = 1;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -187,7 +187,7 @@ function sanitizeLegacyOverlayPreviewDocument<THaloConfig extends object, TGuide
   contentFormatKeyByProfile[outputProfileKey] ??= contentFormatKey;
 
   const document = sanitizeOverlayDocumentFile({
-    kind: "brand-layout-ops.document",
+    kind: "df.document",
     version: 1,
     metadata: {
       name: typeof rawDocument.name === "string" && rawDocument.name.trim().length > 0

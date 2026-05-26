@@ -1,6 +1,6 @@
-import type { LayoutBounds, LogoPlacementSpec, ResolvedTextPlacement, TextFieldPlacementSpec, TextMeasureResult, TextMeasurer, TextStyleSpec } from "@brand-layout-ops/core-types";
-import { computeLayoutGridMetrics, getColumnSpanWidthPx, getKeylineXPx } from "@brand-layout-ops/layout-grid";
-import { resolveLayerScene } from "@brand-layout-ops/layout-engine";
+import type { LayoutBounds, LogoPlacementSpec, ResolvedTextPlacement, TextFieldPlacementSpec, TextMeasureResult, TextMeasurer, TextStyleSpec } from "@design-foundry/core-types";
+import { computeLayoutGridMetrics, getColumnSpanWidthPx, getKeylineXPx } from "@design-foundry/layout-grid";
+import { resolveLayerScene } from "@design-foundry/layout-engine";
 
 interface LegacyTextGeometry {
   anchorXPx: number;

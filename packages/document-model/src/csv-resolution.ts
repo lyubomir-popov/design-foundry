@@ -7,7 +7,7 @@ import {
   OVERLAY_CONTENT_FORMATS,
   OVERLAY_CONTENT_FORMAT_ORDER,
   type TextFieldPlacementSpec
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import type {
   OverlayContentSource,
   OverlayCsvDraftSummary,

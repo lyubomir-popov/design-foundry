@@ -1,4 +1,4 @@
-import type { ColorRgba, OperatorDefinition, PointField, PrototypeLibrary, Vector3 } from "@brand-layout-ops/core-types";
+import type { ColorRgba, OperatorDefinition, PointField, PrototypeLibrary, Vector3 } from "@design-foundry/core-types";
 
 export const ORBITS_OPERATOR_KEY = "operator.orbits";
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { FrameSize, GridSettings, LayoutGridMetrics, SafeAreaInsets, TextFieldPlacementSpec, TextStyleSpec } from "@brand-layout-ops/core-types";
-import { computeLayoutGridMetrics } from "@brand-layout-ops/layout-grid";
+import type { FrameSize, GridSettings, LayoutGridMetrics, SafeAreaInsets, TextFieldPlacementSpec, TextStyleSpec } from "@design-foundry/core-types";
+import { computeLayoutGridMetrics } from "@design-foundry/layout-grid";
 import {
   createApproximateTextMeasurer,
   wrapTextLines,

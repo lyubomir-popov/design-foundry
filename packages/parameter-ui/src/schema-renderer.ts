@@ -11,7 +11,7 @@ import type {
   OperatorParameterSchema,
   OperatorParameterSectionSchema,
   OperatorParameterVisibilityCondition
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   buildAccordionSectionEl,
   createCheckboxFormGroup,

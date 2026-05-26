@@ -1,4 +1,4 @@
-import { topologicallySortGraph } from "@brand-layout-ops/graph-runtime";
+import { topologicallySortGraph } from "@design-foundry/graph-runtime";
 import {
   findOverlayBackgroundInputPort,
   findOverlayBackgroundOutputPort,
@@ -9,7 +9,7 @@ import {
   type OverlayBackgroundEdge,
   type OverlayBackgroundNode,
   type OverlaySceneFamilyKey
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 
 import {
   OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,

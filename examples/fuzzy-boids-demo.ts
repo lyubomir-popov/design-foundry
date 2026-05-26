@@ -1,5 +1,5 @@
-import type { OperatorDefinition, OperatorGraph, PrototypeLibrary } from "@brand-layout-ops/core-types";
-import { OperatorRegistry, evaluateGraph } from "@brand-layout-ops/graph-runtime";
+import type { OperatorDefinition, OperatorGraph, PrototypeLibrary } from "@design-foundry/core-types";
+import { OperatorRegistry, evaluateGraph } from "@design-foundry/graph-runtime";
 import { copyToPointsOperator } from "../packages/operator-copy-to-points/src/index.js";
 import { FUZZY_BOIDS_OPERATOR_KEY, fuzzyBoidsOperator } from "../packages/operator-fuzzy-boids/src/index.js";
 import { phyllotaxisOperator } from "../packages/operator-phyllotaxis/src/index.js";

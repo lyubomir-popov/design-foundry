@@ -9,14 +9,14 @@ import type {
   LogoPlacementSpec,
   TextFieldPlacementSpec,
   TextStyleSpec
-} from "@brand-layout-ops/core-types";
-import { getLinkedLogoDimensionsPx, getLinkedTitleFontSizePx } from "@brand-layout-ops/layout-engine";
+} from "@design-foundry/core-types";
+import { getLinkedLogoDimensionsPx, getLinkedTitleFontSizePx } from "@design-foundry/layout-engine";
 import {
   getOverlayMainHeadingField,
   normalizeOverlayTextFieldOffsetBaselines,
   setOverlayTextValue,
   type OverlayLayoutOperatorParams
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 
 import type {
   PreviewState,
@@ -55,11 +55,6 @@ export interface OverlayEditingController {
 
 export function createOverlayEditingController(deps: OverlayEditingControllerDeps): OverlayEditingController {
   const { state } = deps;
-
-  function refreshOverlayEditingUi(): void {
-    deps.buildConfigEditor();
-    void deps.renderStage();
-  }
 
   function updateSelectedTextValue(id: string, value: string): void {
     state.params = setOverlayTextValue(state.params, id, value);
@@ -251,10 +246,9 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
     showDelete?: boolean;
   }): HTMLElement | null {
     const showAdd = options?.showAdd ?? true;
-    const showDelete = options?.showDelete ?? false;
-    const canDelete = canDeleteSelectedText();
+    const showDelete = false;
 
-    if (!showAdd && !(showDelete && canDelete)) {
+    if (!showAdd && !showDelete) {
       return null;
     }
 
@@ -268,24 +262,10 @@ export function createOverlayEditingController(deps: OverlayEditingControllerDep
       addButton.textContent = "Add Text";
       addButton.addEventListener("click", () => {
         addTextField();
-        refreshOverlayEditingUi();
+        deps.buildConfigEditor();
+        void deps.renderStage();
       });
       actions.append(addButton);
-    }
-
-    if (showDelete && canDelete) {
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "bf-button is-dense";
-      deleteButton.type = "button";
-      deleteButton.textContent = "Delete Text";
-      deleteButton.addEventListener("click", () => {
-        if (!deleteSelectedOverlayItem()) {
-          return;
-        }
-
-        refreshOverlayEditingUi();
-      });
-      actions.append(deleteButton);
     }
 
     return actions;

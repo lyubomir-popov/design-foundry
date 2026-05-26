@@ -6,8 +6,8 @@ import {
   sanitizeOverlayDocumentFile,
   type OverlayDocumentProject,
   type OverlaySourceDefaultSnapshot
-} from "@brand-layout-ops/document-model";
-import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
+} from "@design-foundry/operator-overlay-layout";
+import type { HaloFieldConfig } from "@design-foundry/operator-halo-field";
 import {
   applySourceDefaultSnapshotToState,
   type OverlayPreviewDocumentBridgeAdapter

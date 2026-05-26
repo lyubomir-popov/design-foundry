@@ -1,5 +1,5 @@
-import type { LayoutBounds, LayoutGridMetrics, ResolvedTextPlacement, TextFieldPlacementSpec, TextMeasureResult, TextMeasurer, TextStyleSpec } from "@brand-layout-ops/core-types";
-import { getColumnSpanWidthPx, getKeylineXPx } from "@brand-layout-ops/layout-grid";
+import type { LayoutBounds, LayoutGridMetrics, ResolvedTextPlacement, TextFieldPlacementSpec, TextMeasureResult, TextMeasurer, TextStyleSpec } from "@design-foundry/core-types";
+import { getColumnSpanWidthPx, getKeylineXPx } from "@design-foundry/layout-grid";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

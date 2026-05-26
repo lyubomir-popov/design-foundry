@@ -1,4 +1,4 @@
-import type { FrameSize, GridSettings, LayoutGridMetrics, SafeAreaInsets } from "@brand-layout-ops/core-types";
+import type { FrameSize, GridSettings, LayoutGridMetrics, SafeAreaInsets } from "@design-foundry/core-types";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

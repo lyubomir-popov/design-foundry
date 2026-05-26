@@ -1,0 +1,12 @@
+{
+  "name": "@design-foundry/render-pdf",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@design-foundry/render-ir": "*",
+    "pdf-lib": "^1.17.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

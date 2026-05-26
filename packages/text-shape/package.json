@@ -1,0 +1,12 @@
+{
+  "name": "@design-foundry/text-shape",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@design-foundry/render-ir": "*",
+    "harfbuzzjs": "^1.2.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

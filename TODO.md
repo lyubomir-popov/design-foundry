@@ -1,12 +1,42 @@
 # TODO
 
+> **Post-pivot (2026-05-23):** this queue now has two tiers. Read [`PIVOT.md`](./PIVOT.md) and [`STATUS.md`](./STATUS.md) before working through it. The "Kernel queue" below is the new top-of-stack; the "Product-surface queue" further down is the existing active backlog (Lane P, etc.) and is unchanged.
+
+## Kernel queue (new, post-pivot)
+
+Source of truth: [`PIVOT.md`](./PIVOT.md). Items are not yet sequenced into formal "lanes"; pick the next one when there is bandwidth for kernel work specifically. Kernel work does NOT block product-surface work and should NOT modify `apps/overlay-preview/` until step K6.
+
+| Step | Status | Summary |
+|------|--------|---------|
+| K1 | Complete | `@design-foundry/render-ir` package: flat display-list types (Color, Mat3, Paint, Stroke, PathCommands, ShapedRun, AssetRef, ImageFit, Viewport, DisplayListItem union [rect, ellipse, line, path, glyph-run, image, group], DisplayList, Renderer\<T\>). Self-contained — no core-types dependency. |
+| K2 | Complete | `@design-foundry/render-svg` package: SVG renderer adapter implementing `Renderer<string>`. Covers all 7 item types (rect, ellipse, line, path, glyph-run, image, group), transforms, clips, corner radii, strokes. `verify:render-ir-svg` harness passes 15 tests including cross-validation against existing svg-overlay-adapter safe-area output. |
+| K3 | Complete | `@design-foundry/text-shape` package wrapping harfbuzzjs WASM. `loadFont(data, uri)` → `FontHandle`, `shape(font, text, fontSize, opts)` → `ShapedRun`. Advances scaled from font units by fontSize/upem. `verify:text-shape` passes 5 tests: basic shaping, size scaling, RTL direction, empty string, cluster tracking. |
+| K4 | Complete | `@design-foundry/operator-kernel` package: typed operator contract with `InputPort`, `OutputPort`, `ParameterSchema`, sync `evaluate()`, optional `invalidationKey()`, standard `PORT_KIND` constants, and `InputsOf`/`OutputsOf`/`ParamsOf` utility types. No dependencies. `verify:operator-kernel` passes 8 tests. |
+| K5 | Complete | `@design-foundry/render-canvas2d` package: Canvas2D renderer adapter for render-ir. Implements `Renderer<void>`, handles all 7 item types, transform mapping, clip paths, stroke dash patterns. `verify:render-canvas2d` passes 13 tests. |
+| K6 | Complete | Ported `operator-halo-field` onto `operator-kernel` contract. New `./kernel` export path exposes `haloFieldOperator: OperatorDefinition<HaloFieldInputs, HaloFieldOutputs, HaloFieldConfig>`. Existing exports untouched. `verify:halo-field-kernel` passes 7 tests including cross-validation against direct function calls. |
+| K7 | Complete | `@design-foundry/render-pdf` package: sRGB vector PDF renderer via pdf-lib. Implements `Renderer<Promise<Uint8Array>>`, handles rects (incl. non-uniform corners), ellipses, lines, paths (via drawSvgPath), text (Helvetica fallback), groups with opacity. Y-flip coordinate mapping. `verify:render-pdf` passes 10 tests. |
+| K8 | Deferred | pnpm workspace promotion at `H:\WSL_dev_projects\` (option A in PIVOT.md §6). Topology decision settled (multi-repo + pnpm overlay); deferred because cross-repo scope, not urgency. |
+| K9 | Complete | Port `apps/overlay-preview` rendering to consume `@design-foundry/render-ir`. **K9a:** PointField → DisplayList adapter with per-scene-family style resolvers (phyllotaxis, scatter, boids) + safe-area bars. **K9b:** wired into `scene-family-preview.ts` via opt-in `useKernelRenderer` flag. **K9c:** overlay SVG adapter — guides, text, logos → DisplayList → SvgRenderer; `ShapedRun` extended with `fontFamily`/`fontWeight`; wired into `stage-render-controller.ts` via `useKernelOverlay` flag. 18 adapter tests. **K9d deferred:** halo stays on Three.js — one-off summit operator, already has kernel contract (K6), not a reuse candidate. |
+| K10 | Complete | Visual parity validation. 12-test suite (`verify:visual-parity`) cross-validates: adapter style resolvers vs legacy formulas for all 3 scene families (phyllotaxis, scatter, boids); safe-area/guide-grid/text/logo geometry parity vs `svg-overlay-adapter.ts`; cross-renderer consistency (same DisplayList → SVG + Canvas2D + PDF all succeed); full pipeline round-trips (PointField → adapter → all backends); color conversion accuracy. |
+| K11 | Backlog | Migrate remaining `packages/operator-*` to `operator-kernel` contract. Retire ad-hoc `OperatorDefinition` in `core-types` once all operators are ported. |
+
+**Cross-repo coordination items (not in this repo's queue, just listed for context):**
+
+- `diagram-generator` continues its in-place refactor. Its `packages/layout-engine/` is the SINGLE source of autolayout code in the workspace and is reserved as the future `@design-foundry/operator-autolayout`. See `../diagram-generator/.github/copilot-instructions.md` top section.
+- `canonical-spacing-spec` stays a sibling spec repo (no merger planned). May get its GitHub ownership moved to the user's organization account at some point — admin-only, no local impact.
+- **No-double-work guarantee for autolayout:** kernel queue K1–K8 above contains NO step that builds autolayout in this repo. When K4 (operator-kernel contract) and diagram-generator's refactor are both stable, the layout-engine code physically relocates here as `@design-foundry/operator-autolayout` and is wrapped in a thin adapter. Until that moment, autolayout work happens in exactly one place: `diagram-generator/packages/layout-engine/`.
+
+## Product-surface queue (existing, unchanged)
+
+Lane P is still active. Demo work, halo polish, and format-variant authoring all continue as before. The kernel queue above does NOT block this queue.
+
 ## Objective
 
 Stabilize the post-parity document model around authored format variants without breaking the current saved-file compatibility layer.
 
 Work should now center on:
 
-- `brand-layout-ops` (current workspace)
+- `design-foundry` (current workspace)
 
 The original app remains the reference implementation for behavior and output, not the place to continue product architecture work.
 

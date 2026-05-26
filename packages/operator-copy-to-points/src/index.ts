@@ -8,7 +8,7 @@ import type {
   PrototypeLibrary,
   Quaternion,
   Vector3
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 
 export interface CopyToPointsParams {
   defaultPrototypeId?: string;

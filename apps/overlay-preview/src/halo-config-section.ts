@@ -6,14 +6,14 @@
  */
 
 import type { PreviewAppContext } from "./preview-app-context.js";
-import { getOutputProfileMetrics } from "@brand-layout-ops/core-types";
+import { getOutputProfileMetrics } from "@design-foundry/core-types";
 import {
   HALO_FIELD_CONFIG_SCHEMA,
   HALO_FIELD_PRESET_DEFINITIONS,
   getHaloConfigForProfile,
   type HaloFieldConfig
-} from "@brand-layout-ops/operator-halo-field";
-import { buildAccordionSectionEl, renderSchemaPanel, setupAccordion } from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/operator-halo-field";
+import { buildAccordionSectionEl, renderSchemaPanel, setupAccordion } from "@design-foundry/parameter-ui";
 
 /**
  * Set a value at a dotted path on the halo config, returning a new config.

@@ -5,7 +5,7 @@ import {
   type LogoPlacementSpec,
   type OperatorParameterSchema,
   type TextStyleSpec
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   OVERLAY_FORMAT_PRESET_ORDER,
   getOverlayFormatSeedForProfile

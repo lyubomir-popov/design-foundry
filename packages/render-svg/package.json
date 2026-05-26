@@ -1,0 +1,11 @@
+{
+  "name": "@design-foundry/render-svg",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@design-foundry/render-ir": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

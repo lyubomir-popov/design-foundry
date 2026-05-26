@@ -1,4 +1,4 @@
-const DOCUMENT_STORAGE_DB_NAME = "brand-layout-ops-document-storage-v1";
+const DOCUMENT_STORAGE_DB_NAME = "df-document-storage-v1";
 const DOCUMENT_STORAGE_STORE_NAME = "recent-documents";
 const DOCUMENT_FILE_AUTHORING_PATH = "/__authoring/document-file";
 const MAX_RECENT_DOCUMENTS = 12;
@@ -12,7 +12,7 @@ const DOCUMENT_PICKER_ACCEPT_TYPES: Array<{
   }
 }];
 
-export const DOCUMENT_FILE_EXTENSION = ".brand-layout-ops.json";
+export const DOCUMENT_FILE_EXTENSION = ".df.json";
 
 interface DocumentPickerWindow extends Window {
   showOpenFilePicker?: (options?: {
@@ -351,7 +351,7 @@ export async function pickDocumentFileToOpen(): Promise<FileSystemFileHandle | n
 
   const documentWindow = getDocumentPickerWindow();
   const handles = await documentWindow.showOpenFilePicker?.({
-    id: "brand-layout-ops-open-document",
+    id: "df-open-document",
     multiple: false,
     startIn: "documents",
     types: [...DOCUMENT_PICKER_ACCEPT_TYPES]
@@ -367,7 +367,7 @@ export async function pickDocumentFileToSave(suggestedName: string): Promise<Fil
 
   const documentWindow = getDocumentPickerWindow();
   return documentWindow.showSaveFilePicker?.({
-    id: "brand-layout-ops-save-document",
+    id: "df-save-document",
     suggestedName,
     startIn: "documents",
     types: [...DOCUMENT_PICKER_ACCEPT_TYPES]

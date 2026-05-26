@@ -10,18 +10,18 @@ import type {
   LayerScene,
   OperatorGraph,
   TextStyleSpec
-} from "@brand-layout-ops/core-types";
-import { OperatorRegistry, evaluateGraph } from "@brand-layout-ops/graph-runtime";
+} from "@design-foundry/core-types";
+import { OperatorRegistry, evaluateGraph } from "@design-foundry/graph-runtime";
 import {
   createOverlayLayoutOperator,
   OVERLAY_LAYOUT_OPERATOR_KEY,
   type OverlayLayoutOperatorParams
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import {
   buildUbuntuSummitAnimationSceneDescriptor,
   type UbuntuSummitAnimationSceneDescriptor,
   type UbuntuSummitAnimationTransitionState
-} from "@brand-layout-ops/operator-ubuntu-summit-animation";
+} from "@design-foundry/operator-ubuntu-summit-animation";
 
 import { createHaloRenderer, type HaloRenderer } from "./halo-renderer.js";
 import type {
@@ -43,11 +43,41 @@ import {
   createSafeAreaMarkup,
   createTextMarkup
 } from "./svg-overlay-adapter.js";
+import { SvgRenderer } from "@design-foundry/render-svg";
+import type { Color, DisplayListItem, Viewport } from "@design-foundry/render-ir";
+import {
+  guideGridToDisplayList,
+  logoPlacementToDisplayList,
+  safeAreaToDisplayList,
+  textPlacementToDisplayList,
+} from "./display-list-adapter.js";
 import {
   getActivePreviewCompositionLayers
 } from "./preview-composition.js";
 
 const PREVIEW_NODE_ID = "overlay-preview";
+
+/** Parse a hex color string (#RGB, #RRGGBB, #RRGGBBAA) to render-ir Color. */
+function parseCssColor(raw: string): Color {
+  const hex = raw.trim().replace(/^#/, "");
+  if (hex.length === 3) {
+    return {
+      r: parseInt(hex[0]! + hex[0]!, 16) / 255,
+      g: parseInt(hex[1]! + hex[1]!, 16) / 255,
+      b: parseInt(hex[2]! + hex[2]!, 16) / 255,
+      a: 1,
+    };
+  }
+  if (hex.length >= 6) {
+    return {
+      r: parseInt(hex.slice(0, 2), 16) / 255,
+      g: parseInt(hex.slice(2, 4), 16) / 255,
+      b: parseInt(hex.slice(4, 6), 16) / 255,
+      a: hex.length >= 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1,
+    };
+  }
+  return { r: 0.125, g: 0.125, b: 0.125, a: 1 };
+}
 
 export interface StageRenderControllerDeps {
   readonly state: PreviewState;
@@ -60,6 +90,8 @@ export interface StageRenderControllerDeps {
   getSvgOverlay(): SVGSVGElement | null;
   getEffectiveParams(): OverlayLayoutOperatorParams;
   onAuthoringRender(): void;
+  /** When true, use render-ir kernel path for SVG overlay (K9c). */
+  useKernelOverlay?: boolean;
 }
 
 export interface StageRenderController {
@@ -259,6 +291,48 @@ export function createStageRenderController(
 
     const frame = deps.state.params.frame;
     svg.setAttribute("viewBox", `0 0 ${frame.widthPx} ${frame.heightPx}`);
+
+    // -------------------------------------------------------------------
+    // K9c kernel overlay path — builds DisplayList from overlay content
+    // and renders to SVG via SvgRenderer.
+    // -------------------------------------------------------------------
+    if (deps.useKernelOverlay) {
+      const viewport: Viewport = { width: frame.widthPx, height: frame.heightPx };
+      const allItems: DisplayListItem[] = [];
+
+      if (deps.state.guideMode !== "off") {
+        const guideDl = guideGridToDisplayList(scene.grid, frame, deps.state.guideMode, viewport);
+        allItems.push(...guideDl.items);
+
+        const bgColor = deps.state.haloConfig.composition.background_color || "#202020";
+        const safeAreaDl = safeAreaToDisplayList(viewport, deps.state.params.safeArea, parseCssColor(bgColor));
+        allItems.push(...safeAreaDl.items);
+      }
+
+      const styleByKey = new Map<string, TextStyleSpec>(
+        deps.state.params.textStyles.map((style) => [style.key, style])
+      );
+      for (const text of scene.texts) {
+        const style = styleByKey.get(text.styleKey);
+        if (style) {
+          const textDl = textPlacementToDisplayList(text, style, viewport);
+          allItems.push(...textDl.items);
+        }
+      }
+
+      const logoDl = logoPlacementToDisplayList(scene.logo, viewport);
+      allItems.push(...logoDl.items);
+
+      const renderer = new SvgRenderer();
+      const fullSvg = renderer.render({ viewport, items: allItems });
+      // Strip <svg> wrapper — only need the inner content for innerHTML
+      const openEnd = fullSvg.indexOf(">");
+      const closeStart = fullSvg.lastIndexOf("</svg>");
+      svg.innerHTML = openEnd >= 0 && closeStart >= 0
+        ? fullSvg.slice(openEnd + 1, closeStart)
+        : "";
+      return;
+    }
 
     const styleByKey = new Map<string, TextStyleSpec>(
       deps.state.params.textStyles.map((style) => [style.key, style])

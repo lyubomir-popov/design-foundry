@@ -1,4 +1,4 @@
-import type { OperatorDefinition } from "@brand-layout-ops/core-types";
+import type { OperatorDefinition } from "@design-foundry/core-types";
 import {
   COMPOSITION_SIZE_PX,
   UBUNTU_RELEASE_LABELS,
@@ -12,7 +12,7 @@ import {
   type RuntimeTiming,
   type HaloFieldConfig,
   type MascotBox
-} from "@brand-layout-ops/operator-halo-field";
+} from "@design-foundry/operator-halo-field";
 
 export const UBUNTU_SUMMIT_ANIMATION_OPERATOR_KEY = "operator.ubuntu-summit-animation";
 

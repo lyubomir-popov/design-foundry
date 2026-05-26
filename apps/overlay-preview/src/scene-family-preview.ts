@@ -1,30 +1,38 @@
-import type { BoidField, ColorRgba, OperatorDefinition, PointField, PointRecord, Vector3 } from "@brand-layout-ops/core-types";
-import { OperatorRegistry, evaluateGraphSync } from "@brand-layout-ops/graph-runtime";
-import { FuzzyBoidsSimulation, type FuzzyBoidsParams } from "@brand-layout-ops/operator-fuzzy-boids";
-import { resolvePhyllotaxisField, type PhyllotaxisParams } from "@brand-layout-ops/operator-phyllotaxis";
+import type { BoidField, ColorRgba, OperatorDefinition, PointField, PointRecord, Vector3 } from "@design-foundry/core-types";
+import { OperatorRegistry, evaluateGraphSync } from "@design-foundry/graph-runtime";
+import { FuzzyBoidsSimulation, type FuzzyBoidsParams } from "@design-foundry/operator-fuzzy-boids";
+import { resolvePhyllotaxisField, type PhyllotaxisParams } from "@design-foundry/operator-phyllotaxis";
 import type {
   OverlayBackgroundGraph,
   OverlayFuzzyBoidsConfig,
   OverlayPhyllotaxisConfig,
   OverlayScatterConfig,
   OverlaySceneFamilyKey
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import {
   OVERLAY_BACKGROUND_FUZZY_BOIDS_OPERATOR_KEY,
   OVERLAY_BACKGROUND_HALO_OPERATOR_KEY,
   OVERLAY_BACKGROUND_PHYLLOTAXIS_OPERATOR_KEY,
   OVERLAY_BACKGROUND_SCATTER_OPERATOR_KEY
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import {
   resolveScatterPointField,
   type ScatterDistributionMode,
   type ScatterParams,
-} from "@brand-layout-ops/operator-scatter";
-import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
+} from "@design-foundry/operator-scatter";
+import type { HaloFieldConfig } from "@design-foundry/operator-halo-field";
+import { Canvas2DRenderer } from "@design-foundry/render-canvas2d";
+import type { Color, Viewport } from "@design-foundry/render-ir";
 import {
   FuzzyBoidsPreviewWorkerClient,
   type WorkerBoidsPreviewSnapshot
 } from "./fuzzy-boids-preview-worker-client.js";
+import {
+  pointFieldToDisplayList,
+  phyllotaxisStyleResolver,
+  scatterStyleResolver,
+  fuzzyBoidsStyleResolver,
+} from "./display-list-adapter.js";
 import { GpuFuzzyBoidsSpike } from "./gpu-fuzzy-boids-spike.js";
 
 const fuzzyBoidsSimulation = new FuzzyBoidsSimulation();
@@ -131,6 +139,8 @@ export interface RenderSceneFamilyPreviewFrameOptions {
   transparentBackground: boolean;
   haloConfig: HaloFieldConfig;
   previewState: SceneFamilyPreviewState;
+  /** When true, use the render-ir kernel path (Canvas2DRenderer + DisplayList adapter). */
+  useKernelRenderer?: boolean;
 }
 
 type BackgroundGraphEdge = OverlayBackgroundGraph["edges"][number];
@@ -771,6 +781,55 @@ export function buildSceneFamilyPreviewState(
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// K9b — kernel renderer path
+// ---------------------------------------------------------------------------
+
+/** Only scene families that carry a PointField can use the kernel path. */
+function canUseKernelPath(previewState: SceneFamilyPreviewState): boolean {
+  return "pointField" in previewState && (previewState as PointFieldSceneFamilyPreviewState).pointField !== undefined;
+}
+
+function resolveStyleForPreviewState(previewState: SceneFamilyPreviewState) {
+  if (previewState.sceneFamilyKey === "phyllotaxis") {
+    return phyllotaxisStyleResolver(previewState.maxRadiusPx);
+  }
+  if (previewState.sceneFamilyKey === "scatter") {
+    return scatterStyleResolver();
+  }
+  if (previewState.sceneFamilyKey === "fuzzy-boids" && previewState.simulationBackend === "cpu") {
+    return fuzzyBoidsStyleResolver(previewState.dotSizePx);
+  }
+  return undefined;
+}
+
+function renderViaKernel(options: RenderSceneFamilyPreviewFrameOptions): void {
+  const context = options.canvas.getContext("2d");
+  if (!context) return;
+
+  const state = options.previewState as PointFieldSceneFamilyPreviewState;
+  const style = resolveStyleForPreviewState(options.previewState);
+  if (!style) return;
+
+  const bgColorRaw = options.haloConfig.composition.background_color || "#202020";
+  const parsedBg = parseHexColor(bgColorRaw);
+  const background: Color | undefined = options.transparentBackground
+    ? undefined
+    : parsedBg
+      ? { r: parsedBg.r / 255, g: parsedBg.g / 255, b: parsedBg.b / 255, a: parsedBg.a ?? 1 }
+      : { r: 0.125, g: 0.125, b: 0.125, a: 1 };
+
+  const viewport: Viewport = {
+    width: options.widthPx,
+    height: options.heightPx,
+    ...(background !== undefined ? { background } : {}),
+  };
+
+  const displayList = pointFieldToDisplayList(state.pointField, { viewport, style });
+  const renderer = new Canvas2DRenderer(context);
+  renderer.render(displayList);
+}
+
 export function renderSceneFamilyPreviewFrame(
   options: RenderSceneFamilyPreviewFrameOptions
 ): void {
@@ -783,6 +842,16 @@ export function renderSceneFamilyPreviewFrame(
       options.transparentBackground,
       options.haloConfig.composition.background_color || "#202020"
     );
+    return;
+  }
+
+  // -----------------------------------------------------------------------
+  // K9b kernel renderer path — opt-in via useKernelRenderer flag.
+  // Builds a DisplayList from the preview state and renders it with
+  // Canvas2DRenderer, replacing the ad-hoc drawPointDot loops below.
+  // -----------------------------------------------------------------------
+  if (options.useKernelRenderer && canUseKernelPath(options.previewState)) {
+    renderViaKernel(options);
     return;
   }
 

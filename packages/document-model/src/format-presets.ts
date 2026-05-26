@@ -6,7 +6,7 @@ import {
   type FrameSize,
   type GridSettings,
   type SafeAreaInsets
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 
 export interface OverlayFormatSeed {
   frame: FrameSize;

@@ -8,16 +8,14 @@ import {
   buildAccordionSectionEl,
   renderSchemaPanel,
   setupAccordion
-} from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/parameter-ui";
 import {
   OVERLAY_BACKGROUND_SCATTER_OPERATOR_KEY,
   OVERLAY_SCATTER_CONFIG_SCHEMA,
-  SCATTER_PRESET_DEFINITIONS,
   createDefaultOverlayScatterConfig
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import type { PreviewAppContext } from "./preview-app-context.js";
 import type { ScatterPreviewConfig } from "./scene-family-preview.js";
-import { buildOperatorPresetPicker } from "./operator-preset-picker.js";
 
 export function buildScatterSection(ctx: PreviewAppContext): HTMLElement {
   const { root, body } = buildAccordionSectionEl("Scatter");
@@ -51,20 +49,6 @@ export function buildScatterSection(ctx: PreviewAppContext): HTMLElement {
     void ctx.renderStage();
   }
 
-  const presetPicker = buildOperatorPresetPicker(ctx, {
-    operatorKey: "scatter",
-    operatorLabel: "Scatter",
-    builtInPresets: SCATTER_PRESET_DEFINITIONS,
-    getCurrentConfig: () => JSON.parse(JSON.stringify(sc)) as Record<string, unknown>,
-    applyPresetConfig(config) {
-      update(config as Partial<ScatterPreviewConfig>);
-    },
-    resetToSeed() {
-      const seed = createDefaultOverlayScatterConfig(ctx.state.outputProfileKey);
-      update(seed as Partial<ScatterPreviewConfig>);
-    }
-  });
-
   const result = renderSchemaPanel(
     OVERLAY_SCATTER_CONFIG_SCHEMA,
     sc as unknown as Record<string, unknown>,
@@ -84,7 +68,7 @@ export function buildScatterSection(ctx: PreviewAppContext): HTMLElement {
   }
 
   nestedAccordion.append(nestedList);
-  body.append(presetPicker, nestedAccordion);
+  body.append(nestedAccordion);
   setupAccordion(nestedAccordion);
 
   return root;

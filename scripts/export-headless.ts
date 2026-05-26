@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Playwright headless PNG sequence exporter for brand-layout-ops.
+ * Playwright headless PNG sequence exporter for design-foundry.
  *
  * Spins up the Vite dev server, opens the overlay preview in a headless
  * Chromium browser, drives the __layoutOpsAutomation API to render frames

@@ -1,9 +1,9 @@
-import type { BoidField, BoidRecord, PointField, PointRecord, Vector3 } from "@brand-layout-ops/core-types";
+import type { BoidField, BoidRecord, PointField, PointRecord, Vector3 } from "@design-foundry/core-types";
 import {
   resolveFuzzyBoidOutputs,
   type FuzzyBoidsOutputs,
   type FuzzyBoidsParams
-} from "@brand-layout-ops/operator-fuzzy-boids";
+} from "@design-foundry/operator-fuzzy-boids";
 
 const MAX_GPU_SPIKE_BOIDS = 8192;
 const MAX_GPU_SPIKE_NEIGHBORS = 24;
@@ -140,7 +140,7 @@ export function isGpuFuzzyBoidsSpikeEnabled(): boolean {
   }
 
   try {
-    if (window.localStorage.getItem("brand-layout-ops-gpu-boids-spike") === "1") {
+    if (window.localStorage.getItem("df-gpu-boids-spike") === "1") {
       return true;
     }
   } catch {

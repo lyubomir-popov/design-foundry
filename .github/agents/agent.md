@@ -1,10 +1,10 @@
 ---
-description: "Use when continuing work in the brand-layout-ops repo. Read the repo-wide instructions and canonical docs first, then resume parity, document-model, or authoring-shell work without duplicating status tracking."
+description: "Use when continuing work in the design-foundry repo. Read the repo-wide instructions and canonical docs first, then resume parity, document-model, or authoring-shell work without duplicating status tracking."
 ---
 
 # Brand Layout Ops Agent
 
-Use this agent when continuing work in `brand-layout-ops`.
+Use this agent when continuing work in `design-foundry`.
 
 ## What belongs here
 

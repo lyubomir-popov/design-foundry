@@ -1,4 +1,4 @@
-import type { ColorRgba, OperatorDefinition, PointField, Vector3 } from "@brand-layout-ops/core-types";
+import type { ColorRgba, OperatorDefinition, PointField, Vector3 } from "@design-foundry/core-types";
 
 export const SPOKES_OPERATOR_KEY = "operator.spokes";
 

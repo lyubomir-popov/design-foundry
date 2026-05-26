@@ -16,7 +16,7 @@ import {
   type RecentDocumentSummary
 } from "./document-storage.js";
 
-const LAST_SESSION_DOCUMENT_STORAGE_KEY = "brand-layout-ops:last-session-document";
+const LAST_SESSION_DOCUMENT_STORAGE_KEY = "df:last-session-document";
 const DOCUMENT_LOCATION_HASH_PREFIX = "#document=";
 
 export type DocumentStatusTone = "neutral" | "success" | "error";

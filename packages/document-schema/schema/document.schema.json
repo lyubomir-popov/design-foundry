@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://design-foundry/schemas/document.json",
+  "title": "BrandLayoutOpsDocument",
+  "description": "Shared, unit-agnostic document model. The TypeScript source of truth lives in @design-foundry/document-schema (src/index.ts); this artifact exists so non-TS consumers (notably the Python diagram-generator) can validate the same shape.",
+  "type": "object",
+  "required": [
+    "kind",
+    "version",
+    "units",
+    "metadata",
+    "grid",
+    "styles",
+    "assets",
+    "pages",
+    "overrides"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "df.document" },
+    "version": { "const": 1 },
+    "units": { "enum": ["pt", "px", "baseline"] },
+    "metadata": { "$ref": "#/$defs/Metadata" },
+    "grid": { "$ref": "#/$defs/GridSpec" },
+    "styles": { "type": "array", "items": { "$ref": "#/$defs/TextStyle" } },
+    "assets": { "type": "array", "items": { "$ref": "#/$defs/Asset" } },
+    "pages": { "type": "array", "items": { "$ref": "#/$defs/Page" } },
+    "overrides": { "type": "array", "items": { "$ref": "#/$defs/Override" } },
+    "generation": { "$ref": "#/$defs/Generation" }
+  },
+  "$defs": {
+    "Metadata": {
+      "type": "object",
+      "required": ["name", "createdAt", "updatedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "Generation": {
+      "type": "object",
+      "required": ["generatedAt", "generatorVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "generatedAt": { "type": "string" },
+        "generatorVersion": { "type": "string" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "CanvasSize": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "number" },
+        "height": { "type": "number" }
+      }
+    },
+    "Rect": {
+      "type": "object",
+      "required": ["x", "y", "width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number" },
+        "height": { "type": "number" }
+      }
+    },
+    "Insets": {
+      "type": "object",
+      "required": ["top", "right", "bottom", "left"],
+      "additionalProperties": false,
+      "properties": {
+        "top": { "type": "number" },
+        "right": { "type": "number" },
+        "bottom": { "type": "number" },
+        "left": { "type": "number" }
+      }
+    },
+    "GridPlacement": {
+      "type": "object",
+      "required": ["columnStart", "columnSpan", "baselineRow", "baselineSpan"],
+      "additionalProperties": false,
+      "properties": {
+        "columnStart": { "type": "integer" },
+        "columnSpan": { "type": "integer" },
+        "baselineRow": { "type": "integer" },
+        "baselineSpan": { "type": "integer" },
+        "offsetX": { "type": "number" },
+        "offsetY": { "type": "number" },
+        "overrideWidth": { "type": "number" },
+        "overrideHeight": { "type": "number" }
+      }
+    },
+    "GridSpec": {
+      "type": "object",
+      "required": [
+        "id",
+        "page",
+        "bleed",
+        "margin",
+        "baselineStep",
+        "columnCount",
+        "columnGutter",
+        "rowCount",
+        "rowGutter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "page": { "$ref": "#/$defs/CanvasSize" },
+        "bleed": { "$ref": "#/$defs/Insets" },
+        "margin": { "$ref": "#/$defs/Insets" },
+        "baselineStep": { "type": "number" },
+        "columnCount": { "type": "integer" },
+        "columnGutter": { "type": "number" },
+        "rowCount": { "type": "integer" },
+        "rowGutter": { "type": "number" }
+      }
+    },
+    "TextStyle": {
+      "type": "object",
+      "required": ["id", "family", "size", "lineHeight", "weight", "color"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "family": { "type": "string" },
+        "size": { "type": "number" },
+        "lineHeight": { "type": "number" },
+        "weight": { "type": "number" },
+        "color": { "type": "string" },
+        "textAlign": { "enum": ["left", "center", "right"] },
+        "uppercase": { "type": "boolean" },
+        "tracking": { "type": "number" },
+        "spaceAfter": { "type": "number" },
+        "sourceStyleName": { "type": "string" },
+        "sourceStyleType": {
+          "enum": ["paragraph", "character", "object", "table", "cell"]
+        }
+      }
+    },
+    "Asset": {
+      "type": "object",
+      "required": ["id", "mimeType", "source", "originalReference"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "source": {
+          "enum": [
+            "embedded-data-uri",
+            "path",
+            "remote",
+            "template-package"
+          ]
+        },
+        "originalReference": { "type": "string" },
+        "byteLength": { "type": "integer" },
+        "dataUri": { "type": "string" },
+        "path": { "type": "string" }
+      }
+    },
+    "Provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceBlockId": { "type": "string" },
+        "generator": { "type": "string" },
+        "generatedAt": { "type": "string" }
+      }
+    },
+    "NodeBase": {
+      "type": "object",
+      "required": ["id", "kind", "frame"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "enum": ["text", "image", "table", "rule", "rectangle", "group"]
+        },
+        "frame": { "$ref": "#/$defs/Rect" },
+        "gridPlacement": { "$ref": "#/$defs/GridPlacement" },
+        "locked": { "type": "boolean" },
+        "hidden": { "type": "boolean" },
+        "provenance": { "$ref": "#/$defs/Provenance" }
+      }
+    },
+    "Node": {
+      "oneOf": [
+        { "$ref": "#/$defs/TextNode" },
+        { "$ref": "#/$defs/ImageNode" },
+        { "$ref": "#/$defs/TableNode" },
+        { "$ref": "#/$defs/RuleNode" },
+        { "$ref": "#/$defs/RectangleNode" },
+        { "$ref": "#/$defs/GroupNode" }
+      ]
+    },
+    "TextNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["styleId", "text"],
+      "properties": {
+        "kind": { "const": "text" },
+        "styleId": { "type": "string" },
+        "text": { "type": "string" }
+      }
+    },
+    "ImageNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["assetId", "fit"],
+      "properties": {
+        "kind": { "const": "image" },
+        "assetId": { "type": "string" },
+        "fit": { "enum": ["cover", "contain"] }
+      }
+    },
+    "TableNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["rows", "styleId"],
+      "properties": {
+        "kind": { "const": "table" },
+        "rows": {
+          "type": "array",
+          "items": { "type": "array", "items": { "type": "string" } }
+        },
+        "styleId": { "type": "string" }
+      }
+    },
+    "RuleNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["stroke"],
+      "properties": {
+        "kind": { "const": "rule" },
+        "stroke": { "type": "number" },
+        "color": { "type": "string" }
+      }
+    },
+    "RectangleNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["fillColor"],
+      "properties": {
+        "kind": { "const": "rectangle" },
+        "fillColor": { "type": "string" },
+        "strokeColor": { "type": "string" },
+        "stroke": { "type": "number" }
+      }
+    },
+    "GroupNode": {
+      "allOf": [{ "$ref": "#/$defs/NodeBase" }],
+      "required": ["children"],
+      "properties": {
+        "kind": { "const": "group" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/Node" } }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "required": ["id", "label", "pageNumber", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "pageNumber": { "type": "integer" },
+        "templatePatternId": { "type": "string" },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/Node" } }
+      }
+    },
+    "Override": {
+      "type": "object",
+      "required": ["id", "nodeId", "property", "value", "updatedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "nodeId": { "type": "string" },
+        "property": {
+          "enum": ["frame", "gridPlacement", "text", "styleId", "locked", "hidden"]
+        },
+        "value": {},
+        "updatedAt": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

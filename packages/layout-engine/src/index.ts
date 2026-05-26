@@ -11,9 +11,9 @@ import {
   type TextFieldPlacementSpec,
   type TextMeasurer,
   type TextStyleSpec
-} from "@brand-layout-ops/core-types";
-import { computeLayoutGridMetrics } from "@brand-layout-ops/layout-grid";
-import { resolveTextPlacement } from "@brand-layout-ops/layout-text";
+} from "@design-foundry/core-types";
+import { computeLayoutGridMetrics } from "@design-foundry/layout-grid";
+import { resolveTextPlacement } from "@design-foundry/layout-text";
 
 export function getLinkedTitleFontSizePx(
   logoHeightPx: number,

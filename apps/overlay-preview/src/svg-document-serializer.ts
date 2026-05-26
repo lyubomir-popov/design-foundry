@@ -9,8 +9,8 @@
  * svgY = heightPx − worldY before being written to markup.
  */
 
-import type { ColorRgba, PointField, PointRecord } from "@brand-layout-ops/core-types";
-import type { UbuntuSummitAnimationSceneDescriptor } from "@brand-layout-ops/operator-ubuntu-summit-animation";
+import type { ColorRgba, PointField, PointRecord } from "@design-foundry/core-types";
+import type { UbuntuSummitAnimationSceneDescriptor } from "@design-foundry/operator-ubuntu-summit-animation";
 import {
   type HaloFieldConfig,
   type MascotBox,
@@ -45,7 +45,7 @@ import {
   getContentBandMetrics,
   getTextLabelFontSizePx,
   type HaloRevealState,
-} from "@brand-layout-ops/operator-halo-field";
+} from "@design-foundry/operator-halo-field";
 import { escapeXml } from "./svg-overlay-adapter.js";
 import type {
   SceneFamilyPreviewState,
@@ -782,7 +782,7 @@ function serializePointFieldSvg(
   heightPx: number
 ): string {
   let markup = "";
-  pointField.points.forEach((point, index) => {
+  pointField.points.forEach((point: PointRecord, index: number) => {
     const style = getStyle(point, index);
     if (style.alpha <= 0 || style.radiusPx <= 0) return;
     const svgY = heightPx - point.position.y;

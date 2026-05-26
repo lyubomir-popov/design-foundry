@@ -3,14 +3,14 @@
  */
 import {
   getOverlayStyleDisplayLabel
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import {
   buildAccordionSectionEl,
   createCheckboxFormGroup,
   createFormGroup,
   createNumberInput,
   wrapCol
-} from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/parameter-ui";
 import type { PreviewAppContext } from "./preview-app-context.js";
 
 function findOverlayFieldInput(sectionRoot: ParentNode, label: string): HTMLInputElement | HTMLTextAreaElement | null {
@@ -262,11 +262,6 @@ export function buildOverlaySection(ctx: PreviewAppContext): HTMLElement {
     )));
 
     body.append(grid);
-
-    const overlayActions = ctx.createOverlayItemActionRow({ showAdd: true, showDelete: true });
-    if (overlayActions) {
-      body.append(overlayActions);
-    }
   }
 
   if (state.selected.kind === "logo") {

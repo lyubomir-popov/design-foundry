@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { FrameSize, GridSettings, SafeAreaInsets } from "@brand-layout-ops/core-types";
+import type { FrameSize, GridSettings, SafeAreaInsets } from "@design-foundry/core-types";
 import { computeLayoutGridMetrics, getKeylineXPx, snapXPxToKeyline, getColumnSpanWidthPx, snapBaselineToGrid } from "./index.js";
 
 // --- test fixtures ---

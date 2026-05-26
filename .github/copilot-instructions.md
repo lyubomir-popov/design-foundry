@@ -149,6 +149,12 @@ When work in one repo creates a dependency or follow-up in another:
 - Work in this repo only unless the user explicitly redirects elsewhere.
 - Sibling repos (`racoon-anim`, `baseline-foundry`, `canonical-specs`, `docs-typescale`, `portable-vertical-rhythm`) are read-only references.
 
+## Repo topology (settled)
+
+- **Multi-repo, not monorepo.** Each repo under `H:\WSL_dev_projects\` is its own git repo with its own history. This is deliberate: repos have different ownership trajectories (some may transfer to Canonical, others are personal/sandbox). A true monorepo would block selective repo transfer.
+- **pnpm workspace overlay.** A single `pnpm-workspace.yaml` at `H:\WSL_dev_projects\` provides `workspace:*` symlinks across repos. This is a dependency-linking convenience layer — it does not affect git, CI, or repo ownership. Do not confuse this with a monorepo.
+- Do not propose merging repos, git subtree imports, or monorepo migrations.
+
 ## Non-negotiable architecture rules
 
 - Layout semantics stay out of Three.js and preview adapters.

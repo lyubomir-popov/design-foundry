@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { GraphNode, GraphEdge, OperatorDefinition, OperatorGraph } from "@brand-layout-ops/core-types";
+import type { GraphNode, GraphEdge, OperatorDefinition, OperatorGraph } from "@design-foundry/core-types";
 import { OperatorRegistry, topologicallySortGraph, evaluateGraph, evaluateGraphSync } from "./index.js";
 
 // --- helpers ---
@@ -94,8 +94,8 @@ describe("topologicallySortGraph", () => {
 describe("evaluateGraph", () => {
   it("passes inputs from upstream to downstream", async () => {
     const registry = new OperatorRegistry();
-    registry.register(makeOperator("source", ({ params }) => ({ value: (params as { v: number }).v })));
-    registry.register(makeOperator("double", ({ inputs }) => ({ value: (inputs.value as number) * 2 })));
+    registry.register(makeOperator("source", ({ params }: { params: unknown }) => ({ value: (params as { v: number }).v })));
+    registry.register(makeOperator("double", ({ inputs }: { inputs: Record<string, unknown> }) => ({ value: (inputs.value as number) * 2 })));
 
     const graph: OperatorGraph = {
       nodes: [makeNode("src", "source", { v: 5 }), makeNode("dbl", "double")],
@@ -120,8 +120,8 @@ describe("evaluateGraph", () => {
 describe("evaluateGraphSync", () => {
   it("evaluates a sync graph", () => {
     const registry = new OperatorRegistry();
-    registry.register(makeOperator("const", ({ params }) => ({ out: (params as { n: number }).n })));
-    registry.register(makeOperator("sum", ({ inputs }) => ({
+    registry.register(makeOperator("const", ({ params }: { params: unknown }) => ({ out: (params as { n: number }).n })));
+    registry.register(makeOperator("sum", ({ inputs }: { inputs: Record<string, unknown> }) => ({
       out: (inputs.a as number) + (inputs.b as number)
     })));
 

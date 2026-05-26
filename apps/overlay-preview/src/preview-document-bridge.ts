@@ -9,7 +9,7 @@ import {
   type OverlaySourceDefaultSnapshot,
   type ProfileContentFormatMap,
   type ProfileFormatBuckets
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 
 import {
   createOverlayPreviewDocument,
@@ -19,9 +19,9 @@ import {
 } from "./preview-document.js";
 import {
   cloneOverlayParams,
+  saveOutputFormatKey,
   type ExportSettings
 } from "./sample-document.js";
-import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
 
   function cloneJson<T>(value: T): T {
     return JSON.parse(JSON.stringify(value));
@@ -50,7 +50,9 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
     overlayVisible: boolean;
     pendingCsvDraftsByBucket: Record<string, string>;
     outputProfileKey: string;
+    contentFormatKey: string;
     documentFormatBuckets: Record<string, Record<string, OverlayLayoutOperatorParams>>;
+    contentFormatKeyByDocumentFormatId: Record<string, string>;
     exportSettings: ExportSettings;
     exportSettingsByDocumentFormatId: Record<string, ExportSettings>;
     haloConfig: THaloConfig;
@@ -114,7 +116,9 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
     const activeDocumentFormat = getActiveDocumentFormat(state.documentProject, state.outputProfileKey);
     const activeProfileKey = activeDocumentFormat?.outputProfileKey ?? state.outputProfileKey;
     const activeFormatId = activeDocumentFormat?.id ?? state.documentProject.activeTargetId;
-    const activeContentFormatKey = DEFAULT_CONTENT_FORMAT_KEY;
+    const activeContentFormatKey = activeFormatId
+      ? state.contentFormatKeyByDocumentFormatId[activeFormatId] ?? state.contentFormatKey
+      : state.contentFormatKey;
 
     const profileFormatBuckets: ProfileFormatBuckets = {};
     const contentFormatKeyByProfile: ProfileContentFormatMap = {};
@@ -127,8 +131,10 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
         profileFormatBuckets[target.outputProfileKey] = cloneJson(bucket);
       }
 
-      const contentFormatKey = DEFAULT_CONTENT_FORMAT_KEY;
-      contentFormatKeyByProfile[target.outputProfileKey] = contentFormatKey;
+      const contentFormatKey = state.contentFormatKeyByDocumentFormatId[target.id];
+      if (contentFormatKey) {
+        contentFormatKeyByProfile[target.outputProfileKey] = contentFormatKey;
+      }
 
       const exportSettings = state.exportSettingsByDocumentFormatId[target.id];
       if (exportSettings) {
@@ -189,6 +195,7 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
     });
     const activeFormatId = activeDocumentFormat?.id ?? project.activeTargetId;
     const documentFormatBuckets: Record<string, Record<string, OverlayLayoutOperatorParams>> = {};
+    const contentFormatKeyByDocumentFormatId: Record<string, string> = {};
     const exportSettingsByDocumentFormatId: Record<string, ExportSettings> = {};
     const haloConfigByDocumentFormatId: Record<string, THaloConfig> = {};
 
@@ -197,6 +204,11 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
       const bucket = normalizedProfileState.profileFormatBuckets[profileKey];
       if (bucket) {
         documentFormatBuckets[target.id] = cloneJson(bucket);
+      }
+
+      const contentFormatKey = normalizedProfileState.contentFormatKeyByProfile[profileKey];
+      if (contentFormatKey) {
+        contentFormatKeyByDocumentFormatId[target.id] = contentFormatKey;
       }
 
       const exportSettings = snapshot.exportSettingsByProfile[profileKey];
@@ -210,11 +222,17 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
       }
     }
 
+    const activeContentFormatKey = activeFormatId
+      ? contentFormatKeyByDocumentFormatId[activeFormatId] ?? normalizedProfileState.contentFormatKey
+      : normalizedProfileState.contentFormatKey;
+
     state.sourceDefaults = cloneOverlaySourceDefaultSnapshot(snapshot);
     state.outputProfileKey = activeDocumentFormat?.outputProfileKey ?? normalizedProfileState.outputProfileKey;
     state.documentFormatBuckets = documentFormatBuckets;
+    state.contentFormatKeyByDocumentFormatId = contentFormatKeyByDocumentFormatId;
+    state.contentFormatKey = activeContentFormatKey;
     state.params = adapter.normalizeParams(cloneOverlayParams(
-      adapter.getOrCreateDocumentFormatParams(activeFormatId, DEFAULT_CONTENT_FORMAT_KEY)
+      adapter.getOrCreateDocumentFormatParams(activeFormatId, state.contentFormatKey)
     ));
     state.exportSettingsByDocumentFormatId = cloneExportSettingsByProfile(exportSettingsByDocumentFormatId);
     state.exportSettings = cloneJson(
@@ -278,6 +296,7 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
     state.documentProject = cloneOverlayDocumentProject(previewDocument.document.project);
     applySourceDefaultSnapshotToState(state, previewDocument.document.state, adapter, state.documentProject);
     state.pendingCsvDraftsByBucket = { ...previewDocument.pendingCsvDraftsByBucket };
+    saveOutputFormatKey(state.outputProfileKey, state.contentFormatKey);
   }
 
   export function resetOverlayPreviewDocumentState<
@@ -291,4 +310,5 @@ import { DEFAULT_CONTENT_FORMAT_KEY } from "./preview-app-context.js";
     state.documentProject = cloneOverlayDocumentProject(state.sourceDefaultProject);
     applySourceDefaultSnapshotToState(state, state.sourceDefaults, adapter, state.documentProject);
     state.pendingCsvDraftsByBucket = {};
+    saveOutputFormatKey(state.outputProfileKey, state.contentFormatKey);
   }

@@ -1,5 +1,5 @@
-import type { OperatorDefinition, OperatorGraph, PrototypeLibrary } from "@brand-layout-ops/core-types";
-import { OperatorRegistry, evaluateGraph } from "@brand-layout-ops/graph-runtime";
+import type { OperatorDefinition, OperatorGraph, PrototypeLibrary } from "@design-foundry/core-types";
+import { OperatorRegistry, evaluateGraph } from "@design-foundry/graph-runtime";
 import { copyToPointsOperator } from "../packages/operator-copy-to-points/src/index.js";
 import { createPrototypeLibraryFromRecords, orbitsOperator, ORBITS_OPERATOR_KEY } from "../packages/operator-orbits/src/index.js";
 

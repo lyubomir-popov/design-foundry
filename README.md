@@ -52,7 +52,7 @@ If the task is parity-related, inspect these comparison sources next:
 - Reference motion and halo-field rendering in `racoon-anim`: `src/app/rendering.js`, `halo-field.js`
 - Reference content and assets in `racoon-anim`: `assets/content.csv`, `content-speaker-highlight.csv`, `UbuntuTagLogo.svg`, `racoon-mascot-face.svg`, `racoon-mascot-halo.svg`
 - Current preview implementation: `apps/overlay-preview/src/main.ts`, `apps/overlay-preview/src/document-workspace.ts`, `apps/overlay-preview/src/preview-document.ts`, `apps/overlay-preview/src/preview-document-bridge.ts`, `apps/overlay-preview/src/sample-document.ts`, `apps/overlay-preview/src/sample-motion.ts`
-- Current layout and motion kernels: `packages/document-model/src/index.ts`, `packages/layout-engine/src/index.ts`, `packages/operator-orbits/src/index.ts`, `packages/operator-spokes/src/index.ts`
+- Current layout and motion kernels: `packages/operator-overlay-layout/src/index.ts`, `packages/layout-engine/src/index.ts`, `packages/operator-orbits/src/index.ts`, `packages/operator-spokes/src/index.ts`
 
 ## Local Preview
 
@@ -73,7 +73,7 @@ That starts a Vite app at `apps/overlay-preview/` which currently:
 - supports text and logo selection, double-click text editing, drag snapping, guide toggling, and CSV or inline content switching
 - surfaces the main operator document controls from an operator parameter schema instead of only from preview-local hardcoded controls
 - includes left and right snapped resize handles for selected text fields, a first-baseline guide, and staged CSV apply or discard controls
-- persists local `.brand-layout-ops.json` documents through the shared overlay document metadata/state envelope plus shared scene-family and per-format `project` metadata, with CSV-draft extras layered on top and legacy preview-file compatibility retained
+- persists local `.df.json` documents through the shared overlay document metadata/state envelope plus shared scene-family and per-format `project` metadata, with CSV-draft extras layered on top and legacy preview-file compatibility retained
 - lets the Formats dialog add or delete saved document formats, add common sizes from a built-in preset list, and edit the document scene-family metadata instead of treating the active screen size as only transient preview state
 - uses the selected document scene family in the live stage and composed-frame export path, with phyllotaxis, fuzzy-boids, and scatter rendered through richer family-specific canvas preview passes while halo keeps the Three.js renderer
 - exports composed PNG stills, inclusive PNG sequences, and dev-only MP4s from the File menu; the MP4 path snapshots the current persisted preview document, renders a temporary PNG sequence headlessly, and encodes it through the existing FFmpeg script with optional fades
@@ -91,20 +91,20 @@ npm run demo:spokes
 
 ## Packages
 
-- `@brand-layout-ops/core-types`: shared contracts and data payloads
-- `@brand-layout-ops/graph-runtime`: minimal deterministic graph evaluator
-- `@brand-layout-ops/layout-grid`: baseline-grid and column-grid resolution
-- `@brand-layout-ops/layout-text`: wrapping and placement math using a provided measurer
-- `@brand-layout-ops/layout-engine`: scene-level layout composition for branded overlay content
-- `@brand-layout-ops/document-model`: document schema, overlay composition operator, shared overlay defaults, format presets, and document-owned scene-family graphs with background-chain persistence
-- `@brand-layout-ops/operator-copy-to-points`: Houdini-style point instancing with propagated attributes for later Three.js and SVG backends
-- `@brand-layout-ops/operator-orbits`: coarse orbit-ring point-field generator for motion-side rebuild work
-- `@brand-layout-ops/operator-phyllotaxis`: golden-angle point-field generation matching the current Houdini phyllotaxis HDA logic
-- `@brand-layout-ops/operator-scatter`: scatter-point generation inside ellipse, rect, rounded-rect, or polygon-style SVG path boundaries
-- `@brand-layout-ops/operator-spokes`: coarse spoke-band point-field generator for motion-side rebuild work
-- `@brand-layout-ops/operator-ubuntu-summit-animation`: coarse scene-family operator boundary for the full non-reusable Ubuntu Summit parity port, including mascot and full animation timeline state
-- `@brand-layout-ops/overlay-interaction`: snapped text/logo drag math for operator-facing overlay editing
-- `@brand-layout-ops/parameter-ui`: small DOM helpers for operator-facing control surfaces in preview apps
+- `@design-foundry/core-types`: shared contracts and data payloads
+- `@design-foundry/graph-runtime`: minimal deterministic graph evaluator
+- `@design-foundry/layout-grid`: baseline-grid and column-grid resolution
+- `@design-foundry/layout-text`: wrapping and placement math using a provided measurer
+- `@design-foundry/layout-engine`: scene-level layout composition for branded overlay content
+- `@design-foundry/operator-overlay-layout`: graph-facing overlay composition operator plus shared overlay defaults and document-schema primitives, including document-owned scene-family graphs and background-chain persistence
+- `@design-foundry/operator-copy-to-points`: Houdini-style point instancing with propagated attributes for later Three.js and SVG backends
+- `@design-foundry/operator-orbits`: coarse orbit-ring point-field generator for motion-side rebuild work
+- `@design-foundry/operator-phyllotaxis`: golden-angle point-field generation matching the current Houdini phyllotaxis HDA logic
+- `@design-foundry/operator-scatter`: scatter-point generation inside ellipse, rect, rounded-rect, or polygon-style SVG path boundaries
+- `@design-foundry/operator-spokes`: coarse spoke-band point-field generator for motion-side rebuild work
+- `@design-foundry/operator-ubuntu-summit-animation`: coarse scene-family operator boundary for the full non-reusable Ubuntu Summit parity port, including mascot and full animation timeline state
+- `@design-foundry/overlay-interaction`: snapped text/logo drag math for operator-facing overlay editing
+- `@design-foundry/parameter-ui`: small DOM helpers for operator-facing control surfaces in preview apps
 
 ## Live Status
 
@@ -112,13 +112,12 @@ Current implementation state intentionally lives in `STATUS.md` and `TODO.md`, n
 
 ## Later additions
 
+- field generator operators
 - SVG instancing operators
 - Canvas/WebGL/Three preview adapters
+- SVG export backend
 - PDF/EPS print backend
 - CMYK intent and mapping pipeline
-- compositor layer stack
-
-Already shipped: SVG export backend, field generator operators (phyllotaxis, scatter, fuzzy-boids).
 
 See `docs/architecture.md` and `docs/future-backends.md`.
 

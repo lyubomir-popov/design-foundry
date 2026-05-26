@@ -1,4 +1,4 @@
-import type { BoidField, BoidRecord, ColorRgba, OperatorDefinition, OperatorParameterSchema, PointField, PointRecord, Vector3 } from "@brand-layout-ops/core-types";
+import type { BoidField, BoidRecord, ColorRgba, OperatorDefinition, OperatorParameterSchema, PointField, PointRecord, Vector3 } from "@design-foundry/core-types";
 
 export const FUZZY_BOIDS_OPERATOR_KEY = "operator.fuzzy-boids";
 

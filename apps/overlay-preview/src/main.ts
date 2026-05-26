@@ -1,11 +1,11 @@
-import "./vendor/baseline-foundry/tiers/os/styles.css";
+import "baseline-foundry/tiers/os.css";
 import "./styles.css";
 
 import type {
   LogoPlacementSpec,
   TextFieldPlacementSpec,
   TextStyleSpec
-} from "@brand-layout-ops/core-types";
+} from "@design-foundry/core-types";
 import {
   cloneOverlayDocumentProject,
   cloneOverlaySourceDefaultSnapshot,
@@ -14,7 +14,7 @@ import {
   createOverlayDocumentProjectFromSnapshot,
   normalizeOverlayParamsForEditing,
   resolveOverlayTextValue
-} from "@brand-layout-ops/document-model";
+} from "@design-foundry/operator-overlay-layout";
 import type {
   OverlayBackgroundEdge,
   OverlayBackgroundNode,
@@ -23,19 +23,17 @@ import type {
   OverlayDocumentProject,
   OverlayLayoutOperatorParams,
   OverlaySceneFamilyKey
-} from "@brand-layout-ops/document-model";
-import {
-  OVERLAY_BACKGROUND_HALO_OPERATOR_KEY,
-  getOverlaySceneFamilyKeyForBackgroundOperator
-} from "@brand-layout-ops/document-model";
-import { getHaloConfigForProfile } from "@brand-layout-ops/operator-halo-field";
-import type { HaloFieldConfig } from "@brand-layout-ops/operator-halo-field";
-import type { ParameterSectionDefinition } from "@brand-layout-ops/parameter-ui";
+} from "@design-foundry/operator-overlay-layout";
+import { getHaloConfigForProfile } from "@design-foundry/operator-halo-field";
+import type { HaloFieldConfig } from "@design-foundry/operator-halo-field";
+import type { ParameterSectionDefinition } from "@design-foundry/parameter-ui";
 
 import type { SceneFamilyPreviewMode } from "./scene-family-preview.js";
 import {
   cloneOverlayParams,
   createDefaultExportSettings,
+  loadOutputFormatKeys,
+  saveOutputFormatKey,
   type ExportSettings
 } from "./sample-document.js";
 import { type PersistedOverlayPreviewDocument } from "./preview-document.js";
@@ -51,7 +49,6 @@ import type {
   Selection
 } from "./preview-app-context.js";
 import {
-  DEFAULT_CONTENT_FORMAT_KEY,
   OVERLAY_LAYOUT_OPERATOR_SELECTION_ID,
   UNTITLED_DOCUMENT_NAME
 } from "./preview-app-context.js";
@@ -95,10 +92,6 @@ import {
   type PreviewDocumentStateController
 } from "./preview-document-state-controller.js";
 import {
-  createPreviewHistoryController,
-  type PreviewHistoryController
-} from "./preview-history-controller.js";
-import {
   createProfileStateController,
   type ProfileStateController
 } from "./profile-state-controller.js";
@@ -125,13 +118,15 @@ import { buildScatterSection } from "./scatter-section.js";
 type ConfigSectionDefinition = ParameterSectionDefinition;
 
 const INITIAL_PROFILE_KEY = "instagram_1080x1350";
-const OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-overlay-visible-v1";
-const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "brand-layout-ops-network-overlay-visible-v1";
-const GUIDE_MODE_STORAGE_KEY = "brand-layout-ops-guide-mode-v1";
-const HISTORY_LIMIT = 100;
+const INITIAL_FORMAT_KEY = "generic_social";
+const OVERLAY_VISIBLE_STORAGE_KEY = "df-overlay-visible-v1";
+const NETWORK_OVERLAY_VISIBLE_STORAGE_KEY = "df-network-overlay-visible-v1";
+const GUIDE_MODE_STORAGE_KEY = "df-guide-mode-v1";
 
-const startProfileKey = INITIAL_PROFILE_KEY;
-const INITIAL_PARAMS = createDefaultOverlayParams(startProfileKey, DEFAULT_CONTENT_FORMAT_KEY);
+const persistedFormat = loadOutputFormatKeys();
+const startProfileKey = persistedFormat?.profileKey ?? INITIAL_PROFILE_KEY;
+const startFormatKey = persistedFormat?.formatKey ?? INITIAL_FORMAT_KEY;
+const INITIAL_PARAMS = createDefaultOverlayParams(startProfileKey, startFormatKey);
 
 function normalizeGuideMode(rawGuideMode: unknown): GuideMode {
   return rawGuideMode === "off" || rawGuideMode === "baseline"
@@ -141,7 +136,7 @@ function normalizeGuideMode(rawGuideMode: unknown): GuideMode {
 
 const INITIAL_SOURCE_DEFAULTS = createBuiltInOverlaySourceDefaultSnapshot<ExportSettings, HaloFieldConfig, GuideMode>({
   outputProfileKey: INITIAL_PROFILE_KEY,
-  contentFormatKey: DEFAULT_CONTENT_FORMAT_KEY,
+  contentFormatKey: INITIAL_FORMAT_KEY,
   guideMode: "composition",
   createExportSettings: createDefaultExportSettings,
   createHaloConfig: getHaloConfigForProfile
@@ -158,10 +153,14 @@ const state: PreviewState = {
   networkOverlayVisible: localStorage.getItem(NETWORK_OVERLAY_VISIBLE_STORAGE_KEY) === "1",
   pendingCsvDraftsByBucket: {},
   outputProfileKey: startProfileKey,
+  contentFormatKey: startFormatKey,
   documentFormatBuckets: {
     [INITIAL_DOCUMENT_FORMAT_ID]: {
-      [DEFAULT_CONTENT_FORMAT_KEY]: cloneOverlayParams(INITIAL_PARAMS)
+      [startFormatKey]: cloneOverlayParams(INITIAL_PARAMS)
     }
+  },
+  contentFormatKeyByDocumentFormatId: {
+    [INITIAL_DOCUMENT_FORMAT_ID]: startFormatKey
   },
   exportSettings: createDefaultExportSettings(startProfileKey),
   exportSettingsByDocumentFormatId: {
@@ -198,8 +197,8 @@ const documentWorkspaceController = createDocumentWorkspaceController<OverlayPre
   parseDocument: sanitizePreviewDocument,
   getDocumentMetadata: (previewDocument) => previewDocument.document.metadata,
   buildPersistedDocument: buildCurrentDocumentPersistence,
-  applyDocument: applyPreviewDocumentFromWorkspace,
-  applyNewDocumentState: applyNewDocumentStateFromWorkspace,
+  applyDocument: applyPreviewDocumentToState,
+  applyNewDocumentState,
   onWorkspaceChange: () => {
     previewShellController?.updateDocumentUi();
   }
@@ -218,7 +217,6 @@ let configEditorController: ConfigEditorController | null = null;
 let documentFormatController: DocumentFormatController | null = null;
 let profileStateController: ProfileStateController | null = null;
 let documentStateController: PreviewDocumentStateController | null = null;
-let previewHistoryController: PreviewHistoryController | null = null;
 
 const $ = <T extends Element>(selector: string): T | null => document.querySelector<T>(selector);
 
@@ -298,7 +296,8 @@ profileStateController = createProfileStateController({
   normalizeSelection,
   resizeRenderer,
   renderStage,
-  syncDocumentProjectToCurrentOutputProfile
+  syncDocumentProjectToCurrentOutputProfile,
+  saveOutputFormatKey
 });
 
 syncHaloConfigForActiveDocumentFormat();
@@ -332,37 +331,8 @@ function loadLogoIntrinsicDimensions(assetPath: string): Promise<void> {
   });
 }
 
-function resetHistoryFromCurrentDocument(markAsSaved: boolean = true): void {
-  previewHistoryController?.resetFromCurrentDocument(markAsSaved);
-}
-
-function syncHistorySavedSnapshot(): void {
-  previewHistoryController?.syncSavedSnapshot();
-}
-
-async function undoHistory(): Promise<boolean> {
-  if (!previewHistoryController) {
-    return false;
-  }
-
-  return previewHistoryController.undo();
-}
-
-async function redoHistory(): Promise<boolean> {
-  if (!previewHistoryController) {
-    return false;
-  }
-
-  return previewHistoryController.redo();
-}
-
 function markDocumentDirty(): void {
-  if (!previewHistoryController) {
-    documentWorkspaceController.markDirty();
-    return;
-  }
-
-  previewHistoryController.recordSnapshot();
+  documentWorkspaceController.markDirty();
 }
 
 function updateDocumentUi(): void {
@@ -418,6 +388,10 @@ function normalizeSelectedOperatorId(
   preferredOperatorId: string | null = state.selectedOperatorId
 ): SelectedOperatorId {
   return backgroundGraphController.normalizeSelectedOperatorId(preferredOperatorId);
+}
+
+function getAvailableBackgroundOperatorKeys(): OverlayBackgroundOperatorKey[] {
+  return backgroundGraphController.getAvailableBackgroundOperatorKeys();
 }
 
 function setSelectedOperator(operatorId: string | null): boolean {
@@ -648,6 +622,10 @@ function switchOutputProfile(profileKey: string, options?: import("./preview-app
   networkOverlayController?.render();
 }
 
+function switchContentFormat(formatKey: string) {
+  profileStateController!.switchContentFormat(formatKey);
+}
+
 function buildCurrentDocumentPayload(overrides?: { name?: string; createdAt?: string; updatedAt?: string }): OverlayPreviewDocument {
   return documentStateController!.buildCurrentDocumentPayload(overrides);
 }
@@ -665,19 +643,9 @@ async function applyPreviewDocumentToState(previewDocument: OverlayPreviewDocume
   networkOverlayController?.render();
 }
 
-async function applyPreviewDocumentFromWorkspace(previewDocument: OverlayPreviewDocument): Promise<void> {
-  await applyPreviewDocumentToState(previewDocument);
-  resetHistoryFromCurrentDocument(true);
-}
-
 async function applyNewDocumentState(): Promise<void> {
   await documentStateController!.applyNewDocumentState();
   networkOverlayController?.render();
-}
-
-async function applyNewDocumentStateFromWorkspace(): Promise<void> {
-  await applyNewDocumentState();
-  resetHistoryFromCurrentDocument(true);
 }
 
 function setOverlayVisible(nextVisible: boolean) {
@@ -815,6 +783,7 @@ const ctx: PreviewAppContext = {
   getSelectedTextField,
   getSelectedOverlaySectionTitle,
   createOverlayItemActionRow,
+  switchContentFormat,
   setStagedCsvDraft,
   getStagedCsvDraft,
   hasStagedCsvDraft,
@@ -831,12 +800,6 @@ const ctx: PreviewAppContext = {
   },
   setSourceDefaultStatus(message, severity) {
     sourceDefaultController?.setSourceDefaultStatus(message, severity as "neutral" | "success" | "error");
-  },
-  getUserPresetDefinitions(operatorKey) {
-    return operatorPresetController?.getUserPresetDefinitions(operatorKey) ?? [];
-  },
-  saveCurrentPreset(operatorKey, label, config, description) {
-    return operatorPresetController!.saveCurrentPreset(operatorKey, label, config, description);
   },
   getUserHaloPresetDefinitions() {
     return operatorPresetController?.getUserHaloPresetDefinitions() ?? [];
@@ -861,9 +824,6 @@ const ctx: PreviewAppContext = {
   getNormalizedDocumentName,
   exportComposedFramePng: async () => {
     await exportAutomationController?.exportComposedFramePng();
-  },
-  exportSvgDocument: async () => {
-    await exportAutomationController?.exportSvgDocument();
   },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();
@@ -920,31 +880,6 @@ documentStateController = createPreviewDocumentStateController({
   normalizeSelectedBackgroundNodeId,
   normalizeSelectedOperatorId
 });
-
-previewHistoryController = createPreviewHistoryController({
-  historyLimit: HISTORY_LIMIT,
-  serializeCurrentDocument: () => JSON.stringify(buildCurrentDocumentPersistence()),
-  sanitizePreviewDocument,
-  applyPreviewDocumentToState,
-  markWorkspaceDirty: () => {
-    documentWorkspaceController.markDirty();
-  },
-  resetWorkspaceDirty: () => {
-    documentWorkspaceController.resetDirty();
-  },
-  updateDocumentUi
-});
-
-resetHistoryFromCurrentDocument(true);
-
-const originalSaveCurrentDocument = documentWorkspaceController.saveCurrentDocument.bind(documentWorkspaceController);
-documentWorkspaceController.saveCurrentDocument = async (forceSaveAs?: boolean, nameOverride?: string): Promise<boolean> => {
-  const didSave = await originalSaveCurrentDocument(forceSaveAs, nameOverride);
-  if (didSave) {
-    syncHistorySavedSnapshot();
-  }
-  return didSave;
-};
 
 exportAutomationController = createExportAutomationController({
   ctx,
@@ -1028,9 +963,6 @@ previewShellController = createPreviewShellController({
   exportComposedFramePng: async () => {
     await exportAutomationController?.exportComposedFramePng();
   },
-  exportSvgDocument: async () => {
-    await exportAutomationController?.exportSvgDocument();
-  },
   exportPngSequence: async () => {
     await exportAutomationController?.exportPngSequence();
   },
@@ -1044,28 +976,11 @@ previewShellController = createPreviewShellController({
     authoringController?.init();
   },
   deleteSelectedOverlayItem,
-  undoHistory,
-  redoHistory,
   handleAuthoringEditingKeyDown: (event) => {
     return authoringController?.handleEditingKeyDown(event) ?? false;
   },
   handleAuthoringInteractionKeyDown: (event) => {
     return authoringController?.handleInteractionKeyDown(event) ?? false;
-  },
-  getAddNodeMenuEntries: () => {
-    return backgroundGraphController.getAvailableBackgroundOperatorKeys().map((key) => ({
-      key,
-      label: key === OVERLAY_BACKGROUND_HALO_OPERATOR_KEY
-        ? "Halo Field"
-        : getSceneFamilyLabel(getOverlaySceneFamilyKeyForBackgroundOperator(key))
-    }));
-  },
-  addBackgroundNode: (operatorKey) => {
-    const nodeId = addBackgroundNode(operatorKey as OverlayBackgroundOperatorKey);
-    if (nodeId) {
-      backgroundGraphController.setSelectedBackgroundNode(nodeId);
-      buildConfigEditor();
-    }
   }
 });
 
@@ -1086,6 +1001,8 @@ configEditorController = createConfigEditorController({
   getSelectedOperatorId,
   getSelectedOperatorGroup,
   getSceneFamilyLabel,
+  getAvailableBackgroundOperatorKeys,
+  addBackgroundNode,
   connectBackgroundEdge,
   disconnectBackgroundInput,
   setSelectedOperator,

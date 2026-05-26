@@ -3,11 +3,11 @@ import type {
   LayoutGridMetrics,
   LogoPlacementSpec,
   TextFieldPlacementSpec
-} from "@brand-layout-ops/core-types";
-import { snapBaselineToGrid } from "@brand-layout-ops/layout-grid";
-import type { DragAxisLock } from "@brand-layout-ops/overlay-interaction";
-import { moveLogo, moveTextField } from "@brand-layout-ops/overlay-interaction";
-import { getOverlayFieldDisplayLabel } from "@brand-layout-ops/document-model";
+} from "@design-foundry/core-types";
+import { snapBaselineToGrid } from "@design-foundry/layout-grid";
+import type { DragAxisLock } from "@design-foundry/overlay-interaction";
+import { moveLogo, moveTextField } from "@design-foundry/overlay-interaction";
+import { getOverlayFieldDisplayLabel } from "@design-foundry/operator-overlay-layout";
 import type { PreviewAppContext, Selection } from "./preview-app-context.js";
 
 type DragMode = "move" | "resize";
@@ -44,8 +44,6 @@ interface OverlayItemBounds {
   width: number;
   height: number;
   baselineYPx?: number | undefined;
-  lineCount?: number | undefined;
-  lineHeightPx?: number | undefined;
 }
 
 export interface AuthoringInteractionController {
@@ -131,9 +129,7 @@ export function createAuthoringInteractionController(
         top: (authoringTopPx / heightPx) * 100,
         width: (authoringWidthPx / widthPx) * 100,
         height: (authoringHeightPx / heightPx) * 100,
-        baselineYPx: text.anchorBaselineYPx,
-        lineCount: text.wrappedLines.length,
-        lineHeightPx: text.lineHeightPx
+        baselineYPx: text.anchorBaselineYPx
       });
     }
 
@@ -451,23 +447,12 @@ export function createAuthoringInteractionController(
         const draggedItem = items.find((item) => item.id === draggedSelectionId);
         if (draggedItem?.baselineYPx !== undefined) {
           authoringBaselineGuide.hidden = false;
-          const lineCount = Math.max(1, draggedItem.lineCount ?? 1);
-          const lineHeightPx = Math.max(1, draggedItem.lineHeightPx ?? 1);
-          authoringBaselineGuide.replaceChildren();
-
-          for (let lineIndex = 0; lineIndex < lineCount; lineIndex += 1) {
-            const line = document.createElement("div");
-            line.className = "is-authoring-baseline-guide";
-            line.style.top = `${((draggedItem.baselineYPx + lineIndex * lineHeightPx) / heightPx) * 100}%`;
-            authoringBaselineGuide.appendChild(line);
-          }
+          authoringBaselineGuide.style.top = `${(draggedItem.baselineYPx / heightPx) * 100}%`;
         } else {
           authoringBaselineGuide.hidden = true;
-          authoringBaselineGuide.replaceChildren();
         }
       } else {
         authoringBaselineGuide.hidden = true;
-        authoringBaselineGuide.replaceChildren();
       }
     }
 
@@ -788,7 +773,7 @@ export function createAuthoringInteractionController(
       }
 
       authoringBaselineGuide = document.createElement("div");
-      authoringBaselineGuide.className = "is-authoring-baseline-guides";
+      authoringBaselineGuide.className = "is-authoring-baseline-guide";
       authoringBaselineGuide.hidden = true;
 
       layer.append(authoringHoverBox, authoringSelectedBox, authoringBaselineGuide);

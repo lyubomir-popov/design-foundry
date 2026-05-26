@@ -1,6 +1,6 @@
-import type { ColorRgba, FrameSize, Vector3 } from "@brand-layout-ops/core-types";
-import type { OrbitsParams } from "@brand-layout-ops/operator-orbits";
-import type { SpokesParams } from "@brand-layout-ops/operator-spokes";
+import type { ColorRgba, FrameSize, Vector3 } from "@design-foundry/core-types";
+import type { OrbitsParams } from "@design-foundry/operator-orbits";
+import type { SpokesParams } from "@design-foundry/operator-spokes";
 
 export type MotionLayerMode = "none" | "orbits" | "spokes" | "both";
 

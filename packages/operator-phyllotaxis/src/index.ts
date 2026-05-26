@@ -1,4 +1,4 @@
-import type { ColorRgba, OperatorDefinition, OperatorParameterSchema, PointField, Vector3 } from "@brand-layout-ops/core-types";
+import type { ColorRgba, OperatorDefinition, OperatorParameterSchema, PointField, Vector3 } from "@design-foundry/core-types";
 
 export interface PhyllotaxisParams {
   numPoints: number;

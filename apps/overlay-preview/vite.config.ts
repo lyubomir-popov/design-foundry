@@ -8,8 +8,7 @@ import { defineConfig, type Plugin } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
-const vitePort = Number.parseInt(process.env.VITE_PORT ?? "4173", 10);
-const viteHost = process.env.VITE_HOST ?? "127.0.0.1";
+const baselineFoundryRoot = path.resolve(repoRoot, "..", "baseline-foundry");
 const publicRoot = path.resolve(__dirname, "public");
 const sourceDefaultConfigPath = path.resolve(__dirname, "public", "assets", "source-default-config.json");
 const sourceDefaultAuthoringPath = "/__authoring/source-default-config";
@@ -358,7 +357,7 @@ function sourceDefaultAuthoringPlugin(): Plugin {
                 return;
               }
 
-              tempDirPath = await fs.mkdtemp(path.join(os.tmpdir(), "brand-layout-ops-mp4-"));
+              tempDirPath = await fs.mkdtemp(path.join(os.tmpdir(), "df-mp4-"));
               const tempPreviewDocumentPath = path.join(tempDirPath, "preview-document.json");
               const tempFramesDir = path.join(tempDirPath, "frames");
               await fs.writeFile(tempPreviewDocumentPath, `${JSON.stringify(previewDocument, null, 2)}\n`, "utf8");
@@ -448,16 +447,16 @@ export default defineConfig({
   plugins: [sourceDefaultAuthoringPlugin()],
   resolve: {
     alias: {
-      "@brand-layout-ops/core-types": path.resolve(repoRoot, "packages/core-types/src/index.ts"),
-      "@brand-layout-ops/graph-runtime": path.resolve(repoRoot, "packages/graph-runtime/src/index.ts"),
-      "@brand-layout-ops/layout-engine": path.resolve(repoRoot, "packages/layout-engine/src/index.ts"),
-      "@brand-layout-ops/layout-grid": path.resolve(repoRoot, "packages/layout-grid/src/index.ts"),
-      "@brand-layout-ops/layout-text": path.resolve(repoRoot, "packages/layout-text/src/index.ts"),
-      "@brand-layout-ops/document-model": path.resolve(repoRoot, "packages/document-model/src/index.ts"),
-      "@brand-layout-ops/overlay-interaction": path.resolve(repoRoot, "packages/overlay-interaction/src/index.ts"),
-      "@brand-layout-ops/parameter-ui": path.resolve(repoRoot, "packages/parameter-ui/src/index.ts"),
-      "@brand-layout-ops/operator-halo-field": path.resolve(repoRoot, "packages/operator-halo-field/src/index.ts"),
-      "@brand-layout-ops/operator-ubuntu-summit-animation": path.resolve(repoRoot, "packages/operator-ubuntu-summit-animation/src/index.ts")
+      "@design-foundry/core-types": path.resolve(repoRoot, "packages/core-types/src/index.ts"),
+      "@design-foundry/graph-runtime": path.resolve(repoRoot, "packages/graph-runtime/src/index.ts"),
+      "@design-foundry/layout-engine": path.resolve(repoRoot, "packages/layout-engine/src/index.ts"),
+      "@design-foundry/layout-grid": path.resolve(repoRoot, "packages/layout-grid/src/index.ts"),
+      "@design-foundry/layout-text": path.resolve(repoRoot, "packages/layout-text/src/index.ts"),
+      "@design-foundry/operator-overlay-layout": path.resolve(repoRoot, "packages/operator-overlay-layout/src/index.ts"),
+      "@design-foundry/overlay-interaction": path.resolve(repoRoot, "packages/overlay-interaction/src/index.ts"),
+      "@design-foundry/parameter-ui": path.resolve(repoRoot, "packages/parameter-ui/src/index.ts"),
+      "@design-foundry/operator-halo-field": path.resolve(repoRoot, "packages/operator-halo-field/src/index.ts"),
+      "@design-foundry/operator-ubuntu-summit-animation": path.resolve(repoRoot, "packages/operator-ubuntu-summit-animation/src/index.ts")
     }
   },
   css: {
@@ -468,11 +467,8 @@ export default defineConfig({
     }
   },
   server: {
-    host: viteHost,
-    port: Number.isFinite(vitePort) ? vitePort : 4173,
-    strictPort: true,
     fs: {
-      allow: [repoRoot]
+      allow: [repoRoot, baselineFoundryRoot]
     }
   }
 });

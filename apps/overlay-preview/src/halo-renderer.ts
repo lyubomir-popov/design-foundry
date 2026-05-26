@@ -8,7 +8,7 @@
  */
 import * as THREE from "three";
 import { createCircleLayer, createSegmentLayer, type CircleLayer, type SegmentLayer } from "./three-primitives.js";
-import type { UbuntuSummitAnimationSceneDescriptor } from "@brand-layout-ops/operator-ubuntu-summit-animation";
+import type { UbuntuSummitAnimationSceneDescriptor } from "@design-foundry/operator-ubuntu-summit-animation";
 import {
   type HaloFieldConfig,
   type IntroFieldState,
@@ -27,7 +27,7 @@ import {
   buildIntroHaloFieldState,
   buildRuntimePoints,
   UBUNTU_RELEASE_LABELS
-} from "@brand-layout-ops/operator-halo-field";
+} from "@design-foundry/operator-halo-field";
 
 // ─── Constants ────────────────────────────────────────────────────────
 

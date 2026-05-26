@@ -1,5 +1,5 @@
 {
-  "name": "@brand-layout-ops/operator-fuzzy-boids",
+  "name": "@design-foundry/operator-fuzzy-boids",
   "version": "0.1.0",
   "type": "module",
   "exports": {

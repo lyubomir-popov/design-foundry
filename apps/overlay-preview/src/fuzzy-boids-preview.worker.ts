@@ -1,5 +1,5 @@
-import type { PointField, Vector3 } from "@brand-layout-ops/core-types";
-import { FuzzyBoidsSimulation, type FuzzyBoidsParams } from "@brand-layout-ops/operator-fuzzy-boids";
+import type { PointField, Vector3 } from "@design-foundry/core-types";
+import { FuzzyBoidsSimulation, type FuzzyBoidsParams } from "@design-foundry/operator-fuzzy-boids";
 
 interface ResolvePreviewRequestMessage {
   type: "resolve";

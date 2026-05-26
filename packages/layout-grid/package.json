@@ -1,8 +1,9 @@
 {
-  "name": "@brand-layout-ops/layout-grid",
+  "name": "@design-foundry/layout-grid",
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./core": "./src/grid-core.ts"
   }
 }

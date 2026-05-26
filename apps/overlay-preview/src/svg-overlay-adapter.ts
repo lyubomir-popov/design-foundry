@@ -11,8 +11,8 @@ import type {
   LogoPlacement,
   ResolvedTextPlacement,
   TextStyleSpec
-} from "@brand-layout-ops/core-types";
-import { getColumnSpanWidthPx, getKeylineXPx } from "@brand-layout-ops/layout-grid";
+} from "@design-foundry/core-types";
+import { getColumnSpanWidthPx, getKeylineXPx } from "@design-foundry/layout-grid";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
