@@ -4,11 +4,11 @@
   "metadata": {
     "name": "1080p",
     "createdAt": "2026-05-05T13:23:10.969Z",
-    "updatedAt": "2026-05-12T14:46:08.266Z"
+    "updatedAt": "2026-05-26T11:30:12.494Z"
   },
   "project": {
     "sceneFamilyKey": "halo",
-    "activeTargetId": "fullhd_1920x1080",
+    "activeTargetId": "format-7",
     "targets": [
       {
         "id": "landscape_1280x720",
@@ -51,6 +51,13 @@
         "outputProfileKey": "tablet_2560x1600",
         "formatPresetKey": "tablet_2560x1600",
         "derivedFromFormatId": "screen_3840x2160"
+      },
+      {
+        "id": "format-7",
+        "label": "A4 300 dpi",
+        "outputProfileKey": "print_a4_2480x3508",
+        "formatPresetKey": "print_a4_2480x3508",
+        "derivedFromFormatId": "fullhd_1920x1080"
       }
     ],
     "sceneFamilyGraphs": {
@@ -158,7 +165,7 @@
               "marginPx": 16,
               "shapeKind": "rounded-rect",
               "widthPx": 3840,
-              "heightPx": 2160,
+              "heightPx": 3508,
               "cornerRadiusPx": 64,
               "svgPath": "M -220 0 L -120 -150 L 120 -150 L 220 0 L 120 150 L -120 150 Z"
             }
@@ -169,7 +176,7 @@
     }
   },
   "state": {
-    "outputProfileKey": "fullhd_1920x1080",
+    "outputProfileKey": "print_a4_2480x3508",
     "contentFormatKey": "generic_social",
     "profileFormatBuckets": {
       "landscape_1280x720": {
@@ -1444,6 +1451,103 @@
             "rowIndex": 1
           }
         }
+      },
+      "print_a4_2480x3508": {
+        "generic_social": {
+          "frame": {
+            "widthPx": 2480,
+            "heightPx": 3508
+          },
+          "safeArea": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "grid": {
+            "baselineStepPx": 8,
+            "rowCount": 4,
+            "columnCount": 4,
+            "marginTopBaselines": 4,
+            "marginBottomBaselines": 4,
+            "marginLeftBaselines": 5,
+            "marginRightBaselines": 5,
+            "rowGutterBaselines": 4,
+            "columnGutterBaselines": 0,
+            "fitWithinSafeArea": true
+          },
+          "textStyles": [
+            {
+              "key": "title",
+              "fontSizePx": 64,
+              "lineHeightPx": 64,
+              "fontWeight": 200
+            },
+            {
+              "key": "b_head",
+              "fontSizePx": 32,
+              "lineHeightPx": 40,
+              "fontWeight": 400
+            },
+            {
+              "key": "paragraph",
+              "fontSizePx": 28,
+              "lineHeightPx": 32,
+              "fontWeight": 400
+            }
+          ],
+          "textFields": [
+            {
+              "id": "main_heading",
+              "contentFieldId": "main_heading",
+              "styleKey": "title",
+              "text": "Ubuntu\nSummit\n26.04",
+              "keylineIndex": 2,
+              "rowIndex": 1,
+              "offsetBaselines": 6,
+              "columnSpan": 1
+            },
+            {
+              "id": "body_intro",
+              "contentFieldId": "body_intro",
+              "styleKey": "paragraph",
+              "text": "",
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 2,
+              "columnSpan": 1
+            },
+            {
+              "id": "detail_primary",
+              "contentFieldId": "detail_primary",
+              "styleKey": "paragraph",
+              "text": "",
+              "keylineIndex": 4,
+              "rowIndex": 1,
+              "offsetBaselines": 18,
+              "columnSpan": 1
+            }
+          ],
+          "logo": {
+            "id": "brand-mark",
+            "xPx": 0,
+            "yPx": 0,
+            "widthPx": 64,
+            "heightPx": 110,
+            "assetPath": "/assets/UbuntuTagLogo.svg",
+            "linkTitleSizeToHeight": true
+          },
+          "contentSource": "inline",
+          "inlineTextByFieldId": {
+            "main_heading": "Ubuntu\nSummit\n26.04",
+            "body_intro": "A showcase\nfor the innovative\nand the ambitious",
+            "detail_primary": "May 27-28, 2026\nOutline"
+          },
+          "csvContent": {
+            "draft": "main_heading,text_1,text_2,text_3\n\"Ubuntu\\nSummit\\n26.04\",\"A showcase\\nfor the innovative\\nand the ambitious\",\"May 27-28, 2026\",\"Online\"\n\"Ubuntu\\nSummit\\n26.04\",\"Kernel rebuild, now with actual reference defaults.\",\"Parity audit\",\"In progress\"",
+            "rowIndex": 1
+          }
+        }
       }
     },
     "contentFormatKeyByProfile": {
@@ -1452,11 +1556,12 @@
       "instagram_1080x1350": "generic_social",
       "story_1080x1920": "generic_social",
       "screen_3840x2160": "generic_social",
-      "tablet_2560x1600": "generic_social"
+      "tablet_2560x1600": "generic_social",
+      "print_a4_2480x3508": "generic_social"
     },
     "exportSettings": {
-      "exportName": "UbuntuSummit2026-AV",
-      "frameRate": 30,
+      "exportName": "UbuntuSummit2026",
+      "frameRate": 1,
       "transparentBackground": false
     },
     "exportSettingsByProfile": {
@@ -1489,6 +1594,11 @@
         "exportName": "UbuntuSummit2026",
         "frameRate": 24,
         "transparentBackground": false
+      },
+      "print_a4_2480x3508": {
+        "exportName": "UbuntuSummit2026",
+        "frameRate": 1,
+        "transparentBackground": false
       }
     },
     "haloConfig": {
@@ -1520,13 +1630,13 @@
         "nose_bob_up_px": 1.5
       },
       "composition": {
-        "center_x_px": 960,
-        "center_y_px": 469,
-        "center_offset_y_px": -71,
-        "scale": 0.42,
+        "center_x_px": 1240,
+        "center_y_px": 1728,
+        "center_offset_y_px": -26,
+        "scale": 0.82,
         "radial_scale": 1,
         "global_rotation_deg": 0,
-        "background_color": "#2b2b2b"
+        "background_color": "#202020"
       },
       "generator_wrangle": {
         "inner_radius": 0.26,
@@ -1578,12 +1688,12 @@
         "color": "#ffffff",
         "echo_color": "#444444",
         "width_px": 3,
-        "echo_marker_stroke_px": 3,
-        "echo_marker_scale_mult": 2.5,
+        "echo_marker_stroke_px": 4,
+        "echo_marker_scale_mult": 4.6,
         "echo_sparse_scale_boost": 1.5,
         "echo_spacing_offset_px": 0,
         "phase_start_width_px": 8,
-        "phase_end_width_px": 4,
+        "phase_end_width_px": 3,
         "echo_count": 16,
         "echo_style": "mixed",
         "echo_shape_seed": 0,
@@ -1596,8 +1706,8 @@
       },
       "spoke_text": {
         "enabled": true,
-        "font_size_px": 23,
-        "radial_u": 0.6
+        "font_size_px": 10,
+        "radial_u": 0
       },
       "screensaver": {
         "cycle_sec": 60,
@@ -2384,6 +2494,137 @@
         "spoke_text": {
           "enabled": true,
           "font_size_px": 14,
+          "radial_u": 0
+        },
+        "screensaver": {
+          "cycle_sec": 60,
+          "pulse_orbits": true,
+          "pulse_spokes": true,
+          "min_spoke_count": 24,
+          "ramp_in_sec": 2,
+          "phase_boundary_transition_sec": 0.04
+        },
+        "finale": {
+          "enabled": true,
+          "delay_after_dots_sec": 0,
+          "duration_sec": 0.75,
+          "start_angle_deg": 0,
+          "mask_angle_offset_deg": 1.5,
+          "halo_inner_radius_u": 0.255
+        },
+        "vignette": {
+          "enabled": false,
+          "shape_fade": 1,
+          "shape_fade_start": 0.3,
+          "shape_fade_end": 0.85
+        }
+      },
+      "print_a4_2480x3508": {
+        "mascot_fade": {
+          "enabled": false,
+          "duration_sec": 3
+        },
+        "head_turn": {
+          "enabled": true,
+          "duration_sec": 0.333,
+          "peak_angle_deg": -30,
+          "reverse_angle_deg": 30,
+          "overshoot_angle_deg": -3,
+          "peak_frac": 0.25,
+          "reverse_frac": 0.56,
+          "dot_overlap_sec": 1,
+          "overshoot_frac": 0.75
+        },
+        "blink": {
+          "enabled": true,
+          "start_delay_sec": 0.04,
+          "duration_sec": 0.12,
+          "close_frac": 0.42,
+          "hold_closed_frac": 0.12,
+          "eye_scale_y_closed": 0.08
+        },
+        "sneeze": {
+          "enabled": true,
+          "nose_bob_up_px": 1.5
+        },
+        "composition": {
+          "center_x_px": 1240,
+          "center_y_px": 1728,
+          "center_offset_y_px": -26,
+          "scale": 0.82,
+          "radial_scale": 1,
+          "global_rotation_deg": 0,
+          "background_color": "#202020"
+        },
+        "generator_wrangle": {
+          "inner_radius": 0.26,
+          "outer_radius": 0.513,
+          "num_orbits": 8,
+          "spoke_count": 60,
+          "phase_count": 2,
+          "min_active_orbits": 3,
+          "base_angle_deg": 0,
+          "pattern_offset_spokes": 1,
+          "anim_start_angle_deg": 0
+        },
+        "transition_wrangle": {
+          "duration_sec": 1,
+          "spins": 3,
+          "emit_frac": 0.05,
+          "alpha_ramp_duration_sec": 0.14,
+          "animate_orbit_count": true,
+          "orbit_count_start_frac": 0,
+          "orbit_count_end_frac": 1,
+          "capture_start_frac": 0.25,
+          "orbit_stagger_frac": 1,
+          "speed_mult_per_orbit": 0.85,
+          "inner_faster": true,
+          "spawn_angle_offset_deg": 0,
+          "occlusion_arc_deg": 0,
+          "hide_invisible_by_pscale": true,
+          "base_pscale": 0.74,
+          "orbital_frontier_amount": -1,
+          "orbital_frontier_width_u": 1,
+          "orbital_frontier_bias": 0.676,
+          "phase_frontier_amount": 0.655,
+          "phase_frontier_width_u": 0.57,
+          "phase_frontier_bias": 1
+        },
+        "point_style": {
+          "color": "#ffffff",
+          "alpha": 1,
+          "base_pscale_px_per_unit": 4,
+          "min_scale": 0.3,
+          "min_diameter_px": 1.1
+        },
+        "spoke_lines": {
+          "enabled": true,
+          "show_reference_halo": false,
+          "show_debug_masks": false,
+          "construction_color": "#333333",
+          "reference_color": "#666666",
+          "color": "#ffffff",
+          "echo_color": "#444444",
+          "width_px": 3,
+          "echo_marker_stroke_px": 4,
+          "echo_marker_scale_mult": 4.6,
+          "echo_sparse_scale_boost": 1.5,
+          "echo_spacing_offset_px": 0,
+          "phase_start_width_px": 8,
+          "phase_end_width_px": 3,
+          "echo_count": 16,
+          "echo_style": "mixed",
+          "echo_shape_seed": 0,
+          "echo_mix_shape_pct": 0.56,
+          "echo_width_mult": 0.88,
+          "echo_wave_count": 4,
+          "echo_opacity_mult": 0.5,
+          "start_radius_px": 150,
+          "content_clearance_px": 24
+        },
+        "spoke_text": {
+          "enabled": true,
+          "font_size_px": 10,
           "radial_u": 0
         },
         "screensaver": {
